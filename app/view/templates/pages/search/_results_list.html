@@ -41,9 +41,14 @@
           {% if study.url and study.url != '': %}
             <strong>Publication</strong>:
             {{ study.url|external_link() }}
-            <br>
-          {% endif %}
 
+            {% if study.authors: %}
+              by {{ study.authors|author_link_list(format="short", query_words=search.query_words) }}
+            {% endif %}
+          {% endif %}
+        </p>
+
+        <p class="small">
           {% if study.studyTechniques: %}
             <strong>Measurement techniques</strong>:
             {{ study.studyTechniques|map(attribute="short_name")|unique|join(", ") }}

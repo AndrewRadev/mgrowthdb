@@ -60,6 +60,7 @@ class StudySearch():
 
             query_clause = sql.or_(
                 Study.name.ilike(like_expr),
+                Study.authors.ilike(like_expr),
                 Study.description.ilike(like_expr),
                 Study.publicId.in_(self.query_words),
             )

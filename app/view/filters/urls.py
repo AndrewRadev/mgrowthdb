@@ -1,5 +1,9 @@
+import re
+
 from markupsafe import Markup
 from flask import url_for
+
+from app.view.filters.text import highlight
 
 
 def ncbi_url(ncbi_id):
@@ -25,3 +29,32 @@ def help_link(page_name, text=None, section=None, css_class=''):
         url += section
 
     return Markup(f"""<a class="{css_class}" target="_blank" href="{url}">{text}</a>""")
+
+
+def author_link_list(authors, format="short", query_words=None):
+    link_list = []
+
+    if query_words:
+        search_pattern = '(' + '|'.join([re.escape(w) for w in query_words]) + ')'
+        regex = re.compile(search_pattern, re.IGNORECASE)
+    else:
+        regex = None
+
+    for author in authors:
+        if format == 'long' or (regex and re.match(regex, author['given'])):
+            name = f"{author['given']} {author['family']}"
+        elif format == 'short':
+            short_given_name = ' '.join([f"{n[0]}." for n in author['given'].split()])
+            name = f"{author['family']}, {short_given_name}"
+        else:
+            raise ValueError(f"Unknown format: {format}")
+
+        if regex:
+            name = highlight(name, query_words, regex)
+
+        if "ORCID" in author and re.fullmatch(r'https?://orcid.org/[0-9-]+', author["ORCID"]):
+            link_list.append(f"""<a target="_blank" href="{author["ORCID"]}">{name}</a>""")
+        else:
+            link_list.append(name)
+
+    return Markup(', '.join(link_list))
