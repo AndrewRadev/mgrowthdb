@@ -43,7 +43,7 @@
             {{ study.url|external_link() }}
 
             {% if study.authors: %}
-              by {{ study.authors|author_link_list(format="short", query_words=search.query_words) }}
+              by {{ study.authors|author_link_list(query_words=search.query_words, limit=10) }}
             {% endif %}
           {% endif %}
         </p>
