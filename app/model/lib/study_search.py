@@ -123,20 +123,8 @@ class StudySearch():
 
 
 def _replace_public_id_references(text):
-    text = re.sub(r'\bSMGDB0*(\d+)', _replace_study_reference,      text, flags=re.IGNORECASE)
-    # text = re.sub(r'\bPMGDB0*(\d+)', _replace_project_reference,    text, flags=re.IGNORECASE)
-    # text = re.sub(r'\bEMGDB0*(\d+)', _replace_experiment_reference, text, flags=re.IGNORECASE)
-
-    return text
+    return re.sub(r'\bSMGDB0*(\d+)', _replace_study_reference, text, flags=re.IGNORECASE)
 
 
 def _replace_study_reference(m):
     return f"SMGDB{int(m[1]):08d}"
-
-
-# def _replace_project_reference(m):
-#     return f"PMGDB{int(m[1]):06d}"
-
-
-# def _replace_experiment_reference(m):
-#     return f"EMGDB{int(m[1]):09d}"
