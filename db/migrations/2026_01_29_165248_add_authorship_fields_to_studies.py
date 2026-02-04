@@ -5,7 +5,7 @@ def up(conn):
     query = """
         ALTER TABLE Studies
         ADD authors JSON NOT NULL DEFAULT (json_array()),
-        ADD authorCache TEXT DEFAULT NULL
+        ADD authorCache TEXT DEFAULT NULL COLLATE utf8mb4_0900_ai_ci
     """
     conn.execute(sql.text(query))
 

@@ -19,7 +19,9 @@ def chebi_url(chebi_id):
 def external_link(url, text=None, css_class=''):
     text = text or url
 
-    return Markup(f"""<a class="external {css_class}" target="_blank" rel="noreferrer" href="{url}">{text}</a>""")
+    return Markup(
+        f"""<a class="external {css_class}" target="_blank" rel="noreferrer" href="{url}">{text}</a>"""
+    )
 
 
 def help_link(page_name, text=None, section=None, css_class=''):
