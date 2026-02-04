@@ -56,6 +56,10 @@ class StudySearch():
             query = _replace_public_id_references(self.query)
             self.query_words = query.split()
 
+            # Note: this looks for the entire combination in each of the
+            # fields, so searching for e.g. "Garza batch" will not find a good
+            # result if "Garza" is an author, and "batch" is part of the title.
+            #
             like_expr = '%' + '%'.join(self.query_words) + '%'
 
             query_clause = sql.or_(
