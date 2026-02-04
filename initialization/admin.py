@@ -200,6 +200,7 @@ def init_admin(app):
             'studyUsers', 'experiments', 'strains', 'communities', 'compartments',
             'modelingResults', 'bioreplicates',
             'studyMetabolites', 'metabolites',
+            'authorCache',
         ]
 
     class ProjectView(AppView):
