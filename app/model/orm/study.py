@@ -46,8 +46,8 @@ class Study(OrmBase):
     url:         Mapped[str] = mapped_column(sql.String, nullable=True)
     timeUnits:   Mapped[str] = mapped_column(sql.String(100))
 
-    authors:  Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
-    citation: Mapped[str]      = mapped_column(sql.String)
+    authors:     Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
+    authorCache: Mapped[str]      = mapped_column(sql.String)
 
     projectUuid: Mapped[str] = mapped_column(sql.ForeignKey('Projects.uuid'))
     project: Mapped['Project'] = relationship(back_populates="studies")

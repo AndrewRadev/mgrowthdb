@@ -29,13 +29,18 @@ with app.app_context():
             raise ValueError(f"Response was unsuccessful:\n{json.dumps(response, indent=2)}")
 
         study.authors = response.get("message", {}).get("author", [])
+        if study.authors:
+            study.authorCache = ', '.join([a['family'].lower() for a in study.authors])
+            print(study.authorCache)
+        else:
+            print("No authors found")
 
-        # Citation:
-        citation_url = f"https://citation.doi.org/format?doi={doi}&style=apa&lang=en-US"
-        response = requests.get(citation_url).text.strip()
-        study.citation = response
+        # # Citation:
+        # citation_url = f"https://citation.doi.org/format?doi={doi}&style=apa&lang=en-US"
+        # response = requests.get(citation_url).text.strip()
+        # study.citation = response
 
-        print(response)
+        # print(response)
 
         db_session.add(study)
 

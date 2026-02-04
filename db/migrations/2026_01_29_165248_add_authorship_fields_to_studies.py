@@ -5,7 +5,7 @@ def up(conn):
     query = """
         ALTER TABLE Studies
         ADD authors JSON NOT NULL DEFAULT (json_array()),
-        ADD citation TEXT DEFAULT NULL
+        ADD authorCache TEXT DEFAULT NULL
     """
     conn.execute(sql.text(query))
 
@@ -14,7 +14,7 @@ def down(conn):
     query = """
         ALTER TABLE Studies
         DROP authors,
-        DROP citation
+        DROP authorCache
     """
     conn.execute(sql.text(query))
 
