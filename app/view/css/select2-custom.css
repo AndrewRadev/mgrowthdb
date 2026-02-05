@@ -16,7 +16,7 @@
   position: relative;
 }
 
-.loading-spinner {
+.select2-container .loading-spinner {
     background-image: url('/static/images/loader.svg');
     background-repeat: no-repeat;
     background-size: cover;
