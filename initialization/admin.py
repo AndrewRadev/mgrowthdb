@@ -154,7 +154,7 @@ class AppView(ModelView):
     model_form_converter = AppModelConverter
     "Custom converter for JSON and datetime"
 
-    def prettify_name(self, name):
+    def _prettify_name(self, name):
         "Overridden to render camelCased strings nicely in various places"
         return humanize_camelcased_string(name).title()
 
