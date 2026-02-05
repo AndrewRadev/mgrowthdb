@@ -8,6 +8,7 @@ from tests.page_test import PageTest
 from app.pages.help import HelpTopics
 
 
+# Set up as a "page test" because this class requires a flask app
 class TestHelpPages(PageTest):
     def setUp(self):
         super().setUp()
