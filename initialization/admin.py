@@ -58,7 +58,10 @@ def json_formatter(_view, data, _name):
 
 def json_page_visit_counter_formatter(_view, data, _name):
     "Format nested JSON as an HTML table, specifically for Page Visit records"
-    sorted_entries = sorted(((k, v) for k, v in data.items()), key=lambda pair: -pair[1]['visitCount'])
+    sorted_entries = sorted(
+        ((k, v) for k, v in data.items() if v['visitCount'] > 0),
+        key=lambda pair: -pair[1]['visitCount'],
+    )
 
     rows = []
 
@@ -76,7 +79,7 @@ def json_page_visit_counter_formatter(_view, data, _name):
         <table style="font-size: 14px;">
           <thead>
             <tr>
-              <th>Key</th>
+              <th>Key ({len(sorted_entries)})</th>
               <th>Visits</th>
               <th>Visitors</th>
               <th>Users</th>
