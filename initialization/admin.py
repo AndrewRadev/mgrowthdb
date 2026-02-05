@@ -56,6 +56,40 @@ def json_formatter(_view, data, _name):
     return Markup(f"<pre>{json.dumps(data, indent=2, use_decimal=True)}</pre>")
 
 
+def json_page_visit_counter_formatter(_view, data, _name):
+    "Format nested JSON as an HTML table, specifically for Page Visit records"
+    sorted_entries = sorted(((k, v) for k, v in data.items()), key=lambda pair: -pair[1]['visitCount'])
+
+    rows = []
+
+    for key, entry in sorted_entries:
+        rows.append(f"""
+            <tr>
+              <td>{key}</td>
+              <td>{entry['visitCount']}</td>
+              <td>{entry['visitorCount']}</td>
+              <td>{entry['userCount']}</td>
+            </tr>
+        """)
+
+    html = f"""
+        <table style="font-size: 14px;">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Visits</th>
+              <th>Visitors</th>
+              <th>Users</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"\n".join(rows)}
+          </tbody>
+        </table>
+    """
+
+    return Markup(html)
+
 def record_formatter(_view, record, *args):
     "Format ORM records to make them easier to read"
     if hasattr(record, 'publicId'):
@@ -154,7 +188,7 @@ class AppView(ModelView):
     model_form_converter = AppModelConverter
     "Custom converter for JSON and datetime"
 
-    def prettify_name(self, name):
+    def _prettify_name(self, name):
         "Overridden to render camelCased strings nicely in various places"
         return humanize_camelcased_string(name).title()
 
@@ -300,10 +334,16 @@ def init_admin(app):
         ]
         column_filters = ['isBot', 'isUser', 'isAdmin', 'country']
 
-    admin.add_view(UserView(User,            db_session, category="Users"))
-    admin.add_view(AppView(StudyUser,        db_session, category="Users"))
-    admin.add_view(AppView(ProjectUser,      db_session, category="Users"))
-    admin.add_view(PageVisitView(PageVisit,  db_session, category="Users"))
-    admin.add_view(AppView(PageVisitCounter, db_session, category="Users"))
+    class PageVisitCounterView(AppView):
+        column_type_formatters = {
+            **_FORMATTERS,
+            dict: json_page_visit_counter_formatter,
+        }
+
+    admin.add_view(UserView(User,                         db_session, category="Users"))
+    admin.add_view(AppView(StudyUser,                     db_session, category="Users"))
+    admin.add_view(AppView(ProjectUser,                   db_session, category="Users"))
+    admin.add_view(PageVisitView(PageVisit,               db_session, category="Users"))
+    admin.add_view(PageVisitCounterView(PageVisitCounter, db_session, category="Users"))
 
     return app
