@@ -363,6 +363,24 @@ CREATE TABLE ModelingResults (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `PageErrors`
+--
+
+DROP TABLE IF EXISTS PageErrors;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE PageErrors (
+  id int NOT NULL AUTO_INCREMENT,
+  fullPath text NOT NULL,
+  uuid varchar(36) DEFAULT NULL,
+  userId int DEFAULT NULL,
+  traceback text NOT NULL,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `PageVisitCounters`
 --
 
@@ -763,5 +781,6 @@ INSERT INTO MigrationVersions VALUES
 (93,'2026_01_23_120741_create_page_visit_counters','2026-01-23 13:45:15'),
 (95,'2026_01_26_172214_add_country_to_page_visits','2026-01-26 16:22:56'),
 (99,'2026_01_28_155444_track_country_in_page_visit_counters','2026-01-28 14:59:27'),
-(112,'2026_01_29_165248_add_authorship_fields_to_studies','2026-02-04 11:37:02');
+(112,'2026_01_29_165248_add_authorship_fields_to_studies','2026-02-04 11:37:02'),
+(116,'2026_02_06_164753_create_page_errors','2026-02-06 15:57:16');
 

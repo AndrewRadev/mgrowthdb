@@ -33,6 +33,7 @@ from app.model.orm import (
     MeasurementTechnique,
     Metabolite,
     ModelingResult,
+    PageError,
     PageVisit,
     PageVisitCounter,
     Perturbation,
@@ -346,10 +347,17 @@ def init_admin(app):
             dict: json_page_visit_counter_formatter,
         }
 
+    class PageErrorView(AppView):
+        column_list = ['createdAt', 'fullPath', 'traceback', 'uuid', 'userId']
+        column_formatters = {
+            'traceback': lambda v, c, m, p: Markup(f"<pre>{m.traceback}</pre>"),
+        }
+
     admin.add_view(UserView(User,                         db_session, category="Users"))
     admin.add_view(AppView(StudyUser,                     db_session, category="Users"))
     admin.add_view(AppView(ProjectUser,                   db_session, category="Users"))
     admin.add_view(PageVisitView(PageVisit,               db_session, category="Users"))
     admin.add_view(PageVisitCounterView(PageVisitCounter, db_session, category="Users"))
+    admin.add_view(PageErrorView(PageError,               db_session, category="Users"))
 
     return app
