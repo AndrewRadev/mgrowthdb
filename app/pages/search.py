@@ -33,8 +33,6 @@ def search_index_page():
         offset=int(request.args.get('offset', '0')),
     )
 
-    raise ValueError("Example")
-
     studies = search.fetch_results()
 
     render_params = dict(
