@@ -23,6 +23,10 @@ from app.model.orm import (
 )
 from app.model.lib.errors import LoginRequired
 
+
+_CRAWLER_DETECT = CrawlerDetect()
+
+
 def init_global_handlers(app):
     """
     Main entry point of the module.
@@ -150,7 +154,7 @@ def _record_page_visit():
         uuid=session['user_uuid'],
         isUser=(True if g.current_user else False),
         isAdmin=(True if g.current_user and g.current_user.isAdmin else False),
-        isBot=CrawlerDetect().isCrawler(request.user_agent.string),
+        isBot=_CRAWLER_DETECT.isCrawler(request.user_agent.string),
     )
 
     g.db_session.add(page_visit)

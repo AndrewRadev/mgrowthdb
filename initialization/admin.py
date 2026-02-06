@@ -186,6 +186,9 @@ class AppView(ModelView):
     can_export       = True
     can_view_details = True
 
+    # By default, sort by id DESC, so the newest records show up first. This is
+    # overridden below for the three records that use "publicId" as the primary
+    # key.
     column_default_sort = ('id', True)
 
     model_form_converter = AppModelConverter
