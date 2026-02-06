@@ -1,10 +1,7 @@
 import re
 from pathlib import Path
 
-from flask import (
-    current_app,
-    render_template,
-)
+from flask import render_template
 
 from markdown_it import MarkdownIt
 from markupsafe import Markup
@@ -13,9 +10,26 @@ from werkzeug.exceptions import NotFound
 
 
 class HelpTopics:
-    def __init__(self):
-        self.templates_dir = Path('app/view/templates')
-        self.root_dir      = self.templates_dir / 'pages/help/topics'
+    """
+    A class that reads help topic templates as markdown or HTML and provides an
+    interface to search through their text.
+
+    Reads the HTML once
+
+    Depends on Flask's `render_template` to evaluate the templates as jinja2.
+    In the future, it might be nice to isolate it from these, but for now, it
+    does the job and nothing else depends on the class, so it's fine as it is.
+    """
+
+    def __init__(self, templates_dir, help_topic_dir):
+        if not help_topic_dir.startswith(templates_dir):
+            raise ValueError(
+                f"The help topic directory ({help_topic_dir}) "
+                f"must be under the templates directory ({templates_dir})",
+            )
+
+        self.templates_dir  = Path(templates_dir)
+        self.help_topic_dir = Path(help_topic_dir)
 
         self.markdown = MarkdownIt().enable('table')
 
@@ -74,14 +88,16 @@ class HelpTopics:
 
         return results
 
-    def process_once(self):
-        if self._html_cache and not current_app.config['DEBUG']:
+    def process_once(self, debug=False):
+        if self._html_cache and not debug:
             return
 
-        for file in self.root_dir.iterdir():
+        for file in self.help_topic_dir.iterdir():
             extension = file.suffix
-            base_path = str(file).removesuffix(extension).removeprefix(str(self.templates_dir) + '/')
-            base_key  = str(file).removesuffix(extension).removeprefix(str(self.root_dir) + '/')
+            basename  = str(file).removesuffix(extension)
+
+            base_path = basename.removeprefix(str(self.templates_dir) + '/')
+            base_key  = basename.removeprefix(str(self.help_topic_dir) + '/')
 
             if extension == '.md':
                 markdown_content = render_template(f"{base_path}.md")

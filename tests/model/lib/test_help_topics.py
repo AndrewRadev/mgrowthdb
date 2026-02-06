@@ -14,7 +14,10 @@ class TestHelpPages(PageTest):
         super().setUp()
 
         with self.app.app_context():
-            self.help_pages = HelpTopics()
+            self.help_pages = HelpTopics(
+                templates_dir='app/view/templates',
+                help_topic_dir='app/view/templates/pages/help/topics',
+            )
             self.help_pages.process_once()
 
     def test_simple_page_rendering(self):
