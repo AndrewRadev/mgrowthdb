@@ -56,10 +56,15 @@ class StudySearch():
             query = _replace_public_id_references(self.query)
             self.query_words = query.split()
 
+            # Note: this looks for the entire combination in each of the
+            # fields, so searching for e.g. "Garza batch" will not find a good
+            # result if "Garza" is an author, and "batch" is part of the title.
+            #
             like_expr = '%' + '%'.join(self.query_words) + '%'
 
             query_clause = sql.or_(
                 Study.name.ilike(like_expr),
+                Study.authorCache.like(like_expr),
                 Study.description.ilike(like_expr),
                 Study.publicId.in_(self.query_words),
             )
@@ -118,20 +123,8 @@ class StudySearch():
 
 
 def _replace_public_id_references(text):
-    text = re.sub(r'\bSMGDB0*(\d+)', _replace_study_reference,      text, flags=re.IGNORECASE)
-    # text = re.sub(r'\bPMGDB0*(\d+)', _replace_project_reference,    text, flags=re.IGNORECASE)
-    # text = re.sub(r'\bEMGDB0*(\d+)', _replace_experiment_reference, text, flags=re.IGNORECASE)
-
-    return text
+    return re.sub(r'\bSMGDB0*(\d+)', _replace_study_reference, text, flags=re.IGNORECASE)
 
 
 def _replace_study_reference(m):
     return f"SMGDB{int(m[1]):08d}"
-
-
-# def _replace_project_reference(m):
-#     return f"PMGDB{int(m[1]):06d}"
-
-
-# def _replace_experiment_reference(m):
-#     return f"EMGDB{int(m[1]):09d}"

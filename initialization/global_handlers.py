@@ -19,7 +19,8 @@ import maxminddb
 from db import get_connection, FLASK_DB
 from app.model.orm import (
     User,
-    PageVisit
+    PageVisit,
+    PageError,
 )
 from app.model.lib.errors import LoginRequired
 
@@ -189,7 +190,22 @@ def _render_forbidden(_error):
         return render_template('errors/403.html'), 403
 
 
-def _render_server_error(_error):
+def _render_server_error(error):
+    try:
+        import traceback
+
+        traceback_lines = traceback.format_exception(error.original_exception)
+        page_error = PageError(
+            fullPath=request.full_path,
+            uuid=session.get('user_uuid'),
+            userId=(g.current_user.id if g.current_user else None),
+            traceback=''.join(traceback_lines).strip(),
+        )
+        g.db_session.add(page_error)
+        g.db_session.commit()
+    except Exception as e:
+        app.logger.warn(f"Couldn't record error in the database")
+
     if _is_json(request):
         return {'error': '500 Server error'}, 500
     else:

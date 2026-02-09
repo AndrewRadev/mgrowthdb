@@ -18,7 +18,12 @@
 
       <p class="small">
         {% if study.url: %}
-          <strong>Publication URL</strong>: {{ experiment.study.url|external_link }}
+          <strong>Publication</strong>: {{ study.url|external_link }}
+
+          {% if study.authors: %}
+            by {{ study.authors|author_link_list(limit=10) }}
+          {% endif %}
+
           <br>
         {% endif %}
       </p>

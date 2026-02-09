@@ -33,6 +33,7 @@ from app.model.orm import (
     MeasurementTechnique,
     Metabolite,
     ModelingResult,
+    PageError,
     PageVisit,
     PageVisitCounter,
     Perturbation,
@@ -233,13 +234,14 @@ def init_admin(app):
 
     class StudyView(AppView):
         column_searchable_list = ['name']
-        column_exclude_list = ['description']
+        column_exclude_list = ['description', 'authors']
         column_default_sort = ('publicId', True)
         form_excluded_columns = [
             'measurements', 'measurementContexts', 'studyTechniques', 'measurementTechniques',
             'studyUsers', 'experiments', 'strains', 'communities', 'compartments',
             'modelingResults', 'bioreplicates',
             'studyMetabolites', 'metabolites',
+            'authorCache',
         ]
 
     class ProjectView(AppView):
@@ -345,10 +347,17 @@ def init_admin(app):
             dict: json_page_visit_counter_formatter,
         }
 
+    class PageErrorView(AppView):
+        column_list = ['createdAt', 'fullPath', 'traceback', 'uuid', 'userId']
+        column_formatters = {
+            'traceback': lambda v, c, m, p: Markup(f"<pre>{m.traceback}</pre>"),
+        }
+
     admin.add_view(UserView(User,                         db_session, category="Users"))
     admin.add_view(AppView(StudyUser,                     db_session, category="Users"))
     admin.add_view(AppView(ProjectUser,                   db_session, category="Users"))
     admin.add_view(PageVisitView(PageVisit,               db_session, category="Users"))
     admin.add_view(PageVisitCounterView(PageVisitCounter, db_session, category="Users"))
+    admin.add_view(PageErrorView(PageError,               db_session, category="Users"))
 
     return app

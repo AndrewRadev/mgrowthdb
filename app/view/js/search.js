@@ -77,12 +77,13 @@ Page('.search-page', function($page) {
     let $searchForm  = $page.find('.js-search-form');
     let $resultsList = $page.find('.js-results-list');
 
-    $resultsList.addClass('loading');
+    let $searchInput = $searchForm.find('input[name=q]');
+    $searchInput.addClass('loading-input');
 
     $searchForm.ajaxSubmit({
       success: function(response) {
         $resultsList.html(response);
-        $resultsList.removeClass('loading');
+        $searchInput.removeClass('loading-input');
       }
     });
   }

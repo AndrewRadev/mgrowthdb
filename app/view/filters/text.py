@@ -1,7 +1,7 @@
 import re
 
 from markupsafe import Markup, escape as html_escape
-from flask import url_for, request
+from flask import request
 
 from jinja2.utils import urlize
 
@@ -32,12 +32,15 @@ def format_text(text, first_paragraph=False, p_class=''):
 
     return Markup(text)
 
-def highlight(text, words):
+
+def highlight(text, words, regex=None):
     if len(words) == 0:
         return text
 
-    search_pattern = '(' + '|'.join([re.escape(w) for w in words]) + ')'
-    regex = re.compile(search_pattern, re.IGNORECASE)
+    # The regex can be provided as an argument to have it pre-compiled
+    if regex is None:
+        search_pattern = '(' + '|'.join([re.escape(w) for w in words]) + ')'
+        regex = re.compile(search_pattern, re.IGNORECASE)
 
     highlighted_text = re.sub(
         regex,
@@ -46,6 +49,7 @@ def highlight(text, words):
     )
 
     return Markup(highlighted_text)
+
 
 def _replace_project_reference(m):
     base_url = request.host_url

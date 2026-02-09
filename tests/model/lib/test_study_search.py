@@ -44,15 +44,19 @@ class TestStudySearch(DatabaseTest):
         s2 = self.create_study(name="Bar")
         s3 = self.create_study(name="FooBar")
         s4 = self.create_study(name="Test", description="Bar")
+        s5 = self.create_study(name="Test", authorCache="foo, faust")
 
         search = StudySearch(self.db_session, user=admin, query="foo")
-        self._assertEqualPublicIds(search.fetch_results(), [s3, s1])
+        self._assertEqualPublicIds(search.fetch_results(), [s5, s3, s1])
 
         search = StudySearch(self.db_session, user=admin, query="BAR")
         self._assertEqualPublicIds(search.fetch_results(), [s4, s3, s2])
 
         search = StudySearch(self.db_session, user=admin, query="foobar")
         self._assertEqualPublicIds(search.fetch_results(), [s3])
+
+        search = StudySearch(self.db_session, user=admin, query="faust")
+        self._assertEqualPublicIds(search.fetch_results(), [s5])
 
         # Pagination
         search = StudySearch(self.db_session, user=admin, query="bar", per_page=2)
@@ -119,7 +123,6 @@ class TestStudySearch(DatabaseTest):
         search = StudySearch(self.db_session, user=admin, ncbiIds=[roseburia.ncbiId], per_page=1, offset=1)
         self._assertEqualPublicIds(search.fetch_results(), [s1])
         self.assertFalse(search.has_more)
-
 
     def test_metabolite_query(self):
         admin = self.create_user(isAdmin=True)

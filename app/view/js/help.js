@@ -9,16 +9,16 @@ Page('.help-page-index', function($page) {
   $page.on('keyup', '.js-search-input', _.debounce(function() {
     let $searchInput = $(this);
     updatePage($searchInput);
-  }, 100));
+  }, 200));
 
   function updatePage($searchInput) {
     let $form = $searchInput.parents('form');
-    $pageListContainer.addClass('loading');
+    $searchInput.addClass('loading-input');
 
     $form.ajaxSubmit({
       success: function(response) {
         $pageListContainer.html(response);
-        $pageListContainer.removeClass('loading');
+        $searchInput.removeClass('loading-input');
       }
     });
   }

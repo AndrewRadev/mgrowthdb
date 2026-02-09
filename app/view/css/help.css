@@ -1,6 +1,6 @@
 .help-page-index {
   .highlight {
-    background-color: #fafa44;
+    background-color: var(--light-blue);
   }
 
   .page-list-container {
@@ -20,6 +20,10 @@
     font-style: italic;
     opacity: 0.8;
     margin-top: 6px;
+  }
+
+  .loading-input {
+    background: url(/static/images/loader.svg) no-repeat right 10px center, var(--light-blue);
   }
 }
 

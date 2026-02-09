@@ -30,12 +30,18 @@
 
       <h2>Basic information</h2>
 
-      <p class="small">
-        {% if study.url: %}
-          <strong>Publication URL</strong>: {{ study.url|external_link }}
-          <br>
-        {% endif %}
+      {% if study.url: %}
+        <p class="small">
+          <strong>Publication</strong>: {{ study.url|external_link }}
 
+          {% if study.authors: %}
+            by {{ study.authors|author_link_list(limit=10) }}
+          {% endif %}
+
+        </p>
+      {% endif %}
+
+      <p class="small">
         <strong>Uploaded on</strong>
         {{ time_tag(study.createdAt, format="%Y-%m-%d") -}}
         {% if study.owner: %}
