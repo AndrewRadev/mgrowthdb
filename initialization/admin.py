@@ -33,6 +33,8 @@ from app.model.orm import (
     MeasurementTechnique,
     Metabolite,
     ModelingResult,
+    PageVisit,
+    PageVisitCounter,
     Perturbation,
     Project,
     ProjectUser,
@@ -53,6 +55,43 @@ def json_formatter(_view, data, _name):
     "Format JSON using ``simplejson`` with ``use_decimal=True``"
     return Markup(f"<pre>{json.dumps(data, indent=2, use_decimal=True)}</pre>")
 
+
+def json_page_visit_counter_formatter(_view, data, _name):
+    "Format nested JSON as an HTML table, specifically for Page Visit records"
+    sorted_entries = sorted(
+        ((k, v) for k, v in data.items() if v['visitCount'] > 0),
+        key=lambda pair: -pair[1]['visitCount'],
+    )
+
+    rows = []
+
+    for key, entry in sorted_entries:
+        rows.append(f"""
+            <tr>
+              <td>{key}</td>
+              <td>{entry['visitCount']}</td>
+              <td>{entry['visitorCount']}</td>
+              <td>{entry['userCount']}</td>
+            </tr>
+        """)
+
+    html = f"""
+        <table style="font-size: 14px;">
+          <thead>
+            <tr>
+              <th>Key ({len(sorted_entries)})</th>
+              <th>Visits</th>
+              <th>Visitors</th>
+              <th>Users</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"\n".join(rows)}
+          </tbody>
+        </table>
+    """
+
+    return Markup(html)
 
 def record_formatter(_view, record, *args):
     "Format ORM records to make them easier to read"
@@ -147,10 +186,15 @@ class AppView(ModelView):
     can_export       = True
     can_view_details = True
 
+    # By default, sort by id DESC, so the newest records show up first. This is
+    # overridden below for the three records that use "publicId" as the primary
+    # key.
+    column_default_sort = ('id', True)
+
     model_form_converter = AppModelConverter
     "Custom converter for JSON and datetime"
 
-    def prettify_name(self, name):
+    def _prettify_name(self, name):
         "Overridden to render camelCased strings nicely in various places"
         return humanize_camelcased_string(name).title()
 
@@ -190,12 +234,16 @@ def init_admin(app):
     class StudyView(AppView):
         column_searchable_list = ['name']
         column_exclude_list = ['description']
+        column_default_sort = ('publicId', True)
         form_excluded_columns = [
             'measurements', 'measurementContexts', 'studyTechniques', 'measurementTechniques',
             'studyUsers', 'experiments', 'strains', 'communities', 'compartments',
             'modelingResults', 'bioreplicates',
             'studyMetabolites', 'metabolites',
         ]
+
+    class ProjectView(AppView):
+        column_default_sort = ('publicId', True)
 
     class SubmissionView(AppView):
         column_exclude_list = ['studyDesign', 'dataFile']
@@ -223,7 +271,7 @@ def init_admin(app):
                 download_name=file.filename
             )
 
-    admin.add_view(AppView(Project,                 db_session, category="Studies"))
+    admin.add_view(ProjectView(Project,             db_session, category="Studies"))
     admin.add_view(StudyView(Study,                 db_session, category="Studies"))
     admin.add_view(SubmissionView(Submission,       db_session, category="Studies"))
     admin.add_view(SubmissionView(SubmissionBackup, db_session, category="Studies"))
@@ -243,8 +291,10 @@ def init_admin(app):
             'measurementContexts',
             'measurements',
         ]
+    class ExperimentView(ExperimentEntityView):
+        column_default_sort = ('publicId', True)
 
-    admin.add_view(ExperimentEntityView(Experiment,            db_session, category="Experiments"))
+    admin.add_view(ExperimentView(Experiment,                  db_session, category="Experiments"))
     admin.add_view(ExperimentEntityView(ExperimentCompartment, db_session, category="Experiments"))
     admin.add_view(ExperimentEntityView(Compartment,           db_session, category="Experiments"))
     admin.add_view(ExperimentEntityView(Bioreplicate,          db_session, category="Experiments"))
@@ -280,8 +330,25 @@ def init_admin(app):
             'projectUsers', 'studyUsers',
         ]
 
-    admin.add_view(UserView(User,       db_session, category="Users"))
-    admin.add_view(AppView(StudyUser,   db_session, category="Users"))
-    admin.add_view(AppView(ProjectUser, db_session, category="Users"))
+    class PageVisitView(AppView):
+        column_list = [
+            'createdAt',
+            'path', 'parsedQuery',
+            'userAgent', 'ip', 'country',
+            'uuid', 'isBot', 'isUser', 'isAdmin',
+        ]
+        column_filters = ['isBot', 'isUser', 'isAdmin', 'country']
+
+    class PageVisitCounterView(AppView):
+        column_type_formatters = {
+            **_FORMATTERS,
+            dict: json_page_visit_counter_formatter,
+        }
+
+    admin.add_view(UserView(User,                         db_session, category="Users"))
+    admin.add_view(AppView(StudyUser,                     db_session, category="Users"))
+    admin.add_view(AppView(ProjectUser,                   db_session, category="Users"))
+    admin.add_view(PageVisitView(PageVisit,               db_session, category="Users"))
+    admin.add_view(PageVisitCounterView(PageVisitCounter, db_session, category="Users"))
 
     return app
