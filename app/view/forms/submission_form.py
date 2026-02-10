@@ -21,13 +21,14 @@ from app.model.orm import (
 #
 DEFAULT_STUDY_DESIGN = {
     'project': {
-        'name': None,
+        'name':        None,
         'description': None,
     },
     'study': {
         'name':             None,
         'description':      None,
         'url':              None,
+        'authors':          {},
         'embargoExpiresAt': None,
     },
 

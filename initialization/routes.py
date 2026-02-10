@@ -50,6 +50,12 @@ def init_routes(app):
     app.add_url_rule("/upload/7", view_func=upload_pages.upload_step7_page, methods=["GET", "POST"])
 
     app.add_url_rule(
+        "/upload/fetch-authors/",
+        view_func=upload_pages.upload_authors_json,
+        methods=["POST"],
+    )
+
+    app.add_url_rule(
         "/upload/new_submission/",
         view_func=submission_pages.new_submission_action,
         methods=["POST"],
@@ -65,7 +71,11 @@ def init_routes(app):
         methods=["POST"],
     )
 
-    app.add_url_rule("/upload/data_template.xlsx", view_func=upload_pages.download_data_template_xlsx, methods=["POST"])
+    app.add_url_rule(
+        "/upload/data_template.xlsx",
+        view_func=upload_pages.download_data_template_xlsx,
+        methods=["POST"],
+    )
     app.add_url_rule(
         "/upload/spreadsheet_preview/",
         view_func=upload_pages.upload_spreadsheet_preview_fragment,

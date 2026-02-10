@@ -56,6 +56,27 @@ def upload_step1_page():
     )
 
 
+def upload_authors_json():
+    authors = [
+        {
+            "ORCID": "https://orcid.org/0000-0001-8394-3802",
+            "given": "Eric W",
+            "family": "Sayers",
+            "sequence": "first"
+        },
+        {
+            "given": "Jeffrey",
+            "family": "Beck",
+            "sequence": "additional"
+        },
+    ]
+
+    return {
+        'studyName': 'Example',
+        'authorsHtml': render_template('pages/upload/step1/_authors.html', authors=authors)
+    }
+
+
 def upload_step2_page():
     submission_form = _init_submission_form(step=2)
     upload_form     = _init_upload_form(UploadStep2Form, submission_form.submission)

@@ -4,6 +4,28 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
   $step1.on('change', '.js-project-select', function() { updateProjectFields(); });
   $step1.on('change', '.js-study-select', function() { updateStudyFields(); });
 
+  $step1.on('click', '.js-fetch-authors', function() {
+    let url = ($step1.find('input[name=study_url]').val() || '').trim();
+
+    let $authors   = $step1.find('.js-authors');
+    let $studyName = $step1.find('input[name=study_name]');
+
+    $.ajax({
+      url: '/upload/fetch-authors',
+      method: 'POST',
+      dataType: 'json',
+      data: {'doi': url},
+      success: function(response) {
+        $authors.html(response.authorsHtml);
+
+        let existingStudyName = ($studyName.val() || '').trim();
+        if (existingStudyName.length == 0) {
+          $studyName.val(response.studyName);
+        }
+      }
+    });
+  });
+
   function updateProjectFields() {
     let $select = $form.find('.js-project-select');
     let $option = $select.find('option:selected');

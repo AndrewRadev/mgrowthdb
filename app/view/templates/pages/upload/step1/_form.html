@@ -23,6 +23,39 @@
       </ul>
     {% endif %}
 
+    <div>
+      <h3>Publication (optional)</h3>
+
+      <p class="help">
+        If your data is published, please enter a DOI and click "fetch authors",
+        so we can detect the authors of the study. You can also update this
+        later in a follow-up submission.
+      </p>
+    </div>
+
+    <div class="form-row">
+      <label class="full">
+        <span>Study publication DOI:</span>
+        <input
+            type="text"
+            name="study_url"
+            value="{{ submission.studyDesign['study']['url'] or '' }}"
+            class="form-input-full form-input-blue {{ "error" if submission_form.has_error('study_name') }}"
+            placeholder="Example: https://doi.org/10.1000/182" />
+      </label>
+
+      <div class="no-label">
+        <button type="button" class="green-button js-fetch-authors">
+          Fetch authors
+        </button>
+      </div>
+    </div>
+
+    <div class="js-authors">
+      {% set authors = submission.studyDesign['study']['authors'] %}
+      {% include 'pages/upload/step1/_authors.html' %}
+    </div>
+
     <div class="columns">
       <div class="column project-column">
         <h3>Project</h3>
@@ -127,17 +160,6 @@
                 name="study_description"
                 placeholder="Example: Bacterial strains A, B, and C were growth in conditions D and E. Co-cultures and monocultures of each strains were studied. Growth, pH, metabolites were measured with F, G and H methods."
                 class="form-input-full form-input-blue">{{ submission.studyDesign['study']['description'] or '' }}</textarea>
-        </div>
-
-        <div class="form-row">
-          <label class="full">
-            <span>Study publication URL:</span>
-            <input
-                type="url"
-                name="study_url"
-                value="{{ submission.studyDesign['study']['url'] or '' }}"
-                class="form-input-full form-input-blue {{ "error" if submission_form.has_error('study_name') }}"
-                placeholder="Example: https://doi.org/10.1000/182" />
         </div>
 
         <div class="form-row">
