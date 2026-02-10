@@ -11,7 +11,7 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
     let $studyName = $step1.find('input[name=study_name]');
 
     $.ajax({
-      url: '/upload/fetch-authors',
+      url: '/upload/fetch-authors/',
       method: 'POST',
       dataType: 'json',
       data: {'doi': url},

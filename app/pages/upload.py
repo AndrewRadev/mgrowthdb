@@ -18,6 +18,7 @@ from app.model.lib.submission_process import (
 )
 from app.model.lib.errors import LoginRequired
 from app.model.lib.util import is_ajax
+from app.model.lib.crossref_fetcher import CrossrefFetcher
 from app.view.forms.submission_form import SubmissionForm
 from app.view.forms.upload_step2_form import UploadStep2Form
 from app.view.forms.upload_step3_form import UploadStep3Form
@@ -57,24 +58,18 @@ def upload_step1_page():
 
 
 def upload_authors_json():
-    authors = [
-        {
-            "ORCID": "https://orcid.org/0000-0001-8394-3802",
-            "given": "Eric W",
-            "family": "Sayers",
-            "sequence": "first"
-        },
-        {
-            "given": "Jeffrey",
-            "family": "Beck",
-            "sequence": "additional"
-        },
-    ]
+    fetcher = CrossrefFetcher(request.form['doi'])
 
-    return {
-        'studyName': 'Example',
-        'authorsHtml': render_template('pages/upload/step1/_authors.html', authors=authors)
-    }
+    try:
+        fetcher.make_request()
+
+        return {
+            'studyName': 'TODO',
+            'authorCache': fetcher.author_cache,
+            'authorsHtml': render_template('pages/upload/step1/_authors.html', authors=fetcher.authors)
+        }
+    except ValueError as e:
+        return {'error': e.message}
 
 
 def upload_step2_page():
