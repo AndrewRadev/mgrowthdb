@@ -64,7 +64,8 @@ def upload_authors_json():
         fetcher.make_request()
 
         return {
-            'studyName': 'TODO',
+            'studyName':   fetcher.title,
+            'authors':     fetcher.authors,
             'authorCache': fetcher.author_cache,
             'authorsHtml': render_template('pages/upload/step1/_authors.html', authors=fetcher.authors)
         }

@@ -7,7 +7,7 @@ from app.model.lib.crossref_fetcher import CrossrefFetcher
 
 
 class TestCrossrefFetcher(unittest.TestCase):
-    def test_fetching_authors_by_doi(self):
+    def test_fetching_authors(self):
         expected_authors = [{
             "ORCID": "https://orcid.org/0000-0001-8394-3802",
             "given": "Eric W",
@@ -30,6 +30,7 @@ class TestCrossrefFetcher(unittest.TestCase):
 
             self.assertEqual(fetcher.authors, expected_authors)
             self.assertEqual(fetcher.author_cache, 'sayers, beck')
+            self.assertEqual(fetcher.title, '')
 
             m.get('https://api.crossref.org/works/nonexistent', status_code=404)
 
@@ -37,6 +38,23 @@ class TestCrossrefFetcher(unittest.TestCase):
             with self.assertRaises(ValueError):
                 fetcher = CrossrefFetcher(doi='nonexistent')
                 fetcher.make_request()
+
+    def test_fetching_study_title(self):
+        expected_authors = []
+
+        with requests_mock.Mocker() as m:
+            m.get('https://api.crossref.org/works/abc', json={
+                "status": "ok",
+                "message": {"title": ["Test study"], "author": []}
+            })
+
+            fetcher = CrossrefFetcher(doi='abc')
+            fetcher.make_request()
+
+            self.assertEqual(fetcher.authors, [])
+            self.assertEqual(fetcher.author_cache, '')
+            self.assertEqual(fetcher.title, 'Test study')
+
 
 if __name__ == '__main__':
     unittest.main()

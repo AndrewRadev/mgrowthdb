@@ -26,7 +26,7 @@
     <div>
       <h3>Publication (optional)</h3>
 
-      <p class="help">
+      <p class="help small">
         If your data is published, please enter a DOI and click "fetch authors",
         so we can detect the authors of the study. You can also update this
         later in a follow-up submission.
@@ -37,7 +37,7 @@
       <label class="full">
         <span>Study publication DOI:</span>
         <input
-            type="text"
+            type="url"
             name="study_url"
             value="{{ submission.studyDesign['study']['url'] or '' }}"
             class="form-input-full form-input-blue {{ "error" if submission_form.has_error('study_name') }}"
@@ -53,6 +53,7 @@
 
     <div class="js-authors">
       {% set authors = submission.studyDesign['study']['authors'] %}
+      {% set authorCache = submission.studyDesign['study']['authorCache'] %}
       {% include 'pages/upload/step1/_authors.html' %}
     </div>
 

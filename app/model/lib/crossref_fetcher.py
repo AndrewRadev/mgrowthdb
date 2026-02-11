@@ -1,3 +1,4 @@
+import json
 import requests
 
 
@@ -21,5 +22,9 @@ class CrossrefFetcher:
         if response_json["status"] != "ok":
             raise ValueError(f"Response was unsuccessful:\n{json.dumps(response_json, indent=2)}")
 
-        self.authors      = response_json.get("message", {}).get("author", [])
+        message_field = response_json.get("message", {})
+        title_field   = message_field.get("title", [])
+
+        self.title        = title_field[0] if len(title_field) else ''
+        self.authors      = message_field.get("author", [])
         self.author_cache = ', '.join([a['family'].lower() for a in self.authors])
