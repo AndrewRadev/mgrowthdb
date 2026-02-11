@@ -33,12 +33,14 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
 
         $authors.html(response.authorsHtml);
 
-        $authorsInput.val(JSON.stringify(response.authors));
-        $authorsCacheInput.val(response.authorCache);
+        if (response.authors) {
+          $authorsInput.val(JSON.stringify(response.authors));
+          $authorsCacheInput.val(response.authorCache);
 
-        let existingStudyName = ($studyName.val() || '').trim();
-        if (existingStudyName.length == 0 && response.studyName.length > 0) {
-          $studyName.val(response.studyName);
+          let existingStudyName = ($studyName.val() || '').trim();
+          if (existingStudyName.length == 0 && response.studyName.length > 0) {
+            $studyName.val(response.studyName);
+          }
         }
       }
     });

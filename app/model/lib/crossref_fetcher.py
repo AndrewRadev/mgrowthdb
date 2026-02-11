@@ -14,13 +14,15 @@ class CrossrefFetcher:
         crossref_url = f"https://api.crossref.org/works/{self.doi}"
         response = requests.get(crossref_url)
 
+        if response.status_code == 404:
+            raise ValueError(f"Couldn't find publication")
         if response.status_code != 200:
-            raise ValueError(f"Response was unsuccessful: Status {response.status_code}")
+            raise ValueError(f"Couldn't reach Crossref API (Status {response.status_code})")
 
         response_json = response.json()
 
         if response_json["status"] != "ok":
-            raise ValueError(f"Response was unsuccessful:\n{json.dumps(response_json, indent=2)}")
+            raise ValueError(f"The Crossref API didn't return a successful result")
 
         message_field = response_json.get("message", {})
         title_field   = message_field.get("title", [])

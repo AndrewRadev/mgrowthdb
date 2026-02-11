@@ -70,7 +70,9 @@ def upload_authors_json():
             'authorsHtml': render_template('pages/upload/step1/_authors.html', authors=fetcher.authors)
         }
     except ValueError as e:
-        return {'error': e.message}
+        return {
+            'authorsHtml': render_template('pages/upload/step1/_authors.html', error=str(e)),
+        }
 
 
 def upload_step2_page():
