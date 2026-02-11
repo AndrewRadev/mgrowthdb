@@ -9,7 +9,7 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
     let $url = $step1.find('input[name=study_url]');
     let doi = ($url.val() || '').trim();
 
-    if (!/^https\?:\/\//.test(doi)) {
+    if (!/^https?:\/\//.test(doi)) {
       $url.val(`https://doi.org/${doi}`);
     }
 
