@@ -55,6 +55,26 @@ class TestCrossrefFetcher(unittest.TestCase):
             self.assertEqual(fetcher.author_cache, '')
             self.assertEqual(fetcher.title, 'Test study')
 
+    def test_error_handling(self):
+        with requests_mock.Mocker() as m:
+            m.get('https://api.crossref.org/works/doi1', status_code=404)
+            with self.assertRaises(ValueError) as e:
+                fetcher = CrossrefFetcher(doi='doi1')
+                fetcher.make_request()
+                self.assertEqual(str(e), "Couldn't find publication")
+
+            m.get('https://api.crossref.org/works/doi2', status_code=500)
+            with self.assertRaises(ValueError) as e:
+                fetcher = CrossrefFetcher(doi='doi2')
+                fetcher.make_request()
+                self.assertEqual(str(e), "Couldn't reach Crossref API (Status 500)")
+
+            m.get('https://api.crossref.org/works/doi3', status_code=200, json={"status": "error"})
+            with self.assertRaises(ValueError) as e:
+                fetcher = CrossrefFetcher(doi='doi3')
+                fetcher.make_request()
+                self.assertEqual(str(e), "The Crossref API didn't return a successful result")
+
 
 if __name__ == '__main__':
     unittest.main()
