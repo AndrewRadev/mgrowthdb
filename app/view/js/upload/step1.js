@@ -10,7 +10,7 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
     let doi = ($url.val() || '').trim();
 
     if (!/^https?:\/\//.test(doi)) {
-      $url.val(`https://doi.org/${doi}`);
+      $url.animateVal(`https://doi.org/${doi}`);
     }
 
     let $authorsInput      = $step1.find('input[name=authors]');
@@ -39,7 +39,7 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
 
           let existingStudyName = ($studyName.val() || '').trim();
           if (existingStudyName.length == 0 && response.studyName.length > 0) {
-            $studyName.val(response.studyName);
+            $studyName.animateVal(response.studyName);
           }
         }
       }
@@ -54,11 +54,11 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
     let $description = $form.find('textarea[name=project_description]');
 
     if ($option.val() == '_new') {
-      $name.val('');
-      $description.val('');
+      $name.animateVal('');
+      $description.animateVal('');
     } else {
-      $name.val($option.data('name'));
-      $description.val($option.data('description'));
+      $name.animateVal($option.data('name'));
+      $description.animateVal($option.data('description'));
     }
 
     // If the selected study is not in this project, reset the study form
@@ -80,11 +80,11 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
     let $description = $form.find('textarea[name=study_description]');
 
     if ($option.val() == '_new') {
-      $name.val('');
-      $description.val('');
+      $name.animateVal('');
+      $description.animateVal('');
     } else {
-      $name.val($option.data('name'));
-      $description.val($option.data('description'));
+      $name.animateVal($option.data('name'));
+      $description.animateVal($option.data('description'));
     }
 
     // If the selected project is not the parent of this study, find it in the project form
