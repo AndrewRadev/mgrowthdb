@@ -67,8 +67,15 @@ function initCompareButtons($page) {
     let $wrapper   = $button.parents('.js-uncompare');
     let $container = $button.parents('.js-compare-container');
 
-    let contextIds = $container.data('contextIds').toString().split(',');
-    let modelIds   = $container.data('modelIds').toString().split(',');
+    let contextIds = [];
+    let modelIds   = [];
+
+    if ($container.data('contextIds')) {
+      contextIds = $container.data('contextIds').toString().split(',');
+    }
+    if ($container.data('modelIds')) {
+      modelIds = $container.data('modelIds').toString().split(',');
+    }
 
     updateCompareData('remove', contextIds, modelIds, function(compareData) {
       // Hide "uncompare" section, show "compare" button
