@@ -26,6 +26,8 @@
     color: rgba(7, 25, 82, 0.6);
     font-weight: 400;
 
+    transition: 250ms background-color;
+
     .count {
       margin-left: 4px;
       color: rgba(7, 25, 82, 0.6);
