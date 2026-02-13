@@ -18,6 +18,7 @@ from app.model.lib.submission_process import (
 )
 from app.model.lib.errors import LoginRequired
 from app.model.lib.util import is_ajax
+from app.model.lib.crossref_fetcher import CrossrefFetcher
 from app.view.forms.submission_form import SubmissionForm
 from app.view.forms.upload_step2_form import UploadStep2Form
 from app.view.forms.upload_step3_form import UploadStep3Form
@@ -54,6 +55,33 @@ def upload_step1_page():
         "pages/upload/index.html",
         submission_form=submission_form,
     )
+
+
+def upload_authors_json():
+    _require_user()
+    fetcher = CrossrefFetcher(request.form['doi'])
+
+    try:
+        fetcher.make_request()
+
+        return {
+            'doi':         fetcher.doi,
+            'studyName':   fetcher.title,
+            'authors':     fetcher.authors,
+            'authorCache': fetcher.author_cache,
+            'authorsHtml': render_template('pages/upload/step1/_authors.html', authors=fetcher.authors)
+        }
+    except ValueError as e:
+        return {
+            'authorsHtml': render_template('pages/upload/step1/_authors.html', error=str(e)),
+        }
+
+
+def upload_preview_fragment():
+    _require_user()
+    text = request.form.get('text', '').strip()
+
+    return render_template('pages/upload/step1/_preview.html', text=text)
 
 
 def upload_step2_page():
@@ -266,6 +294,11 @@ def upload_step7_page():
         "pages/upload/index.html",
         submission_form=submission_form,
     )
+
+
+def _require_user():
+    if g.current_user is None:
+        raise LoginRequired()
 
 
 def _init_submission_form(step):

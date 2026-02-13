@@ -14,21 +14,21 @@
       </li>
       <li class="complete">
         <span class="icon"></span>
-        <span>Project unique ID:</span>
-        <code class="inline">{{ submission.projectUniqueID }}</code>
-      </li>
-      <li class="complete">
-        <span class="icon"></span>
         <span>Study name:</span>
         <span class="truncate">
           <strong>{{ submission.studyDesign['study']['name'] }}</strong>
         </span>
       </li>
-      <li class="complete">
-        <span class="icon"></span>
-        <span>Study unique ID:</span>
-        <code class="inline">{{ submission.studyUniqueID }}</code>
-      </li>
+
+      {% if submission.studyDesign['study']['authors']: %}
+        <li class="complete">
+          <span class="icon"></span>
+          <span>Authors:</span>
+          <span class="truncate">
+            <strong>{{ submission.studyDesign['study']['authors']|author_link_list }}</strong>
+          </span>
+        </li>
+      {% endif %}
 
     {% else %}
 

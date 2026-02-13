@@ -111,11 +111,7 @@ function updateCompareData(action, contexts, models, successCallback) {
 
       let $sidebarCompareItem = $(document).find('.js-sidebar-compare');
       $sidebarCompareItem.find('.js-count').html(countText);
-
-      $sidebarCompareItem.addClass('highlight');
-      setTimeout(function() {
-        $sidebarCompareItem.removeClass('highlight');
-      }, 500);
+      $sidebarCompareItem.animateClass('highlight', 500);
 
       successCallback(compareData)
     },

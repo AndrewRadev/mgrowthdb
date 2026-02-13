@@ -1,0 +1,5 @@
+{% if text and text != '': %}
+  {{ text|format_text }}
+{% else: %}
+  <div class="help">Update the description to see how it would look when published.</div>
+{% endif %}

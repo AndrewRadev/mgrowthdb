@@ -10,6 +10,10 @@
   opacity: 0.5;
 }
 
+.loading-input {
+  background: url(/static/images/loader.svg) no-repeat right 10px center, var(--light-blue);
+}
+
 .full {
   width: 100%;
 }

@@ -1,4 +1,14 @@
 .upload-page {
+  .form-input-blue {
+    transition: color var(--transition-length) ease;
+    transition: background-color var(--transition-length) ease;
+
+    &.highlight {
+      color: var(--dark-blue);
+      background-color: var(--sidebar-hover-color);
+    }
+  }
+
   .user-submissions {
     ul {
       padding-left: 0;
@@ -79,8 +89,12 @@
   }
 
   .step-1 {
-    .column {
-      width: 50%;
+    .text-preview {
+      line-height: 1.5;
+
+      p:first-child {
+        margin-top: 0;
+      }
     }
   }
 

@@ -1,3 +1,4 @@
+import json
 import copy
 import itertools
 from uuid import uuid4
@@ -21,13 +22,15 @@ from app.model.orm import (
 #
 DEFAULT_STUDY_DESIGN = {
     'project': {
-        'name': None,
+        'name':        None,
         'description': None,
     },
     'study': {
         'name':             None,
         'description':      None,
         'url':              None,
+        'authors':          [],
+        'authorCache':      None,
         'embargoExpiresAt': None,
     },
 
@@ -109,7 +112,9 @@ class SubmissionForm:
             'name':             data['study_name'],
             'description':      data.get('study_description', ''),
             'url':              data.get('study_url', ''),
-            'embargoExpiresAt': data.get('embargo_expires_at', None)
+            'authors':          json.loads(data.get('authors', '[]')),
+            'authorCache':      data.get('authorCache', ''),
+            'embargoExpiresAt': data.get('embargo_expires_at', None),
         }
 
         # Validate uniqueness:
