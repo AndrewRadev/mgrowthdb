@@ -76,34 +76,6 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
     });
   }
 
-  function updateProjectFields() {
-    let $select = $form.find('.js-project-select');
-    let $option = $select.find('option:selected');
-
-    let $name        = $form.find('input[name=project_name]');
-    let $description = $form.find('textarea[name=project_description]');
-
-    if ($option.val() == '_new') {
-      $name.animateVal('');
-      $description.animateVal('');
-    } else {
-      $name.animateVal($option.data('name'));
-      $description.animateVal($option.data('description'));
-    }
-
-    // If the selected study is not in this project, reset the study form
-    if ($option.val() != '_new') {
-      let selectedStudyUuid = $form.find('.js-study-select option:selected').val();
-      let projectStudies = $option.data('studyUuids');
-
-      if (!projectStudies.includes(selectedStudyUuid)) {
-        $form.find('.js-study-select').val('_new').trigger('change');
-      }
-    }
-
-    updatePreview($projectDescription, $projectPreview);
-  }
-
   function updateStudyFields() {
     let $select = $form.find('.js-study-select');
     let $option = $select.find('option:selected');
@@ -131,4 +103,33 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
 
     updatePreview($studyDescription, $studyPreview);
   }
+
+  function updateProjectFields() {
+    let $select = $form.find('.js-project-select');
+    let $option = $select.find('option:selected');
+
+    let $name        = $form.find('input[name=project_name]');
+    let $description = $form.find('textarea[name=project_description]');
+
+    if ($option.val() == '_new') {
+      $name.animateVal('');
+      $description.animateVal('');
+    } else {
+      $name.animateVal($option.data('name'));
+      $description.animateVal($option.data('description'));
+    }
+
+    // If the selected study is not in this project, reset the study form
+    if ($option.val() != '_new') {
+      let selectedStudyUuid = $form.find('.js-study-select option:selected').val();
+      let projectStudies = $option.data('studyUuids') || [];
+
+      if (!projectStudies.includes(selectedStudyUuid)) {
+        $form.find('.js-study-select').val('_new').trigger('change');
+      }
+    }
+
+    updatePreview($projectDescription, $projectPreview);
+  }
+
 });

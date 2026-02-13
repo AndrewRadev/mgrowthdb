@@ -76,7 +76,7 @@
                 value="{{ study.uuid }}"
                 {{ "selected" if study.uuid == submission.studyUniqueID }}
                 data-name="{{ study.name }}"
-                data-description="{{ study.description }}"
+                data-description="{{ study.description or '' }}"
                 data-project-uuid="{{ study.projectUuid }}">
               [{{ study.publicId }}] {{ study.name|truncate(50) }}
             </option>
