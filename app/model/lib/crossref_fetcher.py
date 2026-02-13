@@ -27,6 +27,9 @@ class CrossrefFetcher:
         message_field = response_json.get("message", {})
         title_field   = message_field.get("title", [])
 
+        if canonical_doi := message_field.get("DOI"):
+            self.doi = f"https://doi.org/{canonical_doi}"
+
         self.title        = title_field[0] if len(title_field) else ''
         self.authors      = message_field.get("author", [])
         self.author_cache = ', '.join([a['family'].lower() for a in self.authors])

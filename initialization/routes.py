@@ -54,6 +54,11 @@ def init_routes(app):
         view_func=upload_pages.upload_authors_json,
         methods=["POST"],
     )
+    app.add_url_rule(
+        "/upload/preview-text/",
+        view_func=upload_pages.upload_preview_fragment,
+        methods=["POST"],
+    )
 
     app.add_url_rule(
         "/upload/new_submission/",

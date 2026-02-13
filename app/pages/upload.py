@@ -58,12 +58,14 @@ def upload_step1_page():
 
 
 def upload_authors_json():
+    _require_user()
     fetcher = CrossrefFetcher(request.form['doi'])
 
     try:
         fetcher.make_request()
 
         return {
+            'doi':         fetcher.doi,
             'studyName':   fetcher.title,
             'authors':     fetcher.authors,
             'authorCache': fetcher.author_cache,
@@ -73,6 +75,13 @@ def upload_authors_json():
         return {
             'authorsHtml': render_template('pages/upload/step1/_authors.html', error=str(e)),
         }
+
+
+def upload_preview_fragment():
+    _require_user()
+    text = request.form.get('text', '').strip()
+
+    return render_template('pages/upload/step1/_preview.html', text=text)
 
 
 def upload_step2_page():
@@ -285,6 +294,11 @@ def upload_step7_page():
         "pages/upload/index.html",
         submission_form=submission_form,
     )
+
+
+def _require_user():
+    if g.current_user is None:
+        raise LoginRequired()
 
 
 def _init_submission_form(step):
