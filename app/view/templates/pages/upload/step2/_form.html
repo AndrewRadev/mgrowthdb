@@ -13,7 +13,7 @@
   <p>
     <form
         class="simple-form"
-        action="{{ url_for('upload_step2_page') }}"
+        action="{{ url_for('upload_step2_page', id=submission_form.submission.id) }}"
         method="POST">
 
       {{ upload_form.csrf_token }}

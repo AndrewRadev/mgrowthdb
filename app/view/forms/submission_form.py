@@ -46,7 +46,7 @@ DEFAULT_STUDY_DESIGN = {
 
 
 class SubmissionForm:
-    def __init__(self, submission_id=None, step=0, db_session=None, user_uuid=None):
+    def __init__(self, submission_id=None, step=0, db_session=None, study_uuid=None, user_uuid=None):
         self.step       = step
         self.db_session = db_session
         self.errors     = []
@@ -69,11 +69,25 @@ class SubmissionForm:
                 studyDesign=copy.deepcopy(DEFAULT_STUDY_DESIGN),
             )
 
+        if study_uuid:
+            # A specific study has been selected, so set it for the form to be
+            # pre-filled:
+            if study_uuid == '_new':
+                self.submission.studyUniqueID = None
+                self.submission.projectUniqueID = None
+            else:
+                self.submission.studyUniqueID = study_uuid
+
         # Check for an existing project/study and set the submission "type" accordingly:
         self.project_id = self._find_project_id()
         self.study_id   = self._find_study_id()
         self.user_uuid  = user_uuid
         self.type       = self._determine_project_type()
+
+        if self.type == 'update_study':
+            if study := self.db_session.get(Study, self.study_id):
+                if previous_submission := study.lastSubmission:
+                    self.submission.studyDesign = previous_submission.studyDesign
 
     def update_project(self, data):
         # Update IDs:
