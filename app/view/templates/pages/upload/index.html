@@ -85,13 +85,36 @@
         {{ render_user_submissions(user_submissions, submission) }}
       {% endif %}
 
-      <br>
+      {% if submission_form.step == 0: %}
+        <p class="help small">
+          Select one from the list to submit an
+          update to it, or pick "New study" to start a fresh upload.
+        </p>
 
-      <div class="flex-row">
-        {{ post_button("New submission", url_for('new_submission_action'), class="flex-right") }}
-      </div>
+        <form action="{{ url_for('upload_status_page') }}" method="POST">
+          <div class="form-row flex-row flex-gap-10">
+            <select
+                name="study_uuid"
+                id="study_uuid"
+                class="form-input-blue full js-study-select">
+              <option
+                  value="_new"
+                  data-name="{{ submission.studyDesign['study']['name'] or '' }}"
+                  data-description="{{ submission.studyDesign['study']['description'] or '' }}">
+              New study
+              </option>
 
-      <br>
+              {% for study in g.current_user.managedStudies: %}
+                <option value="{{ study.uuid }}" >
+                [{{ study.publicId }}] {{ study.name|truncate(80) }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <input class="green-button" type="submit" value="New submission" />
+          </div>
+        </form>
+      {% endif %}
 
       {% if submission.id is none: %}
         <p class="help">
@@ -101,6 +124,7 @@
           {% endif %}
         </p>
       {% else: %}
+        <br>
         <div class="upload-steps">
           <div class="step-content step-1 {{ submission_form.html_step_classes(1) }}">
             {% call section_link(submission_form.step, 1, url_for('upload_step1_page', id=submission.id)) %}

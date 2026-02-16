@@ -60,9 +60,8 @@ class TestSubmissionProcess(DatabaseTest):
         self.assertEqual(study.name, 'Test study')
 
         # Updating the existing project and study:
-        submission_form.update_project({
+        submission_form.update_study_info({
             'project_uuid': self.submission.projectUniqueID,
-            'study_uuid':   self.submission.studyUniqueID,
             'study_name':   'Updated study name',
             'project_name': 'Updated project name',
         })

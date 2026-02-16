@@ -28,14 +28,13 @@ from app.view.forms.upload_step5_form import UploadStep5Form
 
 def upload_status_page():
     if request.method == 'POST':
-        submission_form = _create_submission_form(study_uuid=request.args['uuid'])
-    else:
-        submission_form = _load_submission_form(session.get('submission_id', None), step=0)
+        submission_form = _create_submission_form(study_uuid=request.form.get('study_uuid'))
+        submission_form.save()
 
-    if g.current_user and g.current_user.uuid:
-        user_submissions = g.current_user.submissions
-    else:
-        user_submissions = None
+        return redirect(url_for('upload_step1_page', id=submission_form.submission.id))
+
+    submission_form = _load_submission_form(session.get('submission_id', None), step=0)
+    user_submissions = g.current_user.submissions if g.current_user else []
 
     return render_template(
         "pages/upload/index.html",
@@ -48,7 +47,7 @@ def upload_step1_page(id):
     submission_form = _load_submission_form(id, step=1)
 
     if request.method == 'POST':
-        submission_form.update_project(request.form)
+        submission_form.update_study_info(request.form)
 
         if len(submission_form.errors) == 0:
             session['submission_id'] = submission_form.save()
@@ -308,35 +307,27 @@ def _create_submission_form(study_uuid):
     if g.current_user is None:
         raise LoginRequired()
 
-    if g.current_user:
-        user_uuid = g.current_user.uuid
-    else:
-        user_uuid = None
-
-    return SubmissionForm(
-        None,
-        step=0,
+    submission_form = SubmissionForm(
+        submission_id=None,
         db_session=g.db_session,
         study_uuid=study_uuid,
-        user_uuid=user_uuid,
+        user_uuid=g.current_user.uuid,
     )
+    submission_form.init_from_existing_study()
+    submission_form.save()
+    session['submission_id'] = submission_form.submission.id
+
+    return submission_form
 
 
-def _load_submission_form(id, step):
-    if g.current_user is None and step != 0:
+def _load_submission_form(submission_id, step):
+    if g.current_user is None:
         raise LoginRequired()
 
-    if g.current_user:
-        user_uuid = g.current_user.uuid
-    else:
-        user_uuid = None
-
     return SubmissionForm(
-        id,
+        submission_id=submission_id,
         step=step,
         db_session=g.db_session,
-        study_uuid=request.args.get('uuid', None),
-        user_uuid=user_uuid,
     )
 
 

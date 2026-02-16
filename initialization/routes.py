@@ -61,11 +61,6 @@ def init_routes(app):
     )
 
     app.add_url_rule(
-        "/upload/new_submission/",
-        view_func=submission_pages.new_submission_action,
-        methods=["POST"],
-    )
-    app.add_url_rule(
         "/upload/edit_submission/<int:id>",
         view_func=submission_pages.edit_submission_action,
         methods=["POST"],

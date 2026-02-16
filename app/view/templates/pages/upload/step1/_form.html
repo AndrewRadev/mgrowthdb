@@ -16,15 +16,15 @@
       <h3>Publication (optional)</h3>
 
       <p class="help small">
-        If your data is published, please enter a DOI and click "fetch authors",
-        so we can detect the authors of the study. You can also update this
-        later in a follow-up submission.
+        If your data is published, please enter its DOI and click "Fetch
+        information", so we can find and attach the authors of the study. You can
+        also update this later in a follow-up submission.
       </p>
     </div>
 
     <div class="form-row">
       <label class="full">
-        <span>Study publication DOI:</span>
+        <span>Publication DOI:</span>
         <input
             type="url"
             name="study_url"
@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <div class="js-authors">
+    <div class="js-authors-preview">
       {% set authors = submission.studyDesign['study']['authors'] or [] %}
       {% set authorCache = submission.studyDesign['study']['authorCache'] or '' %}
       {% include 'pages/upload/step1/_authors.html' %}
@@ -52,39 +52,12 @@
       <p class="help small">
         Your study should describe a focused investigation on a particular
         research question. Each study may have contain multiple experiments
-        described in later steps. Select one from the list to update the
-        existing information.
+        described in later steps.
       </p>
     </div>
 
     <div class="form-row">
-      <label class="flex-1">
-        <span>Existing study:</span>
-        <select
-            name="study_uuid"
-            id="study_uuid"
-            class="form-input-blue form-input-full js-study-select">
-          <option
-              value="_new"
-              data-name="{{ submission.studyDesign['study']['name'] or '' }}"
-              data-description="{{ submission.studyDesign['study']['description'] or '' }}">
-            New study
-          </option>
-
-          {% for study in g.current_user.managedStudies: %}
-            <option
-                value="{{ study.uuid }}"
-                {{ "selected" if study.uuid == submission.studyUniqueID }}
-                data-name="{{ study.name }}"
-                data-description="{{ study.description or '' }}"
-                data-project-uuid="{{ study.projectUuid }}">
-              [{{ study.publicId }}] {{ study.name|truncate(50) }}
-            </option>
-          {% endfor %}
-        </select>
-      </label>
-
-      <label class="flex-2">
+      <label class="full">
         <span class="required">Study name:</span>
         <input
             type="text"

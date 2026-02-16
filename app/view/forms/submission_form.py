@@ -15,11 +15,6 @@ from app.model.orm import (
     SubmissionBackup
 )
 
-# The structure of a Submission's `studyDesign` field. Any parameters given to
-# the form will be merged with this as a default. Changing the structure here
-# will allow stored submissions to be reused and made compatible with the new
-# structure.
-#
 DEFAULT_STUDY_DESIGN = {
     'project': {
         'name':        None,
@@ -43,63 +38,64 @@ DEFAULT_STUDY_DESIGN = {
     'communities':    [],
     'experiments':    [],
 }
+"""
+The structure of a Submission's `studyDesign` field. Any parameters given to
+the form will be merged with this as a default. Changing the structure here
+will allow stored submissions to be reused and made compatible with the new
+structure.
+"""
 
 
 class SubmissionForm:
-    def __init__(self, submission_id=None, step=0, db_session=None, study_uuid=None, user_uuid=None):
+    def __init__(self, submission_id=None, step=0, db_session=None, user_uuid=None, study_uuid=None):
         self.step       = step
         self.db_session = db_session
         self.errors     = []
 
-        # Load submission object
-        self.submission = None
-        if submission_id is not None:
-            self.submission = self.db_session.get(Submission, submission_id)
+        self._default_study_design = copy.deepcopy(DEFAULT_STUDY_DESIGN)
 
-        if self.submission is not None:
+        if submission_id is not None:
+            # Find existing submission:
+            self.submission = self.db_session.get(Submission, submission_id)
             self.submission.studyDesign = {
-                **copy.deepcopy(DEFAULT_STUDY_DESIGN),
+                **self._default_study_design,
                 **self.submission.studyDesign,
             }
         else:
+            # Initialize a brand new submission:
             self.submission = Submission(
                 projectUniqueID=None,
-                studyUniqueID=None,
+                studyUniqueID=(study_uuid if study_uuid != '_new' else None),
                 userUniqueID=user_uuid,
-                studyDesign=copy.deepcopy(DEFAULT_STUDY_DESIGN),
+                studyDesign=self._default_study_design,
             )
-
-        if study_uuid:
-            # A specific study has been selected, so set it for the form to be
-            # pre-filled:
-            if study_uuid == '_new':
-                self.submission.studyUniqueID = None
-                self.submission.projectUniqueID = None
-            else:
-                self.submission.studyUniqueID = study_uuid
 
         # Check for an existing project/study and set the submission "type" accordingly:
         self.project_id = self._find_project_id()
         self.study_id   = self._find_study_id()
-        self.user_uuid  = user_uuid
-        self.type       = self._determine_project_type()
 
-        if self.type == 'update_study':
-            if study := self.db_session.get(Study, self.study_id):
-                if previous_submission := study.lastSubmission:
-                    self.submission.studyDesign = previous_submission.studyDesign
+    def init_from_existing_study(self):
+        if self.study_id is None:
+            return
 
-    def update_project(self, data):
+        if study := self.db_session.get(Study, self.study_id):
+            self.submission.projectUniqueID = study.project.uuid
+            self.project_id = self._find_project_id()
+
+            # Reuse its last published design:
+            if previous_submission := study.lastSubmission:
+                self.submission.studyDesign = {
+                    **self._default_study_design,
+                    **previous_submission.studyDesign,
+                }
+                self.submission.dataFileId = previous_submission.dataFileId
+
+    def update_study_info(self, data):
         # Update IDs:
         if data['project_uuid'] == '_new':
             self.submission.projectUniqueID = str(uuid4())
         else:
             self.submission.projectUniqueID = data['project_uuid']
-
-        if data['study_uuid'] == '_new':
-            self.submission.studyUniqueID = str(uuid4())
-        else:
-            self.submission.studyUniqueID = data['study_uuid']
 
         # If study to reuse has been given, copy its last submission's study
         # design:
@@ -134,10 +130,9 @@ class SubmissionForm:
         # Validate uniqueness:
         self._validate_unique_project_names()
 
-        # Check whether projects exist:
+        # Check whether project exists:
         self.project_id = self._find_project_id()
         self.study_id   = self._find_study_id()
-        self.type       = self._determine_project_type()
 
     def update_strains(self, data):
         # Existing strains
@@ -298,14 +293,6 @@ class SubmissionForm:
             sql.select(Study.publicId)
             .where(Study.uuid == self.submission.studyUniqueID)
         ).one_or_none()
-
-    def _determine_project_type(self):
-        if self.project_id and self.study_id:
-            return 'update_study'
-        elif self.project_id:
-            return 'new_study'
-        else:
-            return 'new_project'
 
     def _validate_unique_project_names(self):
         self.errors = {}
