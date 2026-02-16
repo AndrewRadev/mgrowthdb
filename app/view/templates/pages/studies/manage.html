@@ -22,16 +22,14 @@
         and choose to update this study.
       </p>
 
-      {% set lastSubmission = study.find_last_submission(g.db_session) %}
-
-      {% if lastSubmission: %}
+      {% if study.lastSubmission: %}
         <p class="help">
           You can also edit the latest submission that updated this study by
           clicking on this button:
         </p>
 
         <p>
-          {{ post_button("Edit submission", url_for('edit_submission_action', id=lastSubmission.id)) }}
+          {{ post_button("Edit submission", url_for('edit_submission_action', id=study.lastSubmission.id)) }}
         </p>
       {% endif %}
 

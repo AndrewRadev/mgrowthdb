@@ -18,5 +18,5 @@ with get_session() as db_session:
 
     for study in studies:
         with print_with_time(f"> Exporting study {study.publicId}"):
-            submission = study.find_last_submission(db_session)
+            submission = study.lastSubmission
             submission.export_data(message="Full export", timestamp=timestamp)
