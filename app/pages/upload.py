@@ -307,14 +307,11 @@ def _create_submission_form(study_uuid):
     if g.current_user is None:
         raise LoginRequired()
 
-    submission_form = SubmissionForm(
-        submission_id=None,
+    submission_form = SubmissionForm.create(
         db_session=g.db_session,
         study_uuid=study_uuid,
         user_uuid=g.current_user.uuid,
     )
-    submission_form.init_from_existing_study()
-    submission_form.save()
     session['submission_id'] = submission_form.submission.id
 
     return submission_form
@@ -324,10 +321,10 @@ def _load_submission_form(submission_id, step):
     if g.current_user is None:
         raise LoginRequired()
 
-    return SubmissionForm(
+    return SubmissionForm.load(
+        db_session=g.db_session,
         submission_id=submission_id,
         step=step,
-        db_session=g.db_session,
     )
 
 

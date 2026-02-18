@@ -8,24 +8,19 @@ from app.view.forms.submission_form import SubmissionForm
 
 class TestSubmissionForm(DatabaseTest):
     def test_initialization(self):
-        # New submission:
+        # Create new submission without a study:
         user = self.create_user(uuid='test_user')
-        form = SubmissionForm(
-            submission_id=None,
-            db_session=self.db_session,
-            user_uuid='test_user',
-        )
+        form = SubmissionForm.create(db_session=self.db_session, user_uuid='test_user')
 
         self.assertIsNone(form.study_id)
         self.assertIsNone(form.project_id)
         self.assertIsNone(form.submission.studyDesign['study']['name'])
 
-        # Initialize with a study id:
+        # Create, given a study id:
         study = self.create_study(name="Test Study")
         study.lastSubmission = self.create_submission(studyDesign={'study': {'name': "Study 1"}})
 
-        form = SubmissionForm(
-            submission_id=None,
+        form = SubmissionForm.create(
             db_session=self.db_session,
             study_uuid=study.uuid,
             user_uuid='test_user',
@@ -36,9 +31,9 @@ class TestSubmissionForm(DatabaseTest):
         self.assertEqual(form.project_id, study.project.publicId)
         self.assertEqual(form.submission.studyDesign['study']['name'], "Study 1")
 
-        # Existing submission without a study:
+        # Load existing submission without a study:
         submission = self.create_submission(studyDesign={'study': {'name': "Study 2"}})
-        form = SubmissionForm(
+        form = SubmissionForm.load(
             submission_id=submission.id,
             db_session=self.db_session,
         )
@@ -46,7 +41,7 @@ class TestSubmissionForm(DatabaseTest):
         self.assertIsNone(form.project_id)
         self.assertEqual(form.submission.studyDesign['study']['name'], "Study 2")
 
-        # Existing submission with a study:
+        # Load existing submission with a study:
         study = self.create_study()
         submission = self.create_submission(
             studyDesign={'study': {'name': 'Study 3'}},
@@ -54,7 +49,7 @@ class TestSubmissionForm(DatabaseTest):
             projectUniqueID=study.project.uuid,
         )
 
-        form = SubmissionForm(
+        form = SubmissionForm.load(
             submission_id=submission.id,
             db_session=self.db_session,
         )
@@ -67,8 +62,10 @@ class TestSubmissionForm(DatabaseTest):
         p2 = self.create_project(name="Project 2")
         s2 = self.create_study(projectUuid=p2.uuid)
 
-        submission_form = SubmissionForm(db_session=self.db_session)
-        self.assertEqual(submission_form.project_id, None)
+        # Initialize from existing study:
+        submission_form = SubmissionForm.create(db_session=self.db_session, study_uuid=s2.uuid, user_uuid='test_user')
+        submission_form.init_from_existing_study()
+        self.assertEqual(submission_form.project_id, p2.publicId)
 
         submission_form.update_study_info({
             'project_uuid': p1.uuid,
@@ -98,7 +95,7 @@ class TestSubmissionForm(DatabaseTest):
         p1 = self.create_project(name="Project 1")
         self.create_study(name="Study 1", projectUuid=p1.uuid)
 
-        submission_form = SubmissionForm(db_session=self.db_session)
+        submission_form = SubmissionForm.create(db_session=self.db_session, user_uuid='test_user')
         valid_params = {
             'project_uuid': '_new',
             'project_name': 'Project 1 (new)',
@@ -124,7 +121,7 @@ class TestSubmissionForm(DatabaseTest):
         self.db_session.add(submission)
         self.db_session.flush()
 
-        submission_form = SubmissionForm(db_session=self.db_session)
+        submission_form = SubmissionForm.create(db_session=self.db_session, user_uuid='test_user')
         submission_form.update_study_info({
             'project_uuid':     '_new',
             'project_name':     'Project 2',
@@ -139,7 +136,7 @@ class TestSubmissionForm(DatabaseTest):
         t1 = self.create_taxon(name="R. intestinalis")
         t2 = self.create_taxon(name="B. thetaiotaomicron")
 
-        submission_form = SubmissionForm(db_session=self.db_session)
+        submission_form = SubmissionForm.create(db_session=self.db_session, user_uuid='test_user')
         self.assertEqual(submission_form.fetch_taxa(), [])
 
         submission_form.update_strains({'strains': [t1.ncbiId], 'custom_strains': []})
@@ -172,7 +169,7 @@ class TestSubmissionForm(DatabaseTest):
         m1 = self.create_metabolite(name="glucose")
         m2 = self.create_metabolite(name="trehalose")
 
-        submission_form = SubmissionForm(db_session=self.db_session)
+        submission_form = SubmissionForm.create(db_session=self.db_session, user_uuid='test_user')
         self.assertEqual(submission_form.fetch_taxa(), [])
 
         study_design = submission_form.submission.studyDesign
@@ -192,7 +189,7 @@ class TestSubmissionForm(DatabaseTest):
         )
 
     def test_technique_descriptions(self):
-        submission_form = SubmissionForm(db_session=self.db_session)
+        submission_form = SubmissionForm.create(db_session=self.db_session, user_uuid='test_user')
 
         submission_form.update_study_design({
             'techniques': [

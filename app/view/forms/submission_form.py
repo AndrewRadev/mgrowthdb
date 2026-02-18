@@ -47,7 +47,27 @@ structure.
 
 
 class SubmissionForm:
-    def __init__(self, submission_id=None, step=0, db_session=None, user_uuid=None, study_uuid=None):
+    @classmethod
+    def create(Self, db_session, user_uuid, study_uuid=None):
+        form = Self(
+            db_session=db_session,
+            user_uuid=user_uuid,
+            study_uuid=study_uuid,
+        )
+        form.init_from_existing_study()
+        form.save()
+
+        return form
+
+    @classmethod
+    def load(Self, db_session, submission_id, step=0):
+        return Self(
+            db_session=db_session,
+            submission_id=submission_id,
+            step=step,
+        )
+
+    def __init__(self, db_session=None, submission_id=None, step=0, user_uuid=None, study_uuid=None):
         self.step       = step
         self.db_session = db_session
         self.errors     = []

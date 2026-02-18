@@ -185,7 +185,7 @@ def _save_study(db_session, submission_form, user_uuid=None):
         'embargoExpiresAt': embargo_datetime,
     }
 
-    if submission_form.type != 'update_study':
+    if submission_form.study_id is None:
         params['ownerUuid'] = user_uuid
 
         study = Study(**Study.filter_keys(params))
@@ -196,11 +196,7 @@ def _save_study(db_session, submission_form, user_uuid=None):
             userUniqueID=submission.userUniqueID,
         ))
     else:
-        study = db_session.scalars(
-            sql.select(Study)
-            .where(Study.uuid == submission.studyUniqueID)
-            .limit(1)
-        ).one()
+        study = db_session.get(Study, submission_form.study_id)
         study.update(**Study.filter_keys(params))
 
     tomorrow = datetime.now(UTC) + timedelta(hours=24)
@@ -224,7 +220,7 @@ def _save_project(db_session, submission_form, user_uuid=None):
         'uuid':        submission.projectUniqueID,
     }
 
-    if submission_form.type == 'new_project':
+    if submission_form.project_id is None:
         params['ownerUuid'] = user_uuid
 
         project = Project(**Project.filter_keys(params))
@@ -234,11 +230,7 @@ def _save_project(db_session, submission_form, user_uuid=None):
             userUniqueID=submission.userUniqueID,
         ))
     else:
-        project = db_session.scalars(
-            sql.select(Project)
-            .where(Project.uuid == submission.projectUniqueID)
-            .limit(1)
-        ).one()
+        project = db_session.get(Project, submission_form.project_id)
         project.update(**Project.filter_keys(params))
 
     db_session.add(project)
