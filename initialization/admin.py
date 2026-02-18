@@ -339,7 +339,7 @@ def init_admin(app):
             'userAgent', 'ip', 'country',
             'uuid', 'isBot', 'isUser', 'isAdmin',
         ]
-        column_filters = ['isBot', 'isUser', 'isAdmin', 'country']
+        column_filters = ['isBot', 'isUser', 'isAdmin', 'country', 'path']
 
     class PageVisitCounterView(AppView):
         column_type_formatters = {
