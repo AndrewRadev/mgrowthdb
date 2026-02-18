@@ -1,6 +1,7 @@
 from uuid import uuid4
 from datetime import datetime, UTC
 from pathlib import Path
+from timeit import default_timer as timer
 
 from flask import (
     g,
@@ -129,6 +130,8 @@ def _record_page_visit():
         # Ignore ajax requests
         return
 
+    start_time = timer()
+
     country = None
     if request.remote_addr and hasattr(current_app, 'maxminddb'):
         info = None
@@ -160,6 +163,10 @@ def _record_page_visit():
 
     g.db_session.add(page_visit)
     g.db_session.commit()
+
+    end_time = timer()
+    duration_ms = (end_time - start_time) * 1000
+    current_app.logger.info(f"[{duration_ms:.2f}ms] Page visit measurement")
 
 
 def _close_db_connection(response):
