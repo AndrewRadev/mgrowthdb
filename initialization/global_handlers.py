@@ -166,7 +166,7 @@ def _record_page_visit():
 
     end_time = timer()
     duration_ms = (end_time - start_time) * 1000
-    current_app.logger.info(f"[{duration_ms:.2f}ms] Page visit measurement")
+    current_app.logger.debug(f"[{duration_ms:.2f}ms] Page visit measurement")
 
 
 def _close_db_connection(response):
