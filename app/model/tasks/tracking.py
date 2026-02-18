@@ -38,6 +38,7 @@ def _aggregate_page_visits(db_session):
     total_count           = 0
     total_visit_count     = 0
     total_bot_visit_count = 0
+    total_api_visit_count = 0
     total_visitors        = set()
     total_users           = set()
 
@@ -54,6 +55,7 @@ def _aggregate_page_visits(db_session):
             paths[pv_path] = {
                 'visitCount': 0,
                 'botVisitCount': 0,
+                'apiVisitCount': 0,
                 'visitors': set(),
                 'users': set(),
             }
@@ -63,11 +65,15 @@ def _aggregate_page_visits(db_session):
             countries[pv_country] = {
                 'visitCount': 0,
                 'botVisitCount': 0,
+                'apiVisitCount': 0,
                 'visitors': set(),
                 'users': set(),
             }
 
-        if pv.isBot:
+        if pv_path.startswith('/api/'):
+            countries[pv_country]['apiVisitCount'] += 1
+            total_api_visit_count += 1
+        elif pv.isBot:
             paths[pv_path]['botVisitCount'] += 1
             countries[pv_country]['botVisitCount'] += 1
             total_bot_visit_count += 1
@@ -101,6 +107,7 @@ def _aggregate_page_visits(db_session):
         totalBotVisitCount=total_bot_visit_count,
         totalVisitorCount=len(total_visitors),
         totalUserCount=len(total_users),
+        totalApiVisitCount=total_api_visit_count,
     )
     db_session.add(pvc)
     db_session.commit()

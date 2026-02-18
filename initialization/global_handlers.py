@@ -1,6 +1,7 @@
 from uuid import uuid4
 from datetime import datetime, UTC
 from pathlib import Path
+from timeit import default_timer as timer
 
 from flask import (
     g,
@@ -44,9 +45,9 @@ def init_global_handlers(app):
             # Note: this doesn't get a `close()` call, but we only read from
             # it, so it should be fine if the process gets killed.
         except maxminddb.InvalidDatabaseError:
-            app.logger.warn(f"Maxmind DB exists, but can't be opened: {maxminddb_path}")
+            app.logger.warning(f"Maxmind DB exists, but can't be opened: {maxminddb_path}")
         except Exception as e:
-            app.logger.warn(f"Error initializing maxminddb: {e}")
+            app.logger.warning(f"Error initializing maxminddb: {e}")
 
     app.before_request(_make_session_permanent)
     app.before_request(_set_variables)
@@ -129,6 +130,8 @@ def _record_page_visit():
         # Ignore ajax requests
         return
 
+    start_time = timer()
+
     country = None
     if request.remote_addr and hasattr(current_app, 'maxminddb'):
         info = None
@@ -140,7 +143,7 @@ def _record_page_visit():
 
             info = current_app.maxminddb.get(ip)
         except Exception as e:
-            current_app.logger.warn(f"Maxmind Lookup failed: {e}")
+            current_app.logger.warning(f"Maxmind Lookup failed: {e}")
 
         if info:
             country = info.get('country', {}).get('names', {}).get('en')
@@ -160,6 +163,10 @@ def _record_page_visit():
 
     g.db_session.add(page_visit)
     g.db_session.commit()
+
+    end_time = timer()
+    duration_ms = (end_time - start_time) * 1000
+    current_app.logger.warning(f"[{duration_ms:.2f}ms] Page visit measurement")
 
 
 def _close_db_connection(response):
@@ -204,7 +211,7 @@ def _render_server_error(error):
         g.db_session.add(page_error)
         g.db_session.commit()
     except Exception as e:
-        app.logger.warn(f"Couldn't record error in the database")
+        app.logger.warning(f"Couldn't record error in the database")
 
     if _is_json(request):
         return {'error': '500 Server error'}, 500

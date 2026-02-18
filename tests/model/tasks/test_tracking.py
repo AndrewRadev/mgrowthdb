@@ -23,6 +23,9 @@ class TestTracking(DatabaseTest):
 
         self.create_page_visit(uuid='p3', path='/help/')
 
+        # API visits counted separately
+        self.create_page_visit(uuid='p4', path='/api/')
+
         _aggregate_page_visits(self.db_session)
 
         # We delete all page visits at the end:
@@ -40,14 +43,17 @@ class TestTracking(DatabaseTest):
         self.assertEqual(counter.paths['/']['visitCount'], 1)
         self.assertEqual(counter.paths['/search/']['visitCount'], 4)
         self.assertEqual(counter.paths['/help/']['visitCount'], 2)
+        self.assertEqual(counter.paths['/api/']['visitCount'], 0)
 
         self.assertEqual(counter.paths['/']['visitorCount'], 1)
         self.assertEqual(counter.paths['/search/']['visitorCount'], 2)
         self.assertEqual(counter.paths['/help/']['visitorCount'], 2)
+        self.assertEqual(counter.paths['/api/']['visitorCount'], 0)
 
         self.assertEqual(counter.paths['/']['userCount'], 0)
         self.assertEqual(counter.paths['/search/']['userCount'], 1)
         self.assertEqual(counter.paths['/help/']['userCount'], 0)
+        self.assertEqual(counter.paths['/api/']['userCount'], 0)
 
     def test_aggregating_countries(self):
         self.create_page_visit(uuid='p1', path='/', country="Belgium")
@@ -63,6 +69,11 @@ class TestTracking(DatabaseTest):
         self.create_page_visit(uuid='p4', path='/', isBot=True, country="United States")
         self.create_page_visit(uuid='p4', path='/', isBot=True, country="United States")
 
+        # API access, counted separately
+        self.create_page_visit(uuid='p5', path='/api/1', country="United States")
+        self.create_page_visit(uuid='p5', path='/api/2', country="United States")
+        self.create_page_visit(uuid='p5', path='/api/3', country="United States")
+
         _aggregate_page_visits(self.db_session)
 
         # We delete all page visits at the end:
@@ -75,15 +86,18 @@ class TestTracking(DatabaseTest):
         self.assertEqual(counter.countries['Belgium']['visitCount'], 3)
         self.assertEqual(counter.countries['Belgium']['visitorCount'], 2)
         self.assertEqual(counter.countries['Belgium']['userCount'], 1)
+        self.assertEqual(counter.countries['Belgium']['apiVisitCount'], 0)
 
         self.assertEqual(counter.countries['Bulgaria']['visitCount'], 1)
         self.assertEqual(counter.countries['Bulgaria']['visitorCount'], 1)
         self.assertEqual(counter.countries['Bulgaria']['userCount'], 0)
+        self.assertEqual(counter.countries['Bulgaria']['apiVisitCount'], 0)
 
         self.assertEqual(counter.countries['United States']['visitCount'], 1)
         self.assertEqual(counter.countries['United States']['visitorCount'], 1)
         self.assertEqual(counter.countries['United States']['userCount'], 0)
         self.assertEqual(counter.countries['United States']['botVisitCount'], 2)
+        self.assertEqual(counter.countries['United States']['apiVisitCount'], 3)
 
         self.assertEqual(counter.countries['Unknown']['visitCount'], 1)
         self.assertEqual(counter.countries['Unknown']['visitorCount'], 1)
