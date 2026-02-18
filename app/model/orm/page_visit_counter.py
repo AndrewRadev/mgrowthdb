@@ -27,6 +27,7 @@ class PageVisitCounter(OrmBase):
     totalBotVisitCount: Mapped[int] = mapped_column(sql.Integer, nullable=False)
     totalVisitorCount:  Mapped[int] = mapped_column(sql.Integer, nullable=False)
     totalUserCount:     Mapped[int] = mapped_column(sql.Integer, nullable=False)
+    totalApiVisitCount: Mapped[int] = mapped_column(sql.Integer, nullable=False)
 
     startTimestamp: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     endTimestamp:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())

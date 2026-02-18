@@ -398,6 +398,7 @@ CREATE TABLE PageVisitCounters (
   totalBotVisitCount int NOT NULL DEFAULT '0',
   totalVisitorCount int NOT NULL DEFAULT '0',
   totalUserCount int NOT NULL DEFAULT '0',
+  totalApiVisitCount int NOT NULL DEFAULT '0',
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -777,10 +778,11 @@ INSERT INTO MigrationVersions VALUES
 (84,'2025_12_14_173844_add_publish_state_to_modeling_result','2025-12-17 15:59:33'),
 (85,'2025_12_17_153401_add_short_model_name_to_custom_models','2025-12-17 15:59:33'),
 (86,'2026_01_05_113846_add-params-to-custom-models','2026-01-08 13:28:47'),
-(90,'2026_01_22_172601_create_page_visits','2026-01-23 10:35:44'),
-(93,'2026_01_23_120741_create_page_visit_counters','2026-01-23 13:45:15'),
-(95,'2026_01_26_172214_add_country_to_page_visits','2026-01-26 16:22:56'),
-(99,'2026_01_28_155444_track_country_in_page_visit_counters','2026-01-28 14:59:27'),
-(112,'2026_01_29_165248_add_authorship_fields_to_studies','2026-02-04 11:37:02'),
-(116,'2026_02_06_164753_create_page_errors','2026-02-06 15:57:16');
+(87,'2026_01_22_172601_create_page_visits','2026-01-23 14:20:13'),
+(88,'2026_01_23_120741_create_page_visit_counters','2026-01-23 14:20:14'),
+(89,'2026_01_26_172214_add_country_to_page_visits','2026-01-27 11:41:23'),
+(90,'2026_01_28_155444_track_country_in_page_visit_counters','2026-01-28 15:14:22'),
+(91,'2026_01_29_165248_add_authorship_fields_to_studies','2026-02-04 11:42:55'),
+(92,'2026_02_06_164753_create_page_errors','2026-02-06 16:10:14'),
+(93,'2026_02_18_115807_add_api_count_to_page_visit_counter','2026-02-18 11:11:29');
 
