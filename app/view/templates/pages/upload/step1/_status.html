@@ -8,8 +8,8 @@
 
       <li class="complete">
         <span class="icon"></span>
-        <span>Updating study:</span>
-        <a href="{{ url_for('study_show_page', publicId=study.publicId) }}">{{ study.nameWithId }}</a>
+        <span>Updating {{ "published" if study.isPublished else "unpublished" }} study</span>
+        <a href="{{ url_for('study_show_page', publicId=study.publicId) }}">{{ study.publicId }}</a>
       </li>
     {% else: %}
       <li class="complete">
