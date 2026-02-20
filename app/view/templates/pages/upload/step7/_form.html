@@ -5,7 +5,7 @@
   <form
       class="simple-form"
       method="POST"
-      action="{{ url_for('upload_step7_page') }}">
+      action="{{ url_for('upload_step7_page', id=submission.id) }}">
 
     {% if not submission.study: %}
 

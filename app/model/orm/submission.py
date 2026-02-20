@@ -11,6 +11,7 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_utc.sqltypes import UtcDateTime
 
 from app.model.orm.orm_base import OrmBase
@@ -54,8 +55,13 @@ class Submission(OrmBase):
         single_parent=True,
     )
 
-    createdAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
-    updatedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    createdAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+
+    @hybrid_property
+    def isPublished(self):
+        return self.publishedAt != None
 
     @property
     def completed_step_count(self):

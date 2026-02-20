@@ -5,7 +5,7 @@
 {% macro render_step3_form(submission_form, upload_form) %}
   <form
       class="simple-form"
-      action="{{ url_for('upload_step3_page') }}"
+      action="{{ url_for('upload_step3_page', id=submission_form.submission.id) }}"
       method="POST">
 
     {{ upload_form.csrf_token }}

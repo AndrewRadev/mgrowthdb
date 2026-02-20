@@ -39,35 +39,45 @@ def init_routes(app):
     app.add_url_rule("/help/",               view_func=help_pages.help_index_page)
     app.add_url_rule("/help/<string:name>/", view_func=help_pages.help_show_page)
 
-    app.add_url_rule("/upload/", view_func=upload_pages.upload_status_page)
+    app.add_url_rule("/upload/", view_func=upload_pages.upload_status_page, methods=["GET", "POST"])
 
-    app.add_url_rule("/upload/1", view_func=upload_pages.upload_step1_page, methods=["GET", "POST"])
-    app.add_url_rule("/upload/2", view_func=upload_pages.upload_step2_page, methods=["GET", "POST"])
-    app.add_url_rule("/upload/3", view_func=upload_pages.upload_step3_page, methods=["GET", "POST"])
-    app.add_url_rule("/upload/4", view_func=upload_pages.upload_step4_page, methods=["GET", "POST"])
-    app.add_url_rule("/upload/5", view_func=upload_pages.upload_step5_page, methods=["GET", "POST"])
-    app.add_url_rule("/upload/6", view_func=upload_pages.upload_step6_page, methods=["GET", "POST"])
-    app.add_url_rule("/upload/7", view_func=upload_pages.upload_step7_page, methods=["GET", "POST"])
+    app.add_url_rule("/upload/<int:id>/1", view_func=upload_pages.upload_step1_page, methods=["GET", "POST"])
+    app.add_url_rule("/upload/<int:id>/2", view_func=upload_pages.upload_step2_page, methods=["GET", "POST"])
+    app.add_url_rule("/upload/<int:id>/3", view_func=upload_pages.upload_step3_page, methods=["GET", "POST"])
+    app.add_url_rule("/upload/<int:id>/4", view_func=upload_pages.upload_step4_page, methods=["GET", "POST"])
+    app.add_url_rule("/upload/<int:id>/5", view_func=upload_pages.upload_step5_page, methods=["GET", "POST"])
+    app.add_url_rule("/upload/<int:id>/6", view_func=upload_pages.upload_step6_page, methods=["GET", "POST"])
+    app.add_url_rule("/upload/<int:id>/7", view_func=upload_pages.upload_step7_page, methods=["GET", "POST"])
 
     app.add_url_rule(
-        "/upload/new_submission/",
-        view_func=submission_pages.new_submission_action,
+        "/upload/fetch-authors/",
+        view_func=upload_pages.upload_authors_json,
         methods=["POST"],
     )
     app.add_url_rule(
-        "/upload/edit_submission/<id>",
+        "/upload/preview-text/",
+        view_func=upload_pages.upload_preview_fragment,
+        methods=["POST"],
+    )
+
+    app.add_url_rule(
+        "/upload/edit_submission/<int:id>",
         view_func=submission_pages.edit_submission_action,
         methods=["POST"],
     )
     app.add_url_rule(
-        "/upload/delete_submission/<id>",
+        "/upload/delete_submission/<int:id>",
         view_func=submission_pages.delete_submission_action,
         methods=["POST"],
     )
 
-    app.add_url_rule("/upload/data_template.xlsx", view_func=upload_pages.download_data_template_xlsx, methods=["POST"])
     app.add_url_rule(
-        "/upload/spreadsheet_preview/",
+        "/upload/<int:id>/data_template.xlsx",
+        view_func=upload_pages.download_data_template_xlsx,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/upload/<int:id>/spreadsheet_preview/",
         view_func=upload_pages.upload_spreadsheet_preview_fragment,
         methods=["POST"],
     )

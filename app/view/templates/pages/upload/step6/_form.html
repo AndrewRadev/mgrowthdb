@@ -55,7 +55,7 @@
 
       <p>
         {% set text = "<span class=\"icon icon-download-white\"></span> Download Template" %}
-        {{ post_button(text, url_for('download_data_template_xlsx'), disabled=download_disabled) }}
+        {{ post_button(text, url_for('download_data_template_xlsx', id=submission.id), disabled=download_disabled) }}
       </p>
     </div>
 
@@ -131,7 +131,7 @@
       class="simple-form"
       enctype="multipart/form-data"
       method="POST"
-      action="{{ url_for('upload_step6_page') }}">
+      action="{{ url_for('upload_step6_page', id=submission.id) }}">
 
     <input
         id="data-template-input"

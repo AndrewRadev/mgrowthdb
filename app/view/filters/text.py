@@ -13,9 +13,9 @@ def format_text(text, first_paragraph=False, p_class=''):
     text = text.strip()
     text = urlize(text, target="_blank", rel="noreferrer nofollow")
 
-    text = re.sub(r'\bPMGDB0*(\d+)', _replace_project_reference, text)
-    text = re.sub(r'\bSMGDB0*(\d+)', _replace_study_reference, text)
-    text = re.sub(r'\bEMGDB0*(\d+)', _replace_experiment_reference, text)
+    text = re.sub(r'\bPMGDB0*(\d+)', _replace_project_reference,    text, flags=re.IGNORECASE)
+    text = re.sub(r'\bSMGDB0*(\d+)', _replace_study_reference,      text, flags=re.IGNORECASE)
+    text = re.sub(r'\bEMGDB0*(\d+)', _replace_experiment_reference, text, flags=re.IGNORECASE)
 
     if len(p_class):
         class_attr = f" class=\"{p_class}\""

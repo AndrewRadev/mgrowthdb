@@ -3,18 +3,14 @@ from flask import (
     session,
     redirect,
     url_for,
+    request,
 )
 import sqlalchemy as sql
 from werkzeug.exceptions import Forbidden
 
 from app.model.orm import Submission
-
-
-def new_submission_action():
-    if 'submission_id' in session:
-        del session['submission_id']
-
-    return redirect(url_for('upload_step1_page'))
+from app.model.lib.errors import LoginRequired
+from app.view.forms.submission_form import SubmissionForm
 
 
 def edit_submission_action(id):

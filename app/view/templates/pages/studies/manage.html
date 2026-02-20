@@ -15,23 +15,24 @@
 
       <h2>Edit study</h2>
 
-      <p class="help">
-        To re-upload the data or apply changes to the experimental design, you
-        need to go through the submission process again
-        (<a href="{{ url_for('upload_status_page') }}">Upload data</a>)
-        and choose to update this study.
-      </p>
+      {% if study.lastSubmission and study.isPublished: %}
+        <p class="help">
+          To re-upload the data or apply changes to the experimental design,
+          you need to go through the submission process again. You'll be able
+          to reuse the study design you've already uploaded.
+        </p>
 
-      {% set lastSubmission = study.find_last_submission(g.db_session) %}
-
-      {% if lastSubmission: %}
+        <p>
+          {{ post_button("Submit changes", url_for('upload_status_page', uuid=study.uuid)) }}
+        </p>
+      {% elif study.lastSubmission: %}
         <p class="help">
           You can also edit the latest submission that updated this study by
           clicking on this button:
         </p>
 
         <p>
-          {{ post_button("Edit submission", url_for('edit_submission_action', id=lastSubmission.id)) }}
+          {{ post_button("Edit submission", url_for('edit_submission_action', id=study.lastSubmission.id)) }}
         </p>
       {% endif %}
 

@@ -1,0 +1,8 @@
+{% if authors: %}
+  Authors: {{ authors|author_link_list(limit=10) }}
+
+  <input type="hidden" name="authors" value='{{ authors|tojson }}' />
+  <input type="hidden" name="authorCache" value="{{ authorCache }}" />
+{% elif error: %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}

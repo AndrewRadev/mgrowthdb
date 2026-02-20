@@ -18,6 +18,7 @@ from app.model.lib.submission_process import (
 )
 from app.model.lib.errors import LoginRequired
 from app.model.lib.util import is_ajax
+from app.model.lib.crossref_fetcher import CrossrefFetcher
 from app.view.forms.submission_form import SubmissionForm
 from app.view.forms.upload_step2_form import UploadStep2Form
 from app.view.forms.upload_step3_form import UploadStep3Form
@@ -26,12 +27,16 @@ from app.view.forms.upload_step5_form import UploadStep5Form
 
 
 def upload_status_page():
-    submission_form = _init_submission_form(step=0)
+    if request.method == 'POST':
+        submission_form = _create_submission_form(study_uuid=request.form.get('study_uuid'))
+        return redirect(url_for('upload_step1_page', id=submission_form.submission.id))
 
-    if g.current_user and g.current_user.uuid:
-        user_submissions = g.current_user.submissions
+    submission_form = _load_submission_form(session.get('submission_id', None), step=0)
+
+    if g.current_user:
+        user_submissions = [s for s in g.current_user.submissions if not s.isPublished]
     else:
-        user_submissions = None
+        user_submissions = []
 
     return render_template(
         "pages/upload/index.html",
@@ -40,15 +45,15 @@ def upload_status_page():
     )
 
 
-def upload_step1_page():
-    submission_form = _init_submission_form(step=1)
+def upload_step1_page(id):
+    submission_form = _load_submission_form(id, step=1)
 
     if request.method == 'POST':
-        submission_form.update_project(request.form)
+        submission_form.update_study_info(request.form)
 
         if len(submission_form.errors) == 0:
             session['submission_id'] = submission_form.save()
-            return redirect(url_for('upload_step2_page'))
+            return redirect(url_for('upload_step2_page', id=id))
 
     return render_template(
         "pages/upload/index.html",
@@ -56,8 +61,35 @@ def upload_step1_page():
     )
 
 
-def upload_step2_page():
-    submission_form = _init_submission_form(step=2)
+def upload_authors_json():
+    _require_user()
+    fetcher = CrossrefFetcher(request.form['doi'])
+
+    try:
+        fetcher.make_request()
+
+        return {
+            'doi':         fetcher.doi,
+            'studyName':   fetcher.title,
+            'authors':     fetcher.authors,
+            'authorCache': fetcher.author_cache,
+            'authorsHtml': render_template('pages/upload/step1/_authors.html', authors=fetcher.authors)
+        }
+    except ValueError as e:
+        return {
+            'authorsHtml': render_template('pages/upload/step1/_authors.html', error=str(e)),
+        }
+
+
+def upload_preview_fragment():
+    _require_user()
+    text = request.form.get('text', '').strip()
+
+    return render_template('pages/upload/step1/_preview.html', text=text)
+
+
+def upload_step2_page(id):
+    submission_form = _load_submission_form(id, step=2)
     upload_form     = _init_upload_form(UploadStep2Form, submission_form.submission)
 
     if is_ajax(request):
@@ -68,7 +100,7 @@ def upload_step2_page():
 
         if upload_form.validate():
             session['submission_id'] = submission_form.save()
-            return redirect(url_for('upload_step3_page'))
+            return redirect(url_for('upload_step3_page', id=id))
 
     return render_template(
         "pages/upload/index.html",
@@ -90,8 +122,8 @@ def _step2_partial(upload_form, submission_form):
     )
 
 
-def upload_step3_page():
-    submission_form = _init_submission_form(step=3)
+def upload_step3_page(id):
+    submission_form = _load_submission_form(id, step=3)
     upload_form     = _init_upload_form(UploadStep3Form, submission_form.submission)
 
     if is_ajax(request):
@@ -102,7 +134,7 @@ def upload_step3_page():
 
         if upload_form.validate():
             session['submission_id'] = submission_form.save()
-            return redirect(url_for('upload_step4_page'))
+            return redirect(url_for('upload_step4_page', id=id))
 
     return render_template(
         "pages/upload/index.html",
@@ -124,8 +156,8 @@ def _step3_partial(upload_form, submission_form):
     )
 
 
-def upload_step4_page():
-    submission_form = _init_submission_form(step=4)
+def upload_step4_page(id):
+    submission_form = _load_submission_form(id, step=4)
     upload_form     = _init_upload_form(UploadStep4Form, submission_form.submission)
 
     if is_ajax(request):
@@ -136,7 +168,7 @@ def upload_step4_page():
 
         if upload_form.validate():
             session['submission_id'] = submission_form.save()
-            return redirect(url_for('upload_step5_page'))
+            return redirect(url_for('upload_step5_page', id=id))
 
     return render_template(
         "pages/upload/index.html",
@@ -158,8 +190,8 @@ def _step4_partial(upload_form, submission_form, subform_type):
     )
 
 
-def upload_step5_page():
-    submission_form = _init_submission_form(step=5)
+def upload_step5_page(id):
+    submission_form = _load_submission_form(id, step=5)
     upload_form     = _init_upload_form(UploadStep5Form, submission_form.submission)
 
     if is_ajax(request):
@@ -170,7 +202,7 @@ def upload_step5_page():
 
         if upload_form.validate():
             session['submission_id'] = submission_form.save()
-            return redirect(url_for('upload_step6_page'))
+            return redirect(url_for('upload_step6_page', id=id))
 
     return render_template(
         "pages/upload/index.html",
@@ -192,8 +224,8 @@ def _step5_partial(upload_form, submission_form):
     )
 
 
-def upload_step6_page():
-    submission_form = _init_submission_form(step=6)
+def upload_step6_page(id):
+    submission_form = _load_submission_form(id, step=6)
     submission = submission_form.submission
     errors = []
 
@@ -212,7 +244,7 @@ def upload_step6_page():
             errors = persist_submission_to_database(submission_form)
 
         if not errors:
-            return redirect(url_for('upload_step7_page'))
+            return redirect(url_for('upload_step7_page', id=id))
     else:
         errors = validate_data_file(submission_form)
 
@@ -223,8 +255,8 @@ def upload_step6_page():
     )
 
 
-def download_data_template_xlsx():
-    submission_form = _init_submission_form(step=6)
+def download_data_template_xlsx(id):
+    submission_form = _load_submission_form(id, step=6)
     spreadsheet = data_spreadsheet.create_excel(submission_form)
 
     return send_file(
@@ -234,8 +266,8 @@ def download_data_template_xlsx():
     )
 
 
-def upload_spreadsheet_preview_fragment():
-    submission_form = _init_submission_form(step=6)
+def upload_spreadsheet_preview_fragment(id):
+    submission_form = _load_submission_form(id, step=6)
 
     excel_file = ExcelFile.from_upload(request.files['file'])
     errors = validate_data_file(submission_form, excel_file)
@@ -247,8 +279,8 @@ def upload_spreadsheet_preview_fragment():
     )
 
 
-def upload_step7_page():
-    submission_form = _init_submission_form(step=7)
+def upload_step7_page(id):
+    submission_form = _load_submission_form(id, step=7)
 
     if request.method == 'POST':
         study = submission_form.submission.study
@@ -268,20 +300,33 @@ def upload_step7_page():
     )
 
 
-def _init_submission_form(step):
-    if g.current_user is None and step != 0:
+def _require_user():
+    if g.current_user is None:
         raise LoginRequired()
 
-    if g.current_user:
-        user_uuid = g.current_user.uuid
-    else:
-        user_uuid = None
 
-    return SubmissionForm(
-        session.get('submission_id', None),
-        step=step,
+def _create_submission_form(study_uuid):
+    if g.current_user is None:
+        raise LoginRequired()
+
+    submission_form = SubmissionForm.create(
         db_session=g.db_session,
-        user_uuid=user_uuid,
+        study_uuid=study_uuid,
+        user_uuid=g.current_user.uuid,
+    )
+    session['submission_id'] = submission_form.submission.id
+
+    return submission_form
+
+
+def _load_submission_form(submission_id, step):
+    if g.current_user is None:
+        raise LoginRequired()
+
+    return SubmissionForm.load(
+        db_session=g.db_session,
+        submission_id=submission_id,
+        step=step,
     )
 
 
