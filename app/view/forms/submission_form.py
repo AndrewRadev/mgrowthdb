@@ -110,6 +110,20 @@ class SubmissionForm:
                 }
                 self.submission.dataFileId = previous_submission.dataFileId
 
+    @property
+    def show_embargo_date_input(self):
+        "Embargo date input is shown if the study is not published yet"
+        if not self.submission.study:
+            return True
+        if not self.submission.study.isPublished:
+            return True
+        return False
+
+    @property
+    def show_reuse_study_input(self):
+        "Input for reusing a study design is shown for new studies"
+        return not self.study_id
+
     def update_study_info(self, data):
         # Update IDs:
         if data['project_uuid'] == '_new':

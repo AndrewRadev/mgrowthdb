@@ -156,51 +156,58 @@
       </label>
     </div>
 
-    <div>
-      <h3>Additional options</h3>
-    </div>
+    {% if submission_form.show_embargo_date_input or submission_form.show_reuse_study_input: %}
+      <div>
+        <h3>Additional options</h3>
+      </div>
 
-    <div class="form-row">
-      <label class="flex-1">
-        <span>Embargo date (UTC):</span>
-        <input
-            type="date"
-            min="{{ g.now.strftime("%Y-%m-%d") }}"
-            name="embargo_expires_at"
-            value="{{ submission.studyDesign['study']['embargoExpiresAt'] or '' }}"
-            class="form-input-full form-input-blue {{ "error" if submission_form.has_error('embargo_expires_at') }}" />
+      <div class="form-row">
+        {% if submission_form.show_embargo_date_input: %}
+          <label class="flex-1">
+            <span>Embargo date (UTC):</span>
+            <input
+                type="date"
+                min="{{ g.now.strftime("%Y-%m-%d") }}"
+                name="embargo_expires_at"
+                value="{{ submission.studyDesign['study']['embargoExpiresAt'] or '' }}"
+                class="form-input-full form-input-blue {{ "error" if submission_form.has_error('embargo_expires_at') }}" />
 
-        <div class="help margin-top-10">
-          Once you upload your study, a record will appear on μGrowthDB but
-          not your data. You must <strong>explicitly</strong> publish it to make it
-          publicly available. If you set an embargo date, a short message
-          will inform visitors of the expected publication date.
-        </div>
-      </label>
+            <div class="help margin-top-10">
+              Once you upload your study, a record will appear on μGrowthDB but
+              it will not show your data. You must <strong>explicitly</strong>
+              publish it to make it publicly available. If you set an embargo
+              date, a short message will inform visitors of the expected
+              publication date.
+            </div>
+          </label>
+        {% endif %}
 
-      <label class="flex-1">
-        <span>Reuse study design from a previous study:</span>
+        {% if submission_form.show_reuse_study_input: %}
+          <label class="flex-1">
+            <span>Reuse study design from a previous study:</span>
 
-        <select
-            name="reuse_study_uuid"
-            id="reuse_study_uuid"
-            class="form-input-blue form-input-full">
-          <option value="">
-          </option>
-          {% for study in g.current_user.managedStudies: %}
-            <option value="{{ study.uuid }}">
-              [{{ study.publicId }}] {{ study.name|truncate(50) }}
-            </option>
-          {% endfor %}
-        </select>
+            <select
+                name="reuse_study_uuid"
+                id="reuse_study_uuid"
+                class="form-input-blue form-input-full">
+              <option value="">
+              </option>
+              {% for study in g.current_user.managedStudies: %}
+                <option value="{{ study.uuid }}">
+                  [{{ study.publicId }}] {{ study.name|truncate(50) }}
+                </option>
+              {% endfor %}
+            </select>
 
-        <div class="help margin-top-10">
-          If you choose a previous study, the following steps will be
-          pre-populated with the same strains, metabolites, etc. You might be
-          able to save some time and avoid re-entering the same details.
-        </div>
-      </label>
-    </div>
+            <div class="help margin-top-10">
+              If you choose a previous study, the following steps will be
+              pre-populated with the same strains, metabolites, etc. You might be
+              able to save some time and avoid re-entering the same details.
+            </div>
+          </label>
+        {% endif %}
+      </div>
+    {% endif %}
 
     <div class="form-row">
       <input type="submit" value="Next" />
