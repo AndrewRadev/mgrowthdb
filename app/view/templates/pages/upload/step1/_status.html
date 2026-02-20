@@ -3,6 +3,21 @@
   {% set complete = submission.projectUniqueID %}
 
   <ul class="upload-status">
+    {% if submission.study: %}
+      {% set study = submission.study %}
+
+      <li class="complete">
+        <span class="icon"></span>
+        <span>Updating study:</span>
+        <a href="{{ url_for('study_show_page', publicId=study.publicId) }}">{{ study.nameWithId }}</a>
+      </li>
+    {% else: %}
+      <li class="complete">
+        <span class="icon"></span>
+        <span>New study</span>
+      </li>
+    {% endif %}
+
     {% if complete %}
 
       <li class="complete">
