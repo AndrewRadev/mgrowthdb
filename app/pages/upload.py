@@ -29,12 +29,14 @@ from app.view.forms.upload_step5_form import UploadStep5Form
 def upload_status_page():
     if request.method == 'POST':
         submission_form = _create_submission_form(study_uuid=request.form.get('study_uuid'))
-        submission_form.save()
-
         return redirect(url_for('upload_step1_page', id=submission_form.submission.id))
 
     submission_form = _load_submission_form(session.get('submission_id', None), step=0)
-    user_submissions = g.current_user.submissions if g.current_user else []
+
+    if g.current_user:
+        user_submissions = [s for s in g.current_user.submissions if not s.isPublished]
+    else:
+        user_submissions = []
 
     return render_template(
         "pages/upload/index.html",

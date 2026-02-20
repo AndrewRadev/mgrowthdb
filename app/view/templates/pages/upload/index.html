@@ -86,12 +86,13 @@
       {% endif %}
 
       {% if submission_form.step == 0: %}
-        <p class="help small">
-          Select one from the list to submit an
-          update to it, or pick "New study" to start a fresh upload.
+        <p>
+          Select an uploaded study from the list to submit an update to it, or
+          pick "New study" to start a fresh upload.
         </p>
+        <br>
 
-        <form action="{{ url_for('upload_status_page') }}" method="POST">
+        <form class="simple-form" action="{{ url_for('upload_status_page') }}" method="POST">
           <div class="form-row flex-row flex-gap-10">
             <select
                 name="study_uuid"
@@ -111,7 +112,7 @@
               {% endfor %}
             </select>
 
-            <input class="green-button" type="submit" value="New submission" />
+            <input type="submit" class="green-button" value="New submission" />
           </div>
         </form>
       {% endif %}
