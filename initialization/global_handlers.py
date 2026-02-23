@@ -1,7 +1,5 @@
 from uuid import uuid4
 from datetime import datetime, UTC
-from pathlib import Path
-from timeit import default_timer as timer
 
 from flask import (
     g,
@@ -14,12 +12,10 @@ from flask import (
 )
 import sqlalchemy as sql
 import sqlalchemy.exc as sql_exceptions
-import maxminddb
 
 from db import get_connection, FLASK_DB
 from app.model.orm import (
     User,
-    PageVisit,
     PageError,
 )
 from app.model.lib.errors import LoginRequired
@@ -34,19 +30,6 @@ def init_global_handlers(app):
     storing a database connection in ``g.db_session`` and fetching the
     currently logged-in user in ``g.current_user``.
     """
-
-    # TODO (2026-02-23) Move to separate initializer
-    maxminddb_path = Path('var/GeoLite2-Country.mmdb')
-    if maxminddb_path.exists():
-        try:
-            setattr(app, 'maxminddb', maxminddb.open_database(maxminddb_path))
-            # Note: this doesn't get a `close()` call, but we only read from
-            # it, so it should be fine if the process gets killed.
-        except maxminddb.InvalidDatabaseError:
-            app.logger.warning(f"Maxmind DB exists, but can't be opened: {maxminddb_path}")
-        except Exception as e:
-            app.logger.warning(f"Error initializing maxminddb: {e}")
-
     app.before_request(_make_session_permanent)
     app.before_request(_set_variables)
     app.before_request(_open_db_connection)
@@ -128,22 +111,16 @@ def _record_page_visit():
         # Ignore ajax requests
         return
 
-    start_time = timer()
-
     record_page_visit.delay({
-        'remote_addr': request.remote_addr,
-        'path': request.path,
+        'remote_addr':  request.remote_addr,
+        'path':         request.path,
         'query_string': request.query_string,
-        'referrer': request.referrer,
-        'user_agent': request.user_agent.string,
-        'user_uuid': session['user_uuid'],
-        'is_user': (True if g.current_user else False),
-        'is_admin': (True if g.current_user and g.current_user.isAdmin else False),
+        'referrer':     request.referrer,
+        'user_agent':   request.user_agent.string,
+        'user_uuid':    session.get('user_uuid', ''),
+        'is_user':      (True if g.current_user else False),
+        'is_admin':     (True if g.current_user and g.current_user.isAdmin else False),
     })
-
-    end_time = timer()
-    duration_ms = (end_time - start_time) * 1000
-    current_app.logger.warning(f"[{duration_ms:.2f}ms] Page visit measurement")
 
 
 def _close_db_connection(response):
