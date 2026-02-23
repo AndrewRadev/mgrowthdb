@@ -1,10 +1,8 @@
-import tempfile
-from datetime import datetime, UTC
-
+from flask import current_app
 import sqlalchemy as sql
-from sqlalchemy.orm.attributes import flag_modified
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from crawlerdetect import CrawlerDetect
 
 from db import FLASK_DB
 from app.model.orm import (
@@ -12,18 +10,60 @@ from app.model.orm import (
     PageVisitCounter,
 )
 
-_LOGGER = get_task_logger(__name__)
+_LOGGER         = get_task_logger(__name__)
+_CRAWLER_DETECT = CrawlerDetect()
+
+
+@shared_task
+def record_page_visit(request_info):
+    db_session = FLASK_DB.session
+
+    ip_info = None
+
+    if request_info['remote_addr'] and hasattr(current_app, 'maxminddb'):
+        try:
+            ip = request_info['remote_addr']
+            if ip.startswith('[') and ip.endswith(']'):
+                # IPv6 addresses may be wrapped in brackets, so let's remove them
+                ip = ip[1:-1]
+
+            ip_info = current_app.maxminddb.get(ip)
+        except Exception as e:
+            current_app.logger.warning(f"Maxmind Lookup failed: {e}")
+
+    _record_page_visit(db_session, request_info, ip_info)
 
 
 @shared_task
 def aggregate_page_visits():
     db_session = FLASK_DB.session
-
     _aggregate_page_visits(db_session)
 
 
+def _record_page_visit(db_session, request_info, ip_info=None):
+    country = None
+    if ip_info:
+        country = ip_info.get('country', {}).get('names', {}).get('en')
+
+    page_visit = PageVisit(
+        path=request_info['path'],
+        query=request_info['query_string'],
+        referrer=request_info['referrer'],
+        ip=request_info['remote_addr'],
+        country=country,
+        userAgent=request_info['user_agent'],
+        uuid=request_info['user_uuid'],
+        isUser=request_info['is_user'],
+        isAdmin=request_info['is_admin'],
+        isBot=_CRAWLER_DETECT.isCrawler(request_info['user_agent']),
+    )
+
+    db_session.add(page_visit)
+    db_session.commit()
+
+
 def _aggregate_page_visits(db_session):
-    _LOGGER.info(f"Page visit aggregation start")
+    _LOGGER.info("Page visit aggregation start")
 
     start_time, end_time, last_id = db_session.execute(
         sql.select(

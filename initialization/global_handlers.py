@@ -14,7 +14,6 @@ from flask import (
 )
 import sqlalchemy as sql
 import sqlalchemy.exc as sql_exceptions
-from crawlerdetect import CrawlerDetect
 import maxminddb
 
 from db import get_connection, FLASK_DB
@@ -24,9 +23,7 @@ from app.model.orm import (
     PageError,
 )
 from app.model.lib.errors import LoginRequired
-
-
-_CRAWLER_DETECT = CrawlerDetect()
+from app.model.tasks.tracking import record_page_visit
 
 
 def init_global_handlers(app):
@@ -38,6 +35,7 @@ def init_global_handlers(app):
     currently logged-in user in ``g.current_user``.
     """
 
+    # TODO (2026-02-23) Move to separate initializer
     maxminddb_path = Path('var/GeoLite2-Country.mmdb')
     if maxminddb_path.exists():
         try:
@@ -132,37 +130,16 @@ def _record_page_visit():
 
     start_time = timer()
 
-    country = None
-    if request.remote_addr and hasattr(current_app, 'maxminddb'):
-        info = None
-        try:
-            ip = request.remote_addr
-            if ip.startswith('[') and ip.endswith(']'):
-                # IPv6 addresses may be wrapped in brackets, so let's remove them
-                ip = ip[1:-1]
-
-            info = current_app.maxminddb.get(ip)
-        except Exception as e:
-            current_app.logger.warning(f"Maxmind Lookup failed: {e}")
-
-        if info:
-            country = info.get('country', {}).get('names', {}).get('en')
-
-    page_visit = PageVisit(
-        path=request.path,
-        query=request.query_string,
-        referrer=request.referrer,
-        ip=request.remote_addr,
-        country=country,
-        userAgent=request.user_agent.string,
-        uuid=session['user_uuid'],
-        isUser=(True if g.current_user else False),
-        isAdmin=(True if g.current_user and g.current_user.isAdmin else False),
-        isBot=_CRAWLER_DETECT.isCrawler(request.user_agent.string),
-    )
-
-    g.db_session.add(page_visit)
-    g.db_session.commit()
+    record_page_visit.delay({
+        'remote_addr': request.remote_addr,
+        'path': request.path,
+        'query_string': request.query_string,
+        'referrer': request.referrer,
+        'user_agent': request.user_agent.string,
+        'user_uuid': session['user_uuid'],
+        'is_user': (True if g.current_user else False),
+        'is_admin': (True if g.current_user and g.current_user.isAdmin else False),
+    })
 
     end_time = timer()
     duration_ms = (end_time - start_time) * 1000
@@ -211,7 +188,7 @@ def _render_server_error(error):
         g.db_session.add(page_error)
         g.db_session.commit()
     except Exception as e:
-        app.logger.warning(f"Couldn't record error in the database")
+        current_app.logger.warning(f"Couldn't record error in the database ({error}) due to: {e}")
 
     if _is_json(request):
         return {'error': '500 Server error'}, 500
