@@ -314,6 +314,7 @@ Output structure (note that compartment values encoded as decimal numbers are re
     id: number,
     name: string
     biosampleUrl?: string,
+    isAverage: boolean,
     measurementContexts: [{
       id: number,
       experimentId: "EMGDBxxx",
@@ -397,6 +398,7 @@ Example output:
       "id": 60111,
       "name": "Average(BT_MUCIN)",
       "biosampleUrl": null,
+      "isAverage": true,
       "measurementContexts": [
         {
           "id": 1431,
@@ -558,11 +560,12 @@ Output structure:
 
 ```typescript
 {
-  id: 60332,
-  experimentId: "EMGDB000000023",
-  studyId: "SMGDB00000002",
-  name: "Average(BTRI_MUCIN)",
+  id: number,
+  experimentId: "EMGDBxxx",
+  studyId: "SMGDBxxx",
+  name: string,
   biosampleUrl: null,
+  isAverage: boolean,
   measurementTimeUnits: "h",
   measurementContexts: [{
     id: number,
@@ -592,6 +595,7 @@ curl -s "$ROOT_URL/api/v1/bioreplicate/1314.csv"
   "studyId": "SMGDB00000002",
   "name": "Average(BTRI_MUCIN)",
   "biosampleUrl": null,
+  "isAverage": true,
   "measurementTimeUnits": "h",
   "measurementContexts": [
     {
