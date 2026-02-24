@@ -111,6 +111,7 @@ def experiment_json(publicId):
                 'id':                  b.id,
                 'name':                b.name,
                 'biosampleUrl':        b.biosampleUrl,
+                'isAverage':           b.calculationType == 'average',
                 'measurementContexts': [
                     {
                         'id': mc.id,
@@ -185,6 +186,7 @@ def bioreplicate_json(id):
         'studyId':              bioreplicate.experiment.studyId,
         'name':                 bioreplicate.name,
         'biosampleUrl':         bioreplicate.biosampleUrl,
+        'isAverage':            bioreplicate.calculationType == 'average',
         'measurementTimeUnits': 'h',
         'measurementContexts': [
             {
