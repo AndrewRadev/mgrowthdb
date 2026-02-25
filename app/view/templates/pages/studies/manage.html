@@ -19,12 +19,15 @@
         <p class="help">
           To re-upload the data or apply changes to the experimental design,
           you need to go through the submission process again. You'll be able
-          to reuse the study design you've already uploaded.
+          to reuse the study design and data you've already uploaded.
         </p>
 
-        <p>
-          {{ post_button("Submit changes", url_for('upload_status_page', uuid=study.uuid)) }}
-        </p>
+        <form class="simple-form margin-top-10" action="{{ url_for('upload_status_page') }}" method="POST">
+          <input type="hidden" name="study_uuid" value="{{ study.uuid }}" />
+          <div class="form-row">
+            <input type="submit" value="New submission" />
+          </div>
+        </form>
       {% elif study.lastSubmission: %}
         <p class="help">
           You can also edit the latest submission that updated this study by

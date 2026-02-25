@@ -1,4 +1,5 @@
 import sqlalchemy as sql
+from sqlalchemy.orm.attributes import flag_modified
 import requests
 import json
 
@@ -29,6 +30,13 @@ with app.app_context():
 
         study.authors = fetcher.authors
         study.authorCache = fetcher.author_cache
+
+        if submission := study.lastSubmission:
+            submission.studyDesign['study']['authors']     = study.authors
+            submission.studyDesign['study']['authorCache'] = study.authorCache
+
+            flag_modified(submission, 'studyDesign')
+            db_session.add(submission)
 
         print(f" > Author cache: {study.authorCache}")
 

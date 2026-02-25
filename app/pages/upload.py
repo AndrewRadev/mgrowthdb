@@ -311,8 +311,8 @@ def _create_submission_form(study_uuid):
 
     submission_form = SubmissionForm.create(
         db_session=g.db_session,
-        study_uuid=study_uuid,
         user_uuid=g.current_user.uuid,
+        study_uuid=study_uuid,
     )
     session['submission_id'] = submission_form.submission.id
 
