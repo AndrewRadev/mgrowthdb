@@ -60,8 +60,7 @@ def persist_submission_to_database(submission_form):
         for experiment in study.experiments:
             _create_average_measurements(db_trans_session, study, experiment)
 
-        submission_form.save()
-        submission_form.save_backup(study_id=study.publicId, project_id=project.publicId)
+        _finalize_submission(db_trans_session, submission_form, study, project)
 
         db_trans_session.commit()
 
@@ -179,6 +178,8 @@ def _save_study(db_session, submission_form, user_uuid=None):
         'name':             submission.studyDesign['study']['name'].strip(),
         'description':      submission.studyDesign['study'].get('description', '').strip(),
         'url':              submission.studyDesign['study'].get('url', '').strip(),
+        'authors':          submission.studyDesign['study'].get('authors', []),
+        'authorCache':      submission.studyDesign['study'].get('authorCache', ''),
         'uuid':             submission.studyUniqueID,
         'projectUuid':      submission.projectUniqueID,
         'timeUnits':        submission.studyDesign['timeUnits'],
@@ -567,6 +568,15 @@ def _create_average_measurement_context(
             study=study,
         )
         db_session.add(measurement)
+
+
+def _finalize_submission(db_session, submission_form, study, project):
+    study.lastSubmissionId = submission_form.submission.id
+    if study.isPublished:
+        submission_form.submission.publishedAt = study.publishedAt
+
+    submission_form.save()
+    submission_form.save_backup(study_id=study.publicId, project_id=project.publicId)
 
 
 def _find_custom_strain(submission, identifier):

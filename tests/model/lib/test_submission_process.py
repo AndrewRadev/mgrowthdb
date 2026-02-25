@@ -1,5 +1,6 @@
 import tests.init  # noqa: F401
 
+import json
 import unittest
 from datetime import datetime, timedelta, UTC
 
@@ -24,6 +25,7 @@ from app.model.lib.submission_process import (
     _save_experiments,
     _save_study_techniques,
     _create_average_measurements,
+    _finalize_submission,
 )
 from tests.database_test import DatabaseTest
 
@@ -64,6 +66,8 @@ class TestSubmissionProcess(DatabaseTest):
             'project_uuid': self.submission.projectUniqueID,
             'study_name':   'Updated study name',
             'project_name': 'Updated project name',
+            'authors':      json.dumps([{'given': 'John', 'family': 'Doe'}]),
+            'authorCache':  'doe',
         })
 
         # Save the study, the project is not updated yet:
@@ -72,6 +76,8 @@ class TestSubmissionProcess(DatabaseTest):
 
         self.assertEqual(project.name, 'Test project')
         self.assertEqual(study.name, 'Updated study name')
+        self.assertEqual(study.authors, [{'given': 'John', 'family': 'Doe'}])
+        self.assertEqual(study.authorCache, 'doe')
 
         # Save project, both names are updated:
         _save_project(self.db_session, submission_form)
@@ -518,6 +524,35 @@ class TestSubmissionProcess(DatabaseTest):
         _create_average_measurements(self.db_session, study, experiment)
         self.db_session.refresh(experiment)
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3"})
+
+    def test_updating_study_after_publication(self):
+        study = self.create_study(publishedAt=datetime.now(UTC))
+
+        # Prepare previous submission
+        previous_submission = self.create_submission(
+            studyUniqueID=study.uuid,
+            projectUniqueID=study.project.uuid,
+            studyDesign={'study': {'name': 'Existing study'}},
+        )
+        study.lastSubmission = previous_submission
+        self.db_session.add(study)
+        self.db_session.commit()
+
+        submission_form = SubmissionForm.create(self.db_session, user_uuid='test_user', study_uuid=study.uuid)
+        current_submission = submission_form.submission
+
+        self.assertNotEqual(current_submission, study.lastSubmission)
+        self.assertEqual(current_submission.studyDesign['study']['name'], 'Existing study')
+        self.assertFalse(current_submission.isPublished)
+
+        _finalize_submission(self.db_session, submission_form, study, study.project)
+
+        self.db_session.flush()
+        self.db_session.refresh(study)
+        self.db_session.refresh(current_submission)
+
+        self.assertEqual(study.lastSubmission, current_submission)
+        self.assertTrue(current_submission.isPublished)
 
     def _get_by_uuid(self, model_class, uuid):
         return self.db_session.scalars(
