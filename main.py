@@ -8,6 +8,7 @@ from initialization.assets import init_assets
 from initialization.routes import init_routes
 from initialization.plotly import init_plotly
 from initialization.timing import init_timing
+from initialization.maxminddb import init_maxminddb
 from initialization.global_handlers import init_global_handlers
 from initialization.template_filters import init_template_filters
 from initialization.admin import init_admin
@@ -27,6 +28,7 @@ def create_app():
     app = init_flask_db(app)
     app = init_assets(app)
     app = init_routes(app)
+    app = init_maxminddb(app)
     app = init_global_handlers(app)
     app = init_template_filters(app)
     app = init_admin(app)
