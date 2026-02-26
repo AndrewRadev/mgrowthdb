@@ -12,7 +12,7 @@
 
   <p>
     <form
-        class="simple-form"
+        class="simple-form js-step-form"
         action="{{ url_for('upload_step2_page', id=submission_form.submission.id) }}"
         method="POST">
 
@@ -45,6 +45,7 @@
 
       <div class="form-row">
         <input type="submit" class="green-button" value="Next" />
+        {% include 'pages/upload/_loader.html' %}
 
         <div class="flex-right">
           <a href="#" class="white-button flex-row js-add-trigger">

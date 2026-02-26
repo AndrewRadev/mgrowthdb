@@ -128,7 +128,7 @@
   <br>
 
   <form
-      class="simple-form"
+      class="simple-form js-step-form"
       enctype="multipart/form-data"
       method="POST"
       action="{{ url_for('upload_step6_page', id=submission.id) }}">
@@ -146,6 +146,8 @@
       {% else: %}
         <input type="submit" class="green-button" value="Next" />
       {% endif %}
+
+      {% include 'pages/upload/_loader.html' %}
     </div>
   </form>
 
