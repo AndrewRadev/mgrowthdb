@@ -123,10 +123,23 @@
     }
   }
 
+  .step-5 {
+    .preview {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      padding-top: 20px;
+
+      ul {
+        padding-left: 12px;
+      }
+    }
+  }
+
   .step-6 {
     .middle-column {
       display: flex;
-      flex-orientation: row;
+      flex-direction: row;
       justify-content: center;
       align-items: center;
 

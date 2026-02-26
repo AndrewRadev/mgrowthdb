@@ -102,6 +102,30 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
     },
   })
 
+  $step5.on('click', '.js-edit-experiment', function() {
+    $button = $(this);
+    $container = $button.parents('.js-subform-container');
+    $otherButton = $container.find('.js-cancel-edit-experiment');
+
+    $container.find('.js-preview').addClass('hidden');
+    $container.find('.js-subform').removeClass('hidden');
+
+    $button.addClass('hidden');
+    $otherButton.removeClass('hidden');
+  });
+
+  $step5.on('click', '.js-cancel-edit-experiment', function() {
+    $button = $(this);
+    $container = $button.parents('.js-subform-container');
+    $otherButton = $container.find('.js-edit-experiment');
+
+    $container.find('.js-preview').removeClass('hidden');
+    $container.find('.js-subform').addClass('hidden');
+
+    $button.addClass('hidden');
+    $otherButton.removeClass('hidden');
+  });
+
   if ($step5.find('.js-experiment-container').length == 0) {
     // By default, add one form
     $step5.find('.js-add-experiment').trigger('click');
