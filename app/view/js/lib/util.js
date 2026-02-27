@@ -3,6 +3,24 @@ $.fn.log = function() {
   return this;
 }
 
+$.fn.refindElement = function($element) {
+  let $container = $(this);
+  let selector = $element[0].classList.values().toArray().map((c) => `.${c}`).join('');
+  let $newElement;
+
+  if ($container) {
+    $newElement = $container.find(selector);
+  } else {
+    $newElement = $(selector);
+  }
+
+  if ($newElement.length > 1) {
+    throw new Error(`Re-find selector was not unique: ${selector}`);
+  }
+
+  return $newElement;
+}
+
 function wrapSubstrings(text, words, prefix, suffix) {
   if (words.length <= 0 || words[0].length <= 0) {
     return text;

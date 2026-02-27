@@ -142,11 +142,7 @@ $.fn.initAjaxSubform = function(params) {
       success: function(response) {
         loadResponse(response, function($subformList, subformCount) {
           // We reload the button after the subform list has been overwritten based on its full classes:
-          let buttonSelector = $addButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
-          $addButton = $subformList.find(buttonSelector);
-          if ($addButton.length > 1) {
-            console.error(`Duplicate button selector was not unique: ${buttonSelector}`);
-          }
+          $addButton = $subformList.refindElement($addButton);
 
           // Build up new form:
           let $newSubform = params.buildSubform(subformCount, $addButton);
@@ -193,11 +189,7 @@ $.fn.initAjaxSubform = function(params) {
       success: function(response) {
         loadResponse(response, function($subformList, subformCount) {
           // We reload the button after the subform list has been overwritten based on its full classes:
-          let buttonSelector = $duplicateButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
-          $duplicateButton = $subformList.find(buttonSelector);
-          if ($duplicateButton.length > 1) {
-            console.error(`Duplicate button selector was not unique: ${buttonSelector}`)
-          }
+          $duplicateButton = $subformList.refindElement($duplicateButton);
 
           // We load the subform after it's reloaded from the server, but
           // before javascript changes have been applied to it:
