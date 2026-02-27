@@ -50,7 +50,7 @@ Page('.upload-page .step-content.step-2.active', function($step2) {
 
     buildSubform: function(index) {
       let templateHtml = $('template.custom-strain-form').html();
-      let $newForm = $(templateHtml);
+      let $newForm = $("<div />").html(templateHtml).children();
 
       $newForm.addPrefix(`custom_strains-${index}-`);
 

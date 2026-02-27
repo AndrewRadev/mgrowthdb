@@ -27,7 +27,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       $experimentForm.find('.js-bioreplicate-form-row').initClientSideSubform({
         buildSubform: function(bioreplicateIndex) {
           let templateHtml = $experimentForm.find('template.bioreplicate-form').html();
-          let $bioreplicateForm = $(templateHtml);
+          let $bioreplicateForm = $("<div />").html(templateHtml).children();
 
           $bioreplicateForm.addPrefix(`experiments-${experimentIndex}-bioreplicates-${bioreplicateIndex}-`);
 
@@ -74,7 +74,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       $experimentForm.find('.js-perturbation-form-row').initClientSideSubform({
         buildSubform: function(perturbationIndex) {
           let templateHtml = $experimentForm.find('template.perturbation-form').html();
-          let $perturbationForm = $(templateHtml);
+          let $perturbationForm = $("<div />").html(templateHtml).children();
 
           $perturbationForm.addPrefix(`experiments-${experimentIndex}-perturbations-${perturbationIndex}-`);
 
