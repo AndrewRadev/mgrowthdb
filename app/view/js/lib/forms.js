@@ -94,6 +94,12 @@ $.fn.initAjaxSubform = function(params) {
     // Name prefix template, {} is replaced with the new index
     prefixTemplate: null,
 
+    // How to add new/duplicated forms, defaults to adding at the end of
+    // .js-subform-list:
+    addNewSubform: function($button, $subform) {
+      $container.find('.js-subform-list').append($subform);
+    },
+
     // Create and return a jquery element for the new form:
     buildSubform: function(index, $addButton) {},
 
@@ -146,6 +152,10 @@ $.fn.initAjaxSubform = function(params) {
       urlParams: params.urlParams,
       success: function(response) {
         loadResponse(response, function($subformList, subformCount) {
+          // We reload the button after the subform list has been overwritten based on its full classes:
+          let buttonSelector = $addButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
+          $duplicateButton = $subformList.find(buttonSelector);
+
           // We load the subform after it's reloaded from the server, but
           // before javascript changes have been applied to it:
           let $currentSubform = $subformList.children('.js-subform-container').eq(currentSubformIndex);
@@ -177,7 +187,7 @@ $.fn.initAjaxSubform = function(params) {
           $newSubform.hide().fadeIn(150);
 
           // Add it to the end of the list:
-          $subformList.append($newSubform);
+          params.addNewSubform($duplicateButton, $newSubform)
 
           // Trigger necessary javascript
           params.initializeSubform($newSubform, subformCount);
@@ -205,6 +215,10 @@ $.fn.initAjaxSubform = function(params) {
       urlParams: params.urlParams,
       success: function(response) {
         loadResponse(response, function($subformList, subformCount) {
+          // We reload the button after the subform list has been overwritten based on its full classes:
+          let buttonSelector = $addButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
+          $addButton = $subformList.find(buttonSelector);
+
           // Build up new form:
           let $newSubform = params.buildSubform(subformCount, $addButton);
 
@@ -214,8 +228,8 @@ $.fn.initAjaxSubform = function(params) {
           // Give it a different style:
           $newSubform.addClass('new');
 
-          // Add it to the end of the list:
-          $subformList.append($newSubform);
+          // Add it to the list of subforms:
+          params.addNewSubform($addButton, $newSubform)
 
           // Add fade-in effect
           $newSubform.hide().fadeIn(150);
@@ -317,7 +331,7 @@ $.fn.initClientSideSubform = function(params) {
     // Trigger pre-add callback
     params.beforeAdd($newSubform);
 
-    // Add it to the end of the list:
+    // Add it to the list of subforms:
     $subformList.append($newSubform);
 
     // Trigger necessary javascript

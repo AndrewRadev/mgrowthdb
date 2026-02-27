@@ -2,7 +2,7 @@
   <form
       method="POST"
       action="{{ url_for('upload_step1_page', id=submission.id) }}"
-      class="simple-form js-step-form">
+      class="simple-form step-form js-step-form">
 
     {% if submission_form.errors: %}
       <ul class="error-message-list">

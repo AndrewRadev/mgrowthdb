@@ -108,6 +108,12 @@
     }
   }
 
+  .step-3 {
+    h3 {
+      margin-top: 0;
+    }
+  }
+
   .step-4 {
     .form-row {
       flex: 1;

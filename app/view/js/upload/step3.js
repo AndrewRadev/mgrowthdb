@@ -3,6 +3,10 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
     prefixRegex:    /techniques-(\d+)-/,
     prefixTemplate: 'techniques-{}-',
 
+    addNewSubform: function ($button, $newSubform) {
+      $button.parents('.js-button-row').before($newSubform);
+    },
+
     buildSubform: function (index, $addButton) {
       let templateHtml;
 
@@ -87,7 +91,6 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
       $container.find('.js-extra-inputs').hide().find(':checkbox').prop('checked', false);
     }
   }
-
 
   function updatePreview($container, subjectType) {
     let $typeSelect = $container.find('.js-type-select');
