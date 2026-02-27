@@ -96,8 +96,8 @@ $.fn.initAjaxSubform = function(params) {
 
     // How to add new/duplicated forms, defaults to adding at the end of
     // .js-subform-list:
-    addNewSubform: function($button, $subform) {
-      $container.find('.js-subform-list').append($subform);
+    addNewSubform: function($subformList, $button, $subform) {
+      $subformList.append($subform);
     },
 
     // Create and return a jquery element for the new form:
@@ -155,6 +155,9 @@ $.fn.initAjaxSubform = function(params) {
           // We reload the button after the subform list has been overwritten based on its full classes:
           let buttonSelector = $addButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
           $duplicateButton = $subformList.find(buttonSelector);
+          if ($duplicateButton.length > 1) {
+            console.error(`Duplicate button selector was not unique: ${buttonSelector}`)
+          }
 
           // We load the subform after it's reloaded from the server, but
           // before javascript changes have been applied to it:
@@ -184,7 +187,7 @@ $.fn.initAjaxSubform = function(params) {
           $newSubform.hide().fadeIn(150);
 
           // Add it to the end of the list:
-          params.addNewSubform($duplicateButton, $newSubform)
+          params.addNewSubform($subformList, $duplicateButton, $newSubform)
 
           // Trigger necessary javascript
           params.initializeSubform($newSubform, subformCount);
@@ -215,6 +218,9 @@ $.fn.initAjaxSubform = function(params) {
           // We reload the button after the subform list has been overwritten based on its full classes:
           let buttonSelector = $addButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
           $addButton = $subformList.find(buttonSelector);
+          if ($addButton.length > 1) {
+            console.error(`Duplicate button selector was not unique: ${buttonSelector}`);
+          }
 
           // Build up new form:
           let $newSubform = params.buildSubform(subformCount, $addButton);
@@ -223,7 +229,7 @@ $.fn.initAjaxSubform = function(params) {
           $newSubform.addClass('new');
 
           // Add it to the list of subforms:
-          params.addNewSubform($addButton, $newSubform)
+          params.addNewSubform($subformList, $addButton, $newSubform)
 
           // Add fade-in effect
           $newSubform.hide().fadeIn(150);

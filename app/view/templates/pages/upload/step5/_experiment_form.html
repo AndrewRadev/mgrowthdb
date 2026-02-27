@@ -4,13 +4,18 @@
 
 {% macro render_experiment_form(form, submission_form, index) %}
   {% set submission = submission_form.submission %}
+  {% set preview = false %}
 
   {% if index is none: %}
     {% set prefix = '' %}
-    {% set preview = false %}
   {% else: %}
     {% set prefix = 'experiments-{}-'.format(index)  %}
-    {% set preview = true %}
+
+    {% set error_count = form.errors['bioreplicates']|length + form.errors['perturbations']|length %}
+
+    {% if error_count == 0: %}
+      {% set preview = true %}
+    {% endif %}
   {% endif %}
 
   {% set publicId    = form.data['publicId'] %}
@@ -170,7 +175,7 @@
         <div class="form-row flex-row" style="align-items: center;">
           <h4>Biological replicates</h4>
 
-          <a href="#" class="white-button small-button flex-row js-add-trigger">
+          <a href="#" class="white-button small-button flex-row js-add-trigger js-add-bioreplicate">
             <span class="icon icon-add"></span>
           </a>
 
@@ -201,7 +206,7 @@
         <div class="form-row flex-row" style="align-items: center;">
           <h4>Perturbations</h4>
 
-          <a href="#" class="white-button small-button flex-row js-add-trigger">
+          <a href="#" class="white-button small-button flex-row js-add-trigger js-add-perturbation">
             <span class="icon icon-add"></span>
           </a>
 

@@ -5,7 +5,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
 
     buildSubform: function(experimentIndex) {
       let templateHtml = $('template.experiment-form').html();
-      let $newForm = $(templateHtml);
+      let $newForm = $("<div />").html(templateHtml).children();
 
       $newForm.addPrefix(`experiments-${experimentIndex}-`);
 
