@@ -5,6 +5,19 @@
 
 {{ render_form_errors(upload_form.error_messages) }}
 
+{#
+For every technique, we keep a global counter to determine what number to show
+on the form item. The form that has been visually shown third has a number 3
+(visual_index).
+
+We also keep a local loop.index0 that determines what its index is within the
+"techniques" list, which should be placed in the form so that the subform
+updates the same item, e.g. techniques-3-name.
+
+We can't use `for X in Y if Z:`, because otherwise the loop index will not
+correspond to the index of the record inside the list.
+#}
+
 {% set techniques    = submission_form.submission['studyDesign']['techniques'] %}
 {% set counter       = namespace(found=false) %}
 {% set counter.index = 0 %}
