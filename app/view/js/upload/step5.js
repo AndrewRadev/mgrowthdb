@@ -105,7 +105,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
   $step5.on('click', '.js-edit-experiment', function() {
     $button = $(this);
     $container = $button.parents('.js-subform-container');
-    $otherButton = $container.find('.js-cancel-edit-experiment');
+    $otherButton = $container.find('.js-save-edit-experiment');
 
     $container.find('.js-preview').addClass('hidden');
     $container.find('.js-subform').removeClass('hidden');
@@ -114,7 +114,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
     $otherButton.removeClass('hidden');
   });
 
-  $step5.on('click', '.js-cancel-edit-experiment', function() {
+  $step5.on('click', '.js-save-edit-experiment', function() {
     $button = $(this);
     $container = $button.parents('.js-subform-container');
     $otherButton = $container.find('.js-edit-experiment');

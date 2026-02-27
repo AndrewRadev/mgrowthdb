@@ -130,6 +130,46 @@ $.fn.initAjaxSubform = function(params) {
     });
   });
 
+  $container.on('click', '.js-add-trigger', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let $addButton = $(e.currentTarget);
+    let $form      = $addButton.parents('form');
+
+    $form.ajaxSubmit({
+      urlParams: params.urlParams,
+      success: function(response) {
+        loadResponse(response, function($subformList, subformCount) {
+          // We reload the button after the subform list has been overwritten based on its full classes:
+          let buttonSelector = $addButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
+          $addButton = $subformList.find(buttonSelector);
+          if ($addButton.length > 1) {
+            console.error(`Duplicate button selector was not unique: ${buttonSelector}`);
+          }
+
+          // Build up new form:
+          let $newSubform = params.buildSubform(subformCount, $addButton);
+
+          // Give it a different style:
+          $newSubform.addClass('new');
+
+          // Add it to the list of subforms:
+          params.addNewSubform($subformList, $addButton, $newSubform)
+
+          // Add fade-in effect
+          $newSubform.hide().fadeIn(150);
+
+          // Trigger necessary javascript
+          params.initializeSubform($newSubform, subformCount);
+
+          // Initialize any new tooltips:
+          initTooltips();
+        });
+      }
+    })
+  });
+
   $container.on('click', '.js-duplicate-trigger', function(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -153,7 +193,7 @@ $.fn.initAjaxSubform = function(params) {
       success: function(response) {
         loadResponse(response, function($subformList, subformCount) {
           // We reload the button after the subform list has been overwritten based on its full classes:
-          let buttonSelector = $addButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
+          let buttonSelector = $duplicateButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
           $duplicateButton = $subformList.find(buttonSelector);
           if ($duplicateButton.length > 1) {
             console.error(`Duplicate button selector was not unique: ${buttonSelector}`)
@@ -204,42 +244,16 @@ $.fn.initAjaxSubform = function(params) {
     });
   });
 
-  $container.on('click', '.js-add-trigger', function(e) {
+  $container.on('click', '.js-save-trigger', function(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    let $addButton = $(e.currentTarget);
-    let $form      = $addButton.parents('form');
+    let $form = $(e.currentTarget).parents('form');
 
     $form.ajaxSubmit({
       urlParams: params.urlParams,
       success: function(response) {
-        loadResponse(response, function($subformList, subformCount) {
-          // We reload the button after the subform list has been overwritten based on its full classes:
-          let buttonSelector = $addButton[0].classList.values().toArray().map((c) => `.${c}`).join('');
-          $addButton = $subformList.find(buttonSelector);
-          if ($addButton.length > 1) {
-            console.error(`Duplicate button selector was not unique: ${buttonSelector}`);
-          }
-
-          // Build up new form:
-          let $newSubform = params.buildSubform(subformCount, $addButton);
-
-          // Give it a different style:
-          $newSubform.addClass('new');
-
-          // Add it to the list of subforms:
-          params.addNewSubform($subformList, $addButton, $newSubform)
-
-          // Add fade-in effect
-          $newSubform.hide().fadeIn(150);
-
-          // Trigger necessary javascript
-          params.initializeSubform($newSubform, subformCount);
-
-          // Initialize any new tooltips:
-          initTooltips();
-        });
+        loadResponse(response);
       }
     })
   });
@@ -258,7 +272,9 @@ $.fn.initAjaxSubform = function(params) {
 
     let $errorMessageList = $subformList.find('.error-message-list');
     if ($errorMessageList.length == 0) {
-      callback($subformList, subformCount);
+      if (callback) {
+        callback($subformList, subformCount);
+      }
     } else {
       $(document).scrollTo($errorMessageList, 150);
     }
