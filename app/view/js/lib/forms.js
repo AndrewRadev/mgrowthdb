@@ -177,9 +177,6 @@ $.fn.initAjaxSubform = function(params) {
           // Apply any post-processing:
           params.onDuplicate($newSubform);
 
-          // Add sequential number:
-          $newSubform.find('.js-index').text(`${subformCount + 1}`);
-
           // Give it a different style:
           $newSubform.addClass('new');
 
@@ -221,9 +218,6 @@ $.fn.initAjaxSubform = function(params) {
 
           // Build up new form:
           let $newSubform = params.buildSubform(subformCount, $addButton);
-
-          // Add sequential number:
-          $newSubform.find('.js-index').text(`${subformCount + 1}`);
 
           // Give it a different style:
           $newSubform.addClass('new');
@@ -318,9 +312,6 @@ $.fn.initClientSideSubform = function(params) {
 
     // Build up new form:
     let $newSubform = params.buildSubform(subformCount, $addButton);
-
-    // Add sequential number:
-    $newSubform.find('.js-index').text(`${subformCount + 1}`);
 
     // Give it a different style:
     $newSubform.addClass('new');

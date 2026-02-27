@@ -12,15 +12,17 @@
 <div>
   <h3>Community-level</h3>
 
-  <p class="help">
+  <p>
     Growth measurements of entire communities of cells within the same vessel
     compartment, or of a property of the compartment (pH).
   </p>
 </div>
 
-{% for technique in techniques if technique['subjectType'] == 'bioreplicate': %}
-  {{ render_community_form(data=technique, index=counter.index) }}
-  {% set counter.index = counter.index + 1 %}
+{% for technique in techniques: %}
+  {% if technique['subjectType'] == 'bioreplicate': %}
+    {{ render_community_form(data=technique, visual_index=counter.index, data_index=loop.index0) }}
+    {% set counter.index = counter.index + 1 %}
+  {% endif %}
 {% endfor %}
 
 <div class="flex-right flex-row js-button-row">
@@ -32,16 +34,18 @@
 <div>
   <h3>Strain-level</h3>
 
-  <p class="help">
+  <p>
     Growth measurements for individiual microbial strains within a compartment.
     Could be measured directly (e.g. via fluorescence), or it could be calculated
     based on relative measurements multiplied by total counts.
   </p>
 </div>
 
-{% for technique in techniques if technique['subjectType'] == 'strain': %}
-  {{ render_strain_form(data=technique, index=counter.index) }}
-  {% set counter.index = counter.index + 1 %}
+{% for technique in techniques: %}
+  {% if technique['subjectType'] == 'strain': %}
+    {{ render_strain_form(data=technique, visual_index=counter.index, data_index=loop.index0) }}
+    {% set counter.index = counter.index + 1 %}
+  {% endif %}
 {% endfor %}
 
 <div class="flex-right flex-row js-button-row">
@@ -53,7 +57,7 @@
 <div>
   <h3>Metabolites</h3>
 
-  <p class="help">
+  <p>
     Measurements of metabolite concentrations during cell growth. In case you do
     not find a specific metabolite, choose the closest one from the list and
     leave a note in the "Description" field. For more information visit the
@@ -61,9 +65,11 @@
   </p>
 </div>
 
-{% for technique in techniques if technique['subjectType'] == 'metabolite': %}
-  {{ render_metabolite_form(submission_form, data=technique, index=counter.index) }}
-  {% set counter.index = counter.index + 1 %}
+{% for technique in techniques: %}
+  {% if technique['subjectType'] == 'metabolite': %}
+    {{ render_metabolite_form(submission_form, data=technique, visual_index=counter.index, data_index=loop.index0) }}
+    {% set counter.index = counter.index + 1 %}
+  {% endif %}
 {% endfor %}
 
 <div class="flex-right flex-row js-button-row">
