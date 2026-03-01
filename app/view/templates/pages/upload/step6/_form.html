@@ -73,7 +73,9 @@
           you'll be able to see a preview and inspect it for issues.
         </p>
 
-        <div class="js-upload-container">
+        <div
+            class="js-upload-container"
+            data-preview-url="{{ url_for('upload_spreadsheet_preview_fragment', id=submission.id) }}">
           <div class="form-row full">
             <div class="file-upload-container full js-file-upload">
               <img
