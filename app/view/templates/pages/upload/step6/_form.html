@@ -104,27 +104,6 @@
     {% endif %}
   </div>
 
-  {% if submission.study: %}
-    <p>
-      When you click "Update data", your file will be validated and your study
-      will be updated.
-    </p>
-  {% else: %}
-    <p>
-      When you click "Next", your file will be validated and your study will
-      be created. You will get a link to see the processed data and you'll be
-      able to publish it
-
-      {% set embargo = submission_form.submission.studyDesign['study']['embargoExpiresAt'] %}
-
-      {% if embargo: %}
-        after the embargo date you specified of <strong>{{ embargo }}</strong> ({{ embargo|relative_date }}).
-      {% else: %}
-        after a period of 24 hours.
-      {% endif  %}
-    </p>
-  {% endif %}
-
   <br>
 
   <form
@@ -132,7 +111,6 @@
       enctype="multipart/form-data"
       method="POST"
       action="{{ url_for('upload_step6_page', id=submission.id) }}">
-
     <input
         id="data-template-input"
         type="file"
@@ -140,15 +118,48 @@
         class="hidden"
         accept=".xls,.xlsx,.ods" />
 
-    <div class="form-row">
-      {% if submission.study: %}
-        <input type="submit" class="green-button" value="Update data" />
-      {% else: %}
-        <input type="submit" class="green-button" value="Next" />
-      {% endif %}
+    {% if submission.study: %}
+      <div class="form-row">
+        <label class="full">
+          <span class="required">Changes</span>
+          <textarea
+              required
+              rows=2
+              name="changelogText"
+              placeholder="Describe your updates to the study in short, for example: &quot;Fixed a typo in the study's description&quot;"
+              class="form-input-blue form-input-full"></textarea>
+        </label>
+      </div>
 
-      {% include 'pages/upload/_loader.html' %}
-    </div>
+      <p>
+        When you click "Update data", your file will be validated and your study
+        will be updated with the changes in this submission.
+      </p>
+
+      <div class="form-row">
+        <input type="submit" class="green-button" value="Update data" />
+        {% include 'pages/upload/_loader.html' %}
+      </div>
+    {% else: %}
+      <p>
+        When you click "Next", your file will be validated and your study will
+        be created. You will get a link to see the processed data and you'll be
+        able to publish it
+
+        {% set embargo = submission_form.submission.studyDesign['study']['embargoExpiresAt'] %}
+
+        {% if embargo: %}
+          after the embargo date you specified of <strong>{{ embargo }}</strong> ({{ embargo|relative_date }}).
+        {% else: %}
+          after a period of 24 hours.
+        {% endif  %}
+      </p>
+
+      <div class="form-row">
+        <input type="submit" class="green-button" value="Next" />
+        {% include 'pages/upload/_loader.html' %}
+      </div>
+    {% endif %}
   </form>
 
 {% endmacro %}

@@ -64,8 +64,13 @@ def persist_submission_to_database(submission_form):
 
         db_trans_session.commit()
 
+        # TODO (2026-03-01) Extract to background job:
         if study.isPublished:
-            submission_form.submission.export_data(message="Study update")
+            message = "Study update."
+            if submission.changelogText:
+                changelog_text = " ".join(submission.changelogText.splitlines())
+                message += f" Changes: {changelog_text}"
+            submission_form.submission.export_data(message=message)
 
         return []
 
