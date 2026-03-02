@@ -72,16 +72,7 @@
         </p>
       {% endif %}
 
-      {% if g.current_user is none: %}
-        <p class="warning-message">
-          In order to upload your data, please
-          <a href="{{ url_for("user_login_page") }}">log in</a>
-          to the application using your
-          {{ "https://orcid.org/"|external_link("ORCID") }}.
-        </p>
-      {% endif %}
-
-      {% if user_submissions %}
+      {% if user_submissions: %}
         {{ render_user_submissions(user_submissions, submission) }}
       {% endif %}
 
@@ -93,7 +84,10 @@
 
         <br>
 
-        <form class="simple-form" action="{{ url_for('upload_status_page') }}" method="POST">
+        <form
+            class="simple-form"
+            action="{{ url_for('upload_status_page') }}"
+            method="POST">
           <div class="form-row flex-row flex-gap-10">
             <select
                 name="study_uuid"
@@ -113,12 +107,23 @@
               {% endfor %}
             </select>
 
-            <input type="submit" class="green-button" value="New submission" />
+            <input
+                {{ "disabled" if not g.current_user else "" }}
+                type="submit"
+                class="green-button"
+                value="New submission" />
           </div>
         </form>
       {% endif %}
 
-      {% if submission.id is none: %}
+      {% if g.current_user is none: %}
+        <p class="warning-message">
+          In order to upload your data, please
+          <a href="{{ url_for("user_login_page") }}">log in</a>
+          to the application using your
+          {{ "https://orcid.org/"|external_link("ORCID") }}.
+        </p>
+      {% elif submission.id is none: %}
         <p class="help">
           To start the upload process, click on "New submission"
           {% if user_submissions: %}

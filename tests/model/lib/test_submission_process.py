@@ -525,6 +525,35 @@ class TestSubmissionProcess(DatabaseTest):
         self.db_session.refresh(experiment)
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3"})
 
+    def test_updating_study_before_publication(self):
+        study = self.create_study(publishedAt=None)
+
+        # Prepare previous submission
+        previous_submission = self.create_submission(
+            studyUniqueID=study.uuid,
+            projectUniqueID=study.project.uuid,
+            studyDesign={'study': {'name': 'Existing study'}},
+        )
+        study.lastSubmission = previous_submission
+        self.db_session.add(study)
+        self.db_session.commit()
+
+        submission_form = SubmissionForm.create(self.db_session, user_uuid='test_user', study_uuid=study.uuid)
+        current_submission = submission_form.submission
+
+        self.assertNotEqual(current_submission, study.lastSubmission)
+        self.assertEqual(current_submission.studyDesign['study']['name'], 'Existing study')
+        self.assertFalse(current_submission.isPublished)
+
+        _finalize_submission(self.db_session, submission_form, study, study.project)
+
+        self.db_session.flush()
+        self.db_session.refresh(study)
+        self.db_session.refresh(current_submission)
+
+        self.assertEqual(study.lastSubmission, current_submission)
+        self.assertFalse(current_submission.isPublished)
+
     def test_updating_study_after_publication(self):
         study = self.create_study(publishedAt=datetime.now(UTC))
 

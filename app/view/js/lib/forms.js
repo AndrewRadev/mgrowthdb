@@ -76,6 +76,9 @@ $.fn.replacePrefix = function(prefixRegex, prefixValue) {
 // Selectors:
 //
 // - .js-add-trigger:       Add button
+// - .js-duplicate-trigger: Duplicate button (optional).
+//                          Note: MUST have at least one unique class for the subform
+//                          so it can be re-fetched.
 // - .js-remove-trigger:    Remove button
 // - .js-subform-list:      Outer container of forms
 // - .js-subform-container: Wrapper of each individual form
