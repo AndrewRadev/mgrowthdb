@@ -322,7 +322,7 @@ def _create_submission_form(study_uuid):
 
 
 def _load_submission_form(submission_id, step):
-    if g.current_user is None:
+    if step > 0 and g.current_user is None:
         raise LoginRequired()
 
     return SubmissionForm.load(

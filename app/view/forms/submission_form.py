@@ -85,7 +85,7 @@ class SubmissionForm:
             # Initialize a brand new submission:
             self.submission = Submission(
                 projectUniqueID=None,
-                studyUniqueID=(study_uuid if study_uuid != '_new' else None),
+                studyUniqueID=(study_uuid if study_uuid != '_new' else str(uuid4())),
                 userUniqueID=user_uuid,
                 studyDesign=self._default_study_design,
             )
