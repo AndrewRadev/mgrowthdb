@@ -4,8 +4,8 @@
 {% macro render_step4_form(submission_form, upload_form) %}
 
   <form
-      class="simple-form"
-      action="{{ url_for('upload_step4_page') }}"
+      class="simple-form step-form js-step-form"
+      action="{{ url_for('upload_step4_page', id=submission_form.submission.id) }}"
       method="POST">
     {{ upload_form.csrf_token }}
 
@@ -45,7 +45,7 @@
 
       <div class="form-row flex-right flex-row">
         <a href="#" class="white-button flex-row js-add-trigger">
-          <span class="icon icon-add"></span> Compartment
+          <span class="icon icon-add"></span> Add compartment
         </a>
       </div>
     </section>
@@ -72,15 +72,13 @@
 
       <div class="form-row flex-right flex-row">
         <a href="#" class="white-button flex-row js-add-trigger">
-          <span class="icon icon-add"></span> Community
+          <span class="icon icon-add"></span> Add community
         </a>
       </div>
 
       <div class="form-row">
-        <input
-            type="submit"
-            class="form-input-blue"
-            value="Next" />
+        <input type="submit" value="Next" />
+        {% include 'pages/upload/_loader.html' %}
       </div>
     </section>
 

@@ -5,7 +5,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
 
     buildSubform: function(experimentIndex) {
       let templateHtml = $('template.experiment-form').html();
-      let $newForm = $(templateHtml);
+      let $newForm = $("<div />").html(templateHtml).children();
 
       $newForm.addPrefix(`experiments-${experimentIndex}-`);
 
@@ -27,7 +27,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       $experimentForm.find('.js-bioreplicate-form-row').initClientSideSubform({
         buildSubform: function(bioreplicateIndex) {
           let templateHtml = $experimentForm.find('template.bioreplicate-form').html();
-          let $bioreplicateForm = $(templateHtml);
+          let $bioreplicateForm = $("<div />").html(templateHtml).children();
 
           $bioreplicateForm.addPrefix(`experiments-${experimentIndex}-bioreplicates-${bioreplicateIndex}-`);
 
@@ -74,7 +74,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       $experimentForm.find('.js-perturbation-form-row').initClientSideSubform({
         buildSubform: function(perturbationIndex) {
           let templateHtml = $experimentForm.find('template.perturbation-form').html();
-          let $perturbationForm = $(templateHtml);
+          let $perturbationForm = $("<div />").html(templateHtml).children();
 
           $perturbationForm.addPrefix(`experiments-${experimentIndex}-perturbations-${perturbationIndex}-`);
 
@@ -101,6 +101,18 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       $newForm.find('.js-not-published').removeClass('hidden');
     },
   })
+
+  $step5.on('click', '.js-edit-experiment', function() {
+    $button = $(this);
+    $container = $button.parents('.js-subform-container');
+    $otherButton = $container.find('.js-save-edit-experiment');
+
+    $container.find('.js-preview').addClass('hidden');
+    $container.find('.js-subform').removeClass('hidden');
+
+    $button.addClass('hidden');
+    $otherButton.removeClass('hidden');
+  });
 
   if ($step5.find('.js-experiment-container').length == 0) {
     // By default, add one form

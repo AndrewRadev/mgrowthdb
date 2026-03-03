@@ -1,13 +1,12 @@
-{% macro render_strain_form(data, index) %}
-  {% if index is none: %}
+{% macro render_strain_form(data, visual_index=None, data_index=None) %}
+  {% if data_index is none: %}
     {% set prefix = '' %}
   {% else: %}
-    {% set prefix = 'techniques-{}-'.format(index)  %}
+    {% set prefix = 'techniques-{}-'.format(data_index)  %}
   {% endif %}
 
   <div
     class="subform-container box technique-container js-subform-container"
-    data-index="{{ index if index is not none else '' }}"
     data-subject-type="strain">
     <img
         width="90"
@@ -15,7 +14,7 @@
         alt="Strain-level measurement"
         src="/static/images/large-icons/bacteria.png" />
     <h3>
-      <span class="js-index">{{ index + 1 if index is not none else '' }}</span>.
+      <span>{{ "{}.".format(visual_index + 1) if visual_index is not none else "[New]" }}</span>
       Strain-level measurement
     </h3>
 
