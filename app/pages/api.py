@@ -7,6 +7,12 @@ from flask import (
 from werkzeug.exceptions import NotFound
 import sqlalchemy as sql
 
+from app.model.lib.conversion import (
+    convert_df_units,
+    CELL_COUNT_UNITS,
+    CFU_COUNT_UNITS,
+    METABOLITE_UNITS,
+)
 from app.model.orm import (
     Bioreplicate,
     Experiment,
@@ -17,6 +23,7 @@ from app.model.orm import (
     Study,
     StudyStrain,
 )
+from app.model.lib.errors import ClientError
 
 
 def project_json(publicId):
@@ -164,7 +171,11 @@ def measurement_context_csv(id):
     if not measurement_context or not measurement_context.study.isPublished:
         raise NotFound
 
-    df = measurement_context.get_df(g.db_session)
+    df                  = measurement_context.get_df(g.db_session)
+    source_units        = measurement_context.technique.units
+    measurement_subject = measurement_context.get_subject(g.db_session)
+
+    _convert_to_requested_units(df, source_units, measurement_subject)
 
     if request.args.get('withLabel'):
         html_label = measurement_context.get_chart_label()
@@ -318,3 +329,26 @@ def _contexts_by_subject(subject_type, subject_id):
             )
             .options(*sql_options)
         ).all()
+
+
+def _convert_to_requested_units(df, source_units, measurement_subject):
+    if source_units in CELL_COUNT_UNITS:
+        target_units = request.args.get('cellCountUnits', 'Cells/mL')
+        if target_units not in CELL_COUNT_UNITS:
+            raise ClientError(f"Unexpected cell count units requested: {target_units}")
+
+        convert_df_units(df, source_units, target_units)
+
+    elif source_units in CFU_COUNT_UNITS:
+        target_units  = request.args.get('cfuCountUnits', 'CFUs/mL')
+        if target_units not in CFU_COUNT_UNITS:
+            raise ClientError(f"Unexpected CFU count units requested: {target_units}")
+
+        convert_df_units(df, source_units, target_units)
+
+    elif source_units in METABOLITE_UNITS and isinstance(measurement_subject, Metabolite):
+        target_units = request.args.get('metaboliteUnits', 'mM')
+        if target_units not in METABOLITE_UNITS:
+            raise ClientError(f"Unexpected metabolite count units requested: {target_units}")
+
+        convert_df_units(df, source_units, target_units, measurement_subject.averageMass)
