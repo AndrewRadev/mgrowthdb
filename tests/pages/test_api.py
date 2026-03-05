@@ -498,8 +498,17 @@ class TestApiPages(PageTest):
         response_df = self._get_csv(response)
         self.assertEqual(response_df['value'].tolist(), [1, 2, 3])
 
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?cellCountUnits=Cells/μL")
+        response_df = self._get_csv(response)
+        mc_b1_df = response_df[response_df['measurementContextId'] == mc_b1.id]
+        self.assertEqual(mc_b1_df['value'].tolist(), [1, 2, 3])
+
         # Request something invalid:
         response = self.client.get(f"/api/v1/measurement-context/{mc_b1.id}.csv?cellCountUnits=g/L")
+        self.assertEqual(response.status, '400 BAD REQUEST')
+        self.assertEqual(response.text.strip(), 'Unexpected cell count units requested: g/L')
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?cellCountUnits=g/L")
         self.assertEqual(response.status, '400 BAD REQUEST')
         self.assertEqual(response.text.strip(), 'Unexpected cell count units requested: g/L')
 
@@ -508,17 +517,37 @@ class TestApiPages(PageTest):
         response_df = self._get_csv(response)
         self.assertEqual(response_df['value'].tolist(), [51.0, 102.0, 153.0])
 
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?metaboliteUnits=g/L")
+        response_df = self._get_csv(response)
+        mc_m1_df = response_df[response_df['measurementContextId'] == mc_m1.id]
+        self.assertEqual(mc_m1_df['value'].tolist(), [51.0, 102.0, 153.0])
+
         # Request strain measurements without parameters, converts from Cells/μL:
         response = self.client.get(f"/api/v1/measurement-context/{mc_s1.id}.csv")
         response_df = self._get_csv(response)
         self.assertEqual(response_df['value'].tolist(), [1_000_000, 2_000_000, 3_000_000])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv")
+        response_df = self._get_csv(response)
+        mc_s1_df = response_df[response_df['measurementContextId'] == mc_s1.id]
+        self.assertEqual(mc_s1_df['value'].tolist(), [1_000_000, 2_000_000, 3_000_000])
 
         # Request strain measurements with incompatible parameters, no conversion
         response = self.client.get(f"/api/v1/measurement-context/{mc_s2.id}.csv?cellCountUnits=Cells/mL")
         response_df = self._get_csv(response)
         self.assertEqual(response_df['value'].tolist(), [1000, 2000, 3000])
 
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?cellCountUnits=Cells/mL")
+        response_df = self._get_csv(response)
+        mc_s2_df = response_df[response_df['measurementContextId'] == mc_s2.id]
+        self.assertEqual(mc_s2_df['value'].tolist(), [1000, 2000, 3000])
+
         # Request strain measurements with compatible parameters:
         response = self.client.get(f"/api/v1/measurement-context/{mc_s2.id}.csv?cfuCountUnits=CFUs/μL")
         response_df = self._get_csv(response)
         self.assertEqual(response_df['value'].tolist(), [1, 2, 3])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?cfuCountUnits=CFUs/μL")
+        response_df = self._get_csv(response)
+        mc_s2_df = response_df[response_df['measurementContextId'] == mc_s2.id]
+        self.assertEqual(mc_s2_df['value'].tolist(), [1, 2, 3])

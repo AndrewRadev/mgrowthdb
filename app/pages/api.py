@@ -173,7 +173,10 @@ def measurement_context_csv(id):
 
     df                  = measurement_context.get_df(g.db_session)
     source_units        = measurement_context.technique.units
-    measurement_subject = measurement_context.get_subject(g.db_session)
+    measurement_subject = None
+
+    if measurement_context.subjectType == 'metabolite':
+        measurement_subject = measurement_context.get_subject(g.db_session)
 
     _convert_to_requested_units(df, source_units, measurement_subject)
 
@@ -216,6 +219,22 @@ def bioreplicate_csv(id):
         raise NotFound
 
     df = bioreplicate.get_df(g.db_session)
+
+    measurement_contexts = g.db_session.scalars(
+        sql.select(MeasurementContext)
+        .where(MeasurementContext.id.in_([mc.id for mc in bioreplicate.measurementContexts]))
+        .options(sql.orm.selectinload(MeasurementContext.technique))
+    )
+
+    # Convert units for each individual measurement context:
+    for mc in measurement_contexts:
+        mc_subject = None
+        if mc.subjectType == 'metabolite':
+            mc_subject = mc.get_subject(g.db_session)
+
+        mc_df = df[df['measurementContextId'] == mc.id].copy()
+        _convert_to_requested_units(mc_df, mc.technique.units, mc_subject)
+        df.loc[df['measurementContextId'] == mc.id] = mc_df
 
     return df.to_csv(index=False)
 
@@ -331,7 +350,7 @@ def _contexts_by_subject(subject_type, subject_id):
         ).all()
 
 
-def _convert_to_requested_units(df, source_units, measurement_subject):
+def _convert_to_requested_units(df, source_units, measurement_subject=None):
     if source_units in CELL_COUNT_UNITS:
         target_units = request.args.get('cellCountUnits', 'Cells/mL')
         if target_units not in CELL_COUNT_UNITS:
@@ -346,7 +365,7 @@ def _convert_to_requested_units(df, source_units, measurement_subject):
 
         convert_df_units(df, source_units, target_units)
 
-    elif source_units in METABOLITE_UNITS and isinstance(measurement_subject, Metabolite):
+    elif source_units in METABOLITE_UNITS and measurement_subject:
         target_units = request.args.get('metaboliteUnits', 'mM')
         if target_units not in METABOLITE_UNITS:
             raise ClientError(f"Unexpected metabolite count units requested: {target_units}")
