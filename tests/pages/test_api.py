@@ -156,6 +156,7 @@ class TestApiPages(PageTest):
         study        = self.create_study(publishedAt=datetime.now(UTC))
         experiment   = self.create_experiment(studyId=study.publicId)
         bioreplicate = self.create_bioreplicate(name='B1', experimentId=experiment.publicId)
+        technique    = self.create_measurement_technique(units='Cells/μL')
 
         measurement_context = self.create_measurement_context(
             studyId=study.publicId,
@@ -163,6 +164,7 @@ class TestApiPages(PageTest):
             subjectId=bioreplicate.id,
             subjectType='bioreplicate',
             subjectName=bioreplicate.name,
+            techniqueId=technique.id,
         )
         for i in range(1, 4):
             self.create_measurement(
@@ -185,7 +187,8 @@ class TestApiPages(PageTest):
         self.assertEqual(response_json['studyId'], study.publicId)
         self.assertEqual(response_json['experimentId'], experiment.publicId)
         self.assertEqual(response_json['techniqueType'], 'fc')
-        self.assertEqual(response_json['techniqueUnits'], '')
+        self.assertEqual(response_json['techniqueOriginalUnits'], 'Cells/μL')
+        self.assertEqual(response_json['techniqueUnits'], 'Cells/mL')
         self.assertEqual(response_json['bioreplicateName'], 'B1')
         self.assertEqual(response_json['measurementCount'], 3)
         self.assertEqual(response_json['subject']['type'], 'bioreplicate')
@@ -522,6 +525,17 @@ class TestApiPages(PageTest):
         mc_m1_df = response_df[response_df['measurementContextId'] == mc_m1.id]
         self.assertEqual(mc_m1_df['value'].tolist(), [51.0, 102.0, 153.0])
 
+        response = self.client.get(f"/api/v1/measurement-context/{mc_m1.id}.json?metaboliteUnits=g/L")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json['techniqueOriginalUnits'], 'mM')
+        self.assertEqual(response_json['techniqueUnits'], 'g/L')
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.json?metaboliteUnits=g/L")
+        response_json = self._get_json(response)
+        mc_json = [entry for entry in response_json['measurementContexts'] if entry['id'] == mc_m1.id][0]
+        self.assertEqual(mc_json['techniqueOriginalUnits'], 'mM')
+        self.assertEqual(mc_json['techniqueUnits'], 'g/L')
+
         # Request strain measurements without parameters, converts from Cells/μL:
         response = self.client.get(f"/api/v1/measurement-context/{mc_s1.id}.csv")
         response_df = self._get_csv(response)
@@ -551,3 +565,45 @@ class TestApiPages(PageTest):
         response_df = self._get_csv(response)
         mc_s2_df = response_df[response_df['measurementContextId'] == mc_s2.id]
         self.assertEqual(mc_s2_df['value'].tolist(), [1, 2, 3])
+
+    def test_metabolite_unit_conversion_without_mass(self):
+        study        = self.create_study(publishedAt=datetime.now(UTC))
+        experiment   = self.create_experiment(studyId=study.publicId)
+        bioreplicate = self.create_bioreplicate(experimentId=experiment.publicId)
+        metabolite   = self.create_metabolite(averageMass=None)
+
+        # Metabolite measurements:
+        mc = self.create_measurement_context(
+            studyId=study.publicId,
+            bioreplicateId=bioreplicate.id,
+            techniqueId=self.create_measurement_technique(units='mM', subjectType='metabolite').id,
+            subjectId=metabolite.id,
+            subjectType='metabolite',
+        )
+
+        # All measured values are 10, 20, 30
+        for i in range(1, 4):
+            self.create_measurement(contextId=mc.id, timeInSeconds=(i * 3600), value=(i * 10))
+
+        self.db_session.commit()
+
+        # Conversion fails, returns original values
+        response = self.client.get(f"/api/v1/measurement-context/{mc.id}.csv?metaboliteUnits=g/L")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df['value'].tolist(), [10, 20, 30])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?metaboliteUnits=g/L")
+        response_df = self._get_csv(response)
+        mc_df = response_df[response_df['measurementContextId'] == mc.id]
+        self.assertEqual(mc_df['value'].tolist(), [10, 20, 30])
+
+        response = self.client.get(f"/api/v1/measurement-context/{mc.id}.json?metaboliteUnits=g/L")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json['techniqueOriginalUnits'], 'mM')
+        self.assertEqual(response_json['techniqueUnits'], 'mM')
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.json?metaboliteUnits=g/L")
+        response_json = self._get_json(response)
+        mc_json = [entry for entry in response_json['measurementContexts'] if entry['id'] == mc.id][0]
+        self.assertEqual(mc_json['techniqueOriginalUnits'], 'mM')
+        self.assertEqual(mc_json['techniqueUnits'], 'mM')
