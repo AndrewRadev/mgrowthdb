@@ -45,14 +45,26 @@ Technique units depend on what the specific technique is, but they will be one o
 - CFU count units: CFUs/mL, CFUs/μL
 - Metabolite units of molar or mass concentration: mM, μM, nM, pM, g/L, mg/L
 
-Units within these three lists are convertible between each other in the application, though at the moment the API returns the data in the units that it was uploaded in. There are also other units that are not convertible with the others:
+Units within these three lists are convertible between each other in the application. To request data in specific units, append the corresponding query parameters to each query:
 
-- AUC: for metabolites, a relative measurement
-- g/L: for mass concentration of cells, same unit as with metabolites, but non-convertible (since we don't know the weights of individual cells)
-- reads: for relative cell abundances
+- `cellCountUnits`, example: `?cellCountUnits=Cells/μL`, default: `Cells/mL`
+- `cfuCountUnits`, example: `?cfuCountUnits=CFUs/μL`, default: `CFUs/mL`
+- `metaboliteUnits`, example: `?metaboliteUnits=g/L`, default: `mM`
+
+For a combined example of all three, you can make a request to a particular endpoint with an added query string:
+
+```
+?cellCountUnits=Cells/μL&cfuCountUnits=CFUs/μL&metaboliteUnits=g/L`
+```
+
+There are also other units that are not convertible with the others:
+
+- `AUC`: for metabolites, a relative measurement
+- `g/L`: for mass concentration of cells, same unit as with metabolites, but non-convertible (since we don't know the weights of individual cells)
+- `reads`: for relative cell abundances
 - an empty string, indicating a unitless value like OD or pH.
 
-Below, in the structure descriptions, these will be described as the type `Unit`.
+Below, in the structure descriptions, these will be described as the type `Unit`. The original units that the data was uploaded in will be labeled "original", e.g. `techniqueOriginalUnits`.
 
 ## Search
 
@@ -68,6 +80,7 @@ You can use the "search" endpoint to locate studies with specific properties. At
     experimentId: "EMGDBxxx",
     studyId: "SMGDBxxx",
     techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
+    techniqueOriginalUnits: Unit,
     techniqueUnits: Unit,
     subject: {
       type: "bioreplicate"|"strain"|"metabolite",
@@ -109,6 +122,7 @@ Output:
       "experimentId": "EMGDB000000028",
       "studyId": "SMGDB00000004",
       "techniqueType": "qpcr",
+      "techniqueOriginalUnits": "Cells/mL",
       "techniqueUnits": "Cells/mL",
       "subject": {
         "type": "strain",
@@ -122,6 +136,7 @@ Output:
       "experimentId": "EMGDB000000042",
       "studyId": "SMGDB00000005",
       "techniqueType": "fc",
+      "techniqueOriginalUnits": "Cells/μL",
       "techniqueUnits": "Cells/μL",
       "subject": {
         "type": "strain",
@@ -160,6 +175,7 @@ curl -s "$ROOT_URL/api/v1/search.json?metaboliteChebiIds=17012"
       "experimentId": "EMGDB000000021",
       "studyId": "SMGDB00000002",
       "techniqueType": "metabolite",
+      "techniqueOriginalUnits": "mM",
       "techniqueUnits": "mM",
       "subject": {
         "type": "metabolite",
@@ -320,6 +336,7 @@ Output structure (note that compartment values encoded as decimal numbers are re
       experimentId: "EMGDBxxx",
       studyId: "SMGDBxxx",
       techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
+      techniqueOriginalUnits: Unit,
       techniqueUnits: Unit,
       subject: {
         type: "bioreplicate"|"strain"|"metabolite",
@@ -403,6 +420,7 @@ Example output:
         {
           "id": 1431,
           "techniqueType": "od",
+          "techniqueOriginalUnits": "",
           "techniqueUnits": "",
           "subject": {
             "id": 60111,
@@ -413,6 +431,7 @@ Example output:
         {
           "id": 1432,
           "techniqueType": "ph",
+          "techniqueOriginalUnits": "",
           "techniqueUnits": "",
           "subject": {
             "id": 60111,
@@ -444,6 +463,7 @@ Metadata structure:
   bioreplicateId: number,
   bioreplicateName: string,
   techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
+  techniqueOriginalUnits: Unit,
   techniqueUnits: Unit,
   subject: {
     type: "bioreplicate"|"strain"|"metabolite",
@@ -472,6 +492,7 @@ Example output:
   "bioreplicateId": 60329,
   "bioreplicateName": "Average(BT_WC)",
   "techniqueType": "fc",
+  "techniqueOriginalUnits": "Cells/μL",
   "techniqueUnits": "Cells/μL",
   "subject": {
     "type": "strain",
@@ -523,6 +544,7 @@ curl -s "$ROOT_URL/api/v1/measurement-context/1314.csv"
   "bioreplicateId": 60315,
   "bioreplicateName": "BT_WC_3",
   "techniqueType": "metabolite",
+  "techniqueOriginalUnits": "mM",
   "techniqueUnits": "mM",
   "subject": {
     "type": "metabolite",
@@ -570,6 +592,7 @@ Output structure:
   measurementContexts: [{
     id: number,
     techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
+    techniqueOriginalUnits: Unit,
     techniqueUnits: Unit,
     subject: {
       type: "bioreplicate"|"strain"|"metabolite",
@@ -601,6 +624,7 @@ curl -s "$ROOT_URL/api/v1/bioreplicate/1314.csv"
     {
       "id": 3364,
       "techniqueType": "od",
+      "techniqueOriginalUnits": "",
       "techniqueUnits": "",
       "subject": {
         "type": "bioreplicate",
