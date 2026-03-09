@@ -137,7 +137,7 @@ Output:
       "studyId": "SMGDB00000005",
       "techniqueType": "fc",
       "techniqueOriginalUnits": "Cells/μL",
-      "techniqueUnits": "Cells/μL",
+      "techniqueUnits": "Cells/mL",
       "subject": {
         "type": "strain",
         "name": "Faecalibacterium duncaniae",
@@ -493,7 +493,7 @@ Example output:
   "bioreplicateName": "Average(BT_WC)",
   "techniqueType": "fc",
   "techniqueOriginalUnits": "Cells/μL",
-  "techniqueUnits": "Cells/μL",
+  "techniqueUnits": "Cells/mL",
   "subject": {
     "type": "strain",
     "name": "Bacteroides thetaiotaomicron VPI-5482",
