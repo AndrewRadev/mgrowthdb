@@ -99,19 +99,36 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       $newForm.find('.js-public-id').remove();
       $newForm.find('.js-is-published').addClass('hidden');
       $newForm.find('.js-not-published').removeClass('hidden');
+
+      // Remove preview state:
+      let $editButton = $newForm.log().find('.js-edit-experiment');
+      if (!$editButton.hasClass('hidden')) {
+        $saveButton      = $newForm.find('.js-save-edit-experiment');
+        $duplicateButton = $newForm.find('.js-duplicate-in-preview');
+
+        $newForm.find('.js-preview').addClass('hidden');
+        $newForm.find('.js-subform').removeClass('hidden');
+
+        $editButton.addClass('hidden');
+        $duplicateButton.addClass('hidden');
+        $saveButton.removeClass('hidden');
+      }
     },
   })
 
   $step5.on('click', '.js-edit-experiment', function() {
     $button = $(this);
-    $container = $button.parents('.js-subform-container');
-    $otherButton = $container.find('.js-save-edit-experiment');
+
+    $container       = $button.parents('.js-subform-container');
+    $saveButton      = $container.find('.js-save-edit-experiment');
+    $duplicateButton = $container.find('.js-duplicate-in-preview');
 
     $container.find('.js-preview').addClass('hidden');
     $container.find('.js-subform').removeClass('hidden');
 
     $button.addClass('hidden');
-    $otherButton.removeClass('hidden');
+    $saveButton.removeClass('hidden');
+    $duplicateButton.removeClass('hidden');
   });
 
   if ($step5.find('.js-experiment-container').length == 0) {

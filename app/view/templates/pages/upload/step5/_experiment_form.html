@@ -41,6 +41,14 @@
             class="green-button small-button small js-save-trigger js-save-edit-experiment {{ 'hidden' if preview else '' }}">
           📝 Save changes
         </button>
+
+        <div style="display: inline-block; vertical-align: middle;">
+          <button
+              type="button"
+              class="white-button small-button small flex-row js-duplicate-trigger js-duplicate-experiment-{{ index or 'new' }} js-duplicate-in-preview">
+            <span class="icon icon-duplicate"></span> Duplicate
+          </button>
+        </div>
       </h3>
 
       {% if publicId: %}
@@ -96,8 +104,19 @@
           <li><strong>Community</strong>: {{ form.data['communityName'] }}</li>
           <li><strong>Compartments</strong>: {{ (form.data['compartmentNames'] or [])|join(', ') }}</li>
           <li><strong>Timepoint count</strong>: {{ form.data['timepointCount'] }}</li>
-          <li><strong>Description</strong>: {{ form.data['description'] }}</li>
         </ul>
+      </div>
+
+      <div>
+        <h4 class="small">Description:</h4>
+
+        <div class="small margin-top-10">
+          {% if form.data['description']: %}
+            {{ form.data['description'] }}
+          {% else: %}
+            <em>N/A</em>
+          {% endif %}
+        </div>
       </div>
     </div>
 
@@ -238,7 +257,9 @@
 
       <div class="form-row" style="margin-top: 10px;">
         <div class="no-label">
-          <a href="#" class="white-button flex-row js-duplicate-trigger js-duplicate-experiment-{{ index or 'new' }}">
+          <a
+              href="#"
+              class="white-button flex-row js-duplicate-trigger js-duplicate-experiment-{{ index or 'new' }} js-duplicate-in-form">
             <span class="icon icon-duplicate"></span> Duplicate experiment
           </a>
         </div>
