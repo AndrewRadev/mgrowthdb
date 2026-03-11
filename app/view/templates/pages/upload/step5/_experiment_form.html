@@ -11,7 +11,10 @@
   {% else: %}
     {% set prefix = 'experiments-{}-'.format(index)  %}
 
-    {% set error_count = form.errors['bioreplicates']|length + form.errors['perturbations']|length %}
+    {% set error_count = 0 %}
+    {% set error_count = error_count + form.errors['']|length %}
+    {% set error_count = error_count + form.errors['bioreplicates']|length %}
+    {% set error_count = error_count + form.errors['perturbations']|length %}
 
     {% if error_count == 0: %}
       {% set preview = true %}
@@ -28,7 +31,7 @@
     <div class="form-row">
       <h3>
         Experiment <span class="js-index">{{ index + 1 if index is not none else '' }}</span>
-        {%- if form.data['name']: -%}: {{ form.data['name'] }}{% endif %}
+        {%- if form.data['name']: -%}: <span class="js-name">{{ form.data['name'] }}</span>{% endif %}
 
         <button
             type="button"
@@ -121,6 +124,8 @@
     </div>
 
     <div class="js-subform {{ 'hidden' if preview else '' }}">
+      {{ render_form_errors(form.errors['']) }}
+
       <div class="form-row margin-top-10">
         <label class="full">
           <div class="required">Name</div>

@@ -111,14 +111,14 @@ $(document).ready(function() {
     let $link   = $(e.currentTarget);
     let $target = $($link.attr('href'));
 
-    $(document).scrollTo($target, 150, {offset: -20});
+    $(document).scrollTo($target, 500, {offset: -20});
   })
 
   // On click, smooth-scroll to the location:
   $(document).on('click', '.js-scroll-top', function(e) {
     e.preventDefault()
     let $link = $(e.currentTarget);
-    $(document).scrollTo(0, 150);
+    $(document).scrollTo(0, 500);
 
     if (window.history) {
       window.history.pushState(null, null, ' ')

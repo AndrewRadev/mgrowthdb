@@ -44,4 +44,4 @@ class UploadStep3Form(BaseForm):
         ]
         technique_descriptions = [st.long_name_with_subject_type for st in techniques]
 
-        self._validate_uniqueness("not unique", technique_descriptions)
+        self._validate_uniqueness("technique_properties", "not unique", technique_descriptions)

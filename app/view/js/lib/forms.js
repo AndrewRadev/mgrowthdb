@@ -232,7 +232,7 @@ $.fn.initAjaxSubform = function(params) {
 
           setTimeout(function() {
             // Scroll to container:
-            $(document).scrollTo($newSubform, 150, {offset: -20});
+            $(document).scrollTo($newSubform, 500, {offset: -20});
           }, 1);
         });
       }
@@ -271,7 +271,9 @@ $.fn.initAjaxSubform = function(params) {
         callback($subformList, subformCount);
       }
     } else {
-      $(document).scrollTo($errorMessageList, 150);
+      setTimeout(function() {
+        $(document).scrollTo($errorMessageList, 500, {offset: -20});
+      }, 1);
     }
 
     $subforms.each(function(index) {
