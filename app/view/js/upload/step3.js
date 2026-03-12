@@ -72,13 +72,13 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
     let type = $typeSelect.val();
 
     if (type == 'ph' || type == 'od') {
-      $unitsSelect.val('');
+      $unitsSelect.animateVal('');
     } else if (type == '16s') {
-      $unitsSelect.val('reads');
+      $unitsSelect.animateVal('reads');
     } else if (type == 'plates') {
-      $unitsSelect.val('CFUs/mL');
+      $unitsSelect.animateVal('CFUs/mL');
     } else if (type == 'fc') {
-      $unitsSelect.val('Cells/mL');
+      $unitsSelect.animateVal('Cells/mL');
     }
   }
 
@@ -129,10 +129,12 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
 
     let columnNames = []
 
-    // General name for the title, ignoring types:
+    // General name for the title, combining types, if any:
     let techniqueTitle = [titleSubject, cellTypes.join('/'), columnName, label].filter(Boolean).join(' ');
     $title.html(_.escape(techniqueTitle))
 
+    // Several column names based on cell types. For each of these, a STD
+    // column is added later, if required:
     if (cellTypes.length == 0) {
       columnNames.push([previewSubject, columnName, label].filter(Boolean).join(' '));
     } else {

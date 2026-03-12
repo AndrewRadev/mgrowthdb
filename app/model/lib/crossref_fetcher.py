@@ -1,8 +1,12 @@
-import json
 import requests
 
 
 class CrossrefFetcher:
+    """
+    This class encapsulates requests to api.crossref.org to get information
+    about a publication based on its DOI. For now, it only fetches the author
+    list and the title of a study.
+    """
     def __init__(self, doi):
         self.doi = doi
 
@@ -15,14 +19,14 @@ class CrossrefFetcher:
         response = requests.get(crossref_url)
 
         if response.status_code == 404:
-            raise ValueError(f"Couldn't find publication")
+            raise ValueError("Couldn't find publication")
         if response.status_code != 200:
             raise ValueError(f"Couldn't reach Crossref API (Status {response.status_code})")
 
         response_json = response.json()
 
         if response_json["status"] != "ok":
-            raise ValueError(f"The Crossref API didn't return a successful result")
+            raise ValueError("The Crossref API didn't return a successful result")
 
         message_field = response_json.get("message", {})
         title_field   = message_field.get("title", [])
