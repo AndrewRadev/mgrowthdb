@@ -1,5 +1,6 @@
 Page('.upload-page .step-content.active', function($page) {
   // Don't do any fancy scrolling on page reload, if possible:
+  // Reference: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceEntry
   let isReload =
     window.performance.getEntriesByType('navigation')[0]?.type === 'reload' ||
     window.performance.navigation?.type === 1; // fallback for old browsers
