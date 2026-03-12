@@ -236,4 +236,10 @@
   .form-icon {
     float: right;
   }
+
+  .icon-info {
+    vertical-align: text-bottom;
+    display: inline-block;
+    opacity: 0.7;
+  }
 }

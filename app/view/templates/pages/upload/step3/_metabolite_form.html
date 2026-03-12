@@ -8,11 +8,6 @@
   <div
     class="subform-container box technique-container js-subform-container"
     data-subject-type="metabolite">
-    <img
-        width="110"
-        class="form-icon"
-        alt="Metabolite measurement"
-        src="/static/images/large-icons/trehalose.png" />
     <h3>
       <span>{{ "{}.".format(visual_index + 1) if visual_index is not none else "[New]" }}</span>
       Metabolite measurement
@@ -44,8 +39,11 @@
           </select>
         </label>
 
-        <label class="full" data-tooltip="If you have multiple kinds of measurements with the same technique, e.g. Flow Cytometry quantified in two different ways, you can specify a short label to differentiate them">
-          <span>Optional label:</span>
+        <label class="full">
+          <span>
+            Optional label:
+            <span class="icon icon-info" data-tooltip="If you have multiple kinds of measurements with the same technique, e.g. Flow Cytometry quantified in two different ways, you can specify a short label to differentiate them"></span>
+          </span>
           <input
               type="text"
               name="{{ prefix }}label"
@@ -82,24 +80,26 @@
     </div>
 
     <div class="form-row" style="margin-top: 10px">
-      <label
-          data-tooltip="If you have multiple technical replicates, you can submit your point estimate as the measurement and add the standard deviation in a separate column.">
+      <label>
         <input
             type="checkbox"
             class="js-include-std js-preview-trigger"
             name="{{ prefix }}includeStd"
             {{ "checked" if data and data['includeStd'] }} />
         Include STD
+        <span class="icon icon-info" data-tooltip="If you have multiple technical replicates, you can submit your point estimate as the measurement and add the standard deviation in a separate column."></span>
       </label>
     </div>
 
     <hr>
 
     <div class="form-row">
-      <div>
+      <div class="flex-row flex-center help small">
         Data spreadsheet preview:
+      </div>
 
-        <table class="dataframe-table margin-top-10">
+      <div class="preview-container full flex-center">
+        <table class="dataframe-table">
           <tr class="js-preview-header">
           </tr>
           <tr class="js-preview-body">
@@ -107,7 +107,7 @@
         </table>
       </div>
 
-      <div class="no-label flex-right">
+      <div class="flex-row flex-center">
         <a href="#" class="white-button flex-row js-remove-trigger">
           <span class="icon icon-remove"></span> Remove
         </a>
