@@ -66,9 +66,9 @@ def init_assets(app):
         output='build/app.js'
     ))
 
+    # Pre-minified, no js_filters:
     assets.register('plotly_js', flask_assets.Bundle(
-        '../app/view/js/vendor/plotly-basic-3.3.1.js',
-        **js_filters,
+        '../app/view/js/vendor/plotly-3.3.1.min.js',
         output='build/plotly.js'
     ))
 
