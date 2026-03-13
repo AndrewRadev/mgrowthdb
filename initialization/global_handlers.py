@@ -18,7 +18,7 @@ from app.model.orm import (
     User,
     PageError,
 )
-from app.model.lib.errors import LoginRequired
+from app.model.lib.errors import LoginRequired, ClientError
 from app.model.tasks.tracking import record_page_visit
 
 
@@ -40,6 +40,8 @@ def init_global_handlers(app):
 
     app.errorhandler(404)(_render_not_found)
     app.errorhandler(sql_exceptions.NoResultFound)(_render_not_found)
+
+    app.errorhandler(ClientError)(_render_client_error)
 
     app.errorhandler(403)(_render_forbidden)
     app.errorhandler(500)(_render_server_error)
@@ -149,6 +151,13 @@ def _render_forbidden(_error):
         return {'error': '403 Forbidden'}, 403
     else:
         return render_template('errors/403.html'), 403
+
+
+def _render_client_error(error):
+    if _is_json(request):
+        return {'error': str(error)}, 400
+    if _is_csv(request):
+        return str(error), 400
 
 
 def _render_server_error(error):
