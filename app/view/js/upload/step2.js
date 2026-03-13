@@ -50,7 +50,7 @@ Page('.upload-page .step-content.step-2.active', function($step2) {
 
     buildSubform: function(index) {
       let templateHtml = $('template.custom-strain-form').html();
-      let $newForm = $(templateHtml);
+      let $newForm = $("<div />").html(templateHtml).children();
 
       $newForm.addPrefix(`custom_strains-${index}-`);
 
@@ -82,13 +82,13 @@ Page('.upload-page .step-content.step-2.active', function($step2) {
       });
 
       $select.on('change', function() {
-        updateCustomStrainParentPreview($select)
+        updateCustomStrainForm($select)
       });
       $select.trigger('change');
     }
   })
 
-  function updateCustomStrainParentPreview($select) {
+  function updateCustomStrainForm($select) {
     let $container     = $select.parents('.js-subform-container');
     let $parentPreview = $container.find('.js-parent-preview');
     let template       = $('template.custom-strain-parent-preview').html();
@@ -103,6 +103,11 @@ Page('.upload-page .step-content.step-2.active', function($step2) {
 
       if (selectedId != id) {
         return;
+      }
+
+      let $nameInput = $container.find('input[name$=-name]');
+      if ($nameInput.val().length == 0) {
+        $nameInput.animateVal(name);
       }
 
       let previewHtml = template.

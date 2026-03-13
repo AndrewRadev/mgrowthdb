@@ -41,8 +41,4 @@
       pointer-events: none;
     }
   }
-
-  .loading-input {
-    background: url(/static/images/loader.svg) no-repeat right 10px center, var(--light-blue);
-  }
 }

@@ -5,7 +5,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
 
     buildSubform: function(experimentIndex) {
       let templateHtml = $('template.experiment-form').html();
-      let $newForm = $(templateHtml);
+      let $newForm = $("<div />").html(templateHtml).children();
 
       $newForm.addPrefix(`experiments-${experimentIndex}-`);
 
@@ -27,7 +27,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       $experimentForm.find('.js-bioreplicate-form-row').initClientSideSubform({
         buildSubform: function(bioreplicateIndex) {
           let templateHtml = $experimentForm.find('template.bioreplicate-form').html();
-          let $bioreplicateForm = $(templateHtml);
+          let $bioreplicateForm = $("<div />").html(templateHtml).children();
 
           $bioreplicateForm.addPrefix(`experiments-${experimentIndex}-bioreplicates-${bioreplicateIndex}-`);
 
@@ -74,7 +74,7 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       $experimentForm.find('.js-perturbation-form-row').initClientSideSubform({
         buildSubform: function(perturbationIndex) {
           let templateHtml = $experimentForm.find('template.perturbation-form').html();
-          let $perturbationForm = $(templateHtml);
+          let $perturbationForm = $("<div />").html(templateHtml).children();
 
           $perturbationForm.addPrefix(`experiments-${experimentIndex}-perturbations-${perturbationIndex}-`);
 
@@ -95,12 +95,45 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
       // Reset names (including for bioreplicates)
       $newForm.find('input[name$="name"]').val('');
 
+      // Remove name and number from title:
+      $newForm.find('.js-name').html('[...]');
+      $newForm.find('.js-index').html('[New]');
+
       // Remove public IDs and reset published state:
       $newForm.find('.js-public-id').remove();
       $newForm.find('.js-is-published').addClass('hidden');
       $newForm.find('.js-not-published').removeClass('hidden');
+
+      // Remove preview state:
+      let $editButton = $newForm.log().find('.js-edit-experiment');
+      if (!$editButton.hasClass('hidden')) {
+        $saveButton      = $newForm.find('.js-save-edit-experiment');
+        $duplicateButton = $newForm.find('.js-duplicate-in-preview');
+
+        $newForm.find('.js-preview').addClass('hidden');
+        $newForm.find('.js-subform').removeClass('hidden');
+
+        $editButton.addClass('hidden');
+        $duplicateButton.addClass('hidden');
+        $saveButton.removeClass('hidden');
+      }
     },
   })
+
+  $step5.on('click', '.js-edit-experiment', function() {
+    $button = $(this);
+
+    $container       = $button.parents('.js-subform-container');
+    $saveButton      = $container.find('.js-save-edit-experiment');
+    $duplicateButton = $container.find('.js-duplicate-in-preview');
+
+    $container.find('.js-preview').addClass('hidden');
+    $container.find('.js-subform').removeClass('hidden');
+
+    $button.addClass('hidden');
+    $saveButton.removeClass('hidden');
+    $duplicateButton.removeClass('hidden');
+  });
 
   if ($step5.find('.js-experiment-container').length == 0) {
     // By default, add one form

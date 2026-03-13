@@ -1,22 +1,16 @@
-{% macro render_community_form(data, index) %}
-  {% if index is none: %}
+{% macro render_community_form(data, visual_index=None, data_index=None) %}
+  {% if data_index is none: %}
     {% set prefix = '' %}
   {% else: %}
-    {% set prefix = 'techniques-{}-'.format(index)  %}
+    {% set prefix = 'techniques-{}-'.format(data_index)  %}
   {% endif %}
 
   <div
       class="subform-container box technique-container js-subform-container"
-      data-index="{{ index if index is not none else '' }}"
       data-subject-type="bioreplicate">
-    <img
-        width="80"
-        class="form-icon"
-        alt="Community-level measurement"
-        src="/static/images/large-icons/test-tube.png" />
     <h3>
-      <span class="js-index">{{ index + 1 if index is not none else '' }}</span>.
-      Community-level measurement
+      <span class="js-visual_index">{{ "{}.".format(visual_index + 1) if visual_index is not none else "[New]" }}</span>
+      <span class="js-title">Community-level measurement</span>
     </h3>
 
     <input type="hidden" name="{{ prefix }}subjectType" value="bioreplicate" />
@@ -45,8 +39,11 @@
         </select>
       </label>
 
-      <label class="full" data-tooltip="If you have multiple kinds of measurements with the same technique, e.g. Flow Cytometry quantified in two different ways, you can specify a short label to differentiate them">
-        <span>Optional label:</span>
+      <label class="full">
+        <span>
+          Optional label:
+          <span class="icon icon-info" data-tooltip="If you have multiple kinds of measurements with the same technique, e.g. Flow Cytometry quantified in two different ways, you can specify a short label to differentiate them"></span>
+        </span>
         <input
             type="text"
             name="{{ prefix }}label"
@@ -96,9 +93,11 @@
     <div class="form-row">
       <div class="flex-column flex-gap-6 flex-1">
         <div
-          class="flex-column flex-gap-6 js-extra-inputs"
-          data-tooltip="If you're not sure whether your measurements include only live cells or count all cells, you can leave the checkboxes blank. Ideally, we recommend marking the relevant types.">
-          <span class="input-label">Types of cells counted:</span>
+          class="flex-column flex-gap-6 js-extra-inputs">
+          <span class="input-label">
+            Types of cells counted:
+            <span class="icon icon-info" data-tooltip="If you're not sure whether your measurements include only live cells or count all cells, you can leave the checkboxes blank. Ideally, we recommend marking the relevant types."></span>
+          </span>
           <label>
             <input
                 type="checkbox"
@@ -130,14 +129,14 @@
         <div class="flex-column flex-gap-6">
           <span class="input-label">Extra measurements:</span>
 
-          <label
-              data-tooltip="If you have multiple technical replicates, you can submit your point estimate as the measurement and add the standard deviation in a separate column.">
+          <label>
             <input
                 type="checkbox"
                 class="js-include-std js-preview-trigger"
                 name="{{ prefix }}includeStd"
                 {{ "checked" if data and data['includeStd'] }} />
             Include STD
+            <span class="icon icon-info" data-tooltip="If you have multiple technical replicates, you can submit your point estimate as the measurement and add the standard deviation in a separate column."></span>
           </label>
         </div>
       </div>
@@ -155,10 +154,12 @@
     <hr>
 
     <div class="form-row">
-      <div class="preview-container">
+      <div class="flex-row flex-center help small">
         Data spreadsheet preview:
+      </div>
 
-        <table class="dataframe-table margin-top-10">
+      <div class="preview-container full flex-center">
+        <table class="dataframe-table">
           <tr class="js-preview-header">
           </tr>
           <tr class="js-preview-body">
@@ -166,7 +167,7 @@
         </table>
       </div>
 
-      <div class="no-label flex-right">
+      <div class="flex-row flex-center">
         <a href="#" class="white-button flex-row js-remove-trigger">
           <span class="icon icon-remove"></span> Remove
         </a>

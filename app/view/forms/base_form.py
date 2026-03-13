@@ -5,6 +5,11 @@ from app.model.lib.util import humanize_camelcased_string
 
 
 class BaseForm(FlaskForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._duplicated_attributes = {}
+
     def get_template(self, subclass_name):
         return getattr(self.__class__, subclass_name)()
 
@@ -12,7 +17,7 @@ class BaseForm(FlaskForm):
     def error_messages(self):
         return list(_iterate_error_messages(prefixes=[], errors=self.errors))
 
-    def _validate_uniqueness(self, message, value_list):
+    def _validate_uniqueness(self, attribute, message, value_list):
         seen       = set()
         duplicated = set()
 
@@ -23,7 +28,9 @@ class BaseForm(FlaskForm):
                 seen.add(value)
 
         if duplicated:
+            self._duplicated_attributes[attribute] = list(duplicated)
             value_description = ', '.join([repr(d) for d in duplicated])
+
             raise ValidationError(f"{message}: {value_description}")
 
 
@@ -38,13 +45,15 @@ def _iterate_error_messages(prefixes, errors):
                 new_prefixes = [*prefixes, str(index + 1)]
 
             yield from _iterate_error_messages(new_prefixes, error)
+
     elif isinstance(errors, dict):
         for field_name, error in errors.items():
             new_prefixes = [*prefixes, humanize_camelcased_string(field_name)]
 
             yield from _iterate_error_messages(new_prefixes, error)
+
     else:
-        prefix = ' '.join(prefixes)
+        prefix = ' '.join(prefixes).capitalize()
         message = errors
 
-        yield f"{prefix}: {message}".strip().capitalize()
+        yield f"{prefix}: {message}".strip()

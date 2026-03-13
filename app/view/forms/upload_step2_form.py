@@ -26,4 +26,4 @@ class UploadStep2Form(BaseForm):
 
     def validate_custom_strains(self, field):
         names = [s['name'] for s in field.data]
-        self._validate_uniqueness("Strain names are not unique", names)
+        self._validate_uniqueness("strain_name", "Strain names are not unique", names)

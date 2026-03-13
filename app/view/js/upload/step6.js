@@ -25,7 +25,7 @@ Page('.upload-page .step-content.step-6.active', function($step6) {
   $('.js-preview select').trigger('change');
 
   function submitExcelForm() {
-    let url        = $uploadContainer.prop('action')
+    let previewUrl = $uploadContainer.data('previewUrl')
     let formData   = new FormData();
     let file       = $fileInput[0].files[0];
     let $preview   = $step6.find('.js-preview');
@@ -35,7 +35,7 @@ Page('.upload-page .step-content.step-6.active', function($step6) {
 
     $.ajax({
       type: 'POST',
-      url: '/upload/spreadsheet_preview',
+      url: previewUrl,
       data: formData,
       cache: false,
       contentType: false,
