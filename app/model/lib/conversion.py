@@ -38,6 +38,7 @@ def convert_df_units(df, source_units, target_units, metabolite_mass=None):
 
     if new_value is not None:
         df['value'] = new_value
+
         if 'std' in df:
             df['std'] = convert_measurement_units(
                 df['std'],

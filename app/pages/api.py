@@ -7,6 +7,12 @@ from flask import (
 from werkzeug.exceptions import NotFound
 import sqlalchemy as sql
 
+from app.model.lib.conversion import (
+    convert_df_units,
+    CELL_COUNT_UNITS,
+    CFU_COUNT_UNITS,
+    METABOLITE_UNITS,
+)
 from app.model.orm import (
     Bioreplicate,
     Experiment,
@@ -17,6 +23,7 @@ from app.model.orm import (
     Study,
     StudyStrain,
 )
+from app.model.lib.errors import ClientError
 
 
 def project_json(publicId):
@@ -115,7 +122,7 @@ def experiment_json(publicId):
                 'measurementContexts': [
                     {
                         'id': mc.id,
-                        **_measurement_technique_fields(mc.technique),
+                        **_measurement_technique_fields(mc),
                         **_measurement_subject_fields(mc)
                     }
                     for mc in b.measurementContexts
@@ -152,7 +159,7 @@ def measurement_context_json(id):
         'studyId':              measurement_context.studyId,
         'bioreplicateId':       measurement_context.bioreplicate.id,
         'bioreplicateName':     measurement_context.bioreplicate.name,
-        **_measurement_technique_fields(measurement_context.technique),
+        **_measurement_technique_fields(measurement_context),
         **_measurement_subject_fields(measurement_context),
         'measurementCount':     measurement_count,
         'measurementTimeUnits': 'h',
@@ -164,7 +171,11 @@ def measurement_context_csv(id):
     if not measurement_context or not measurement_context.study.isPublished:
         raise NotFound
 
-    df = measurement_context.get_df(g.db_session)
+    df           = measurement_context.get_df(g.db_session)
+    source_units = measurement_context.technique.units
+
+    metabolite_mass = _get_metabolite_mass(measurement_context)
+    _convert_to_requested_units(df, source_units, metabolite_mass)
 
     if request.args.get('withLabel'):
         html_label = measurement_context.get_chart_label()
@@ -191,7 +202,7 @@ def bioreplicate_json(id):
         'measurementContexts': [
             {
                 'id': mc.id,
-                **_measurement_technique_fields(mc.technique),
+                **_measurement_technique_fields(mc),
                 **_measurement_subject_fields(mc),
             }
             for mc in bioreplicate.measurementContexts
@@ -205,6 +216,18 @@ def bioreplicate_csv(id):
         raise NotFound
 
     df = bioreplicate.get_df(g.db_session)
+
+    measurement_contexts = g.db_session.scalars(
+        sql.select(MeasurementContext)
+        .where(MeasurementContext.id.in_([mc.id for mc in bioreplicate.measurementContexts]))
+        .options(sql.orm.selectinload(MeasurementContext.technique))
+    )
+
+    # Convert units for each individual measurement context:
+    for mc in measurement_contexts:
+        mc_df = df[df['measurementContextId'] == mc.id].copy()
+        _convert_to_requested_units(mc_df, mc.technique.units, _get_metabolite_mass(mc))
+        df.loc[df['measurementContextId'] == mc.id] = mc_df
 
     return df.to_csv(index=False)
 
@@ -253,7 +276,7 @@ def search_json():
                 'studyId':          mc.studyId,
                 'bioreplicateId':   mc.bioreplicate.id,
                 'bioreplicateName': mc.bioreplicate.name,
-                **_measurement_technique_fields(mc.technique),
+                **_measurement_technique_fields(mc),
                 **_measurement_subject_fields(mc),
             }
             for mc in measurement_contexts
@@ -261,10 +284,16 @@ def search_json():
     }
 
 
-def _measurement_technique_fields(measurement_technique):
+def _measurement_technique_fields(measurement_context):
+    measurement_technique = measurement_context.technique
+
+    metabolite_mass = _get_metabolite_mass(measurement_context)
+    requested_units = _convert_unit_label_to_requested(measurement_technique.units, metabolite_mass)
+
     fields = {
-        'techniqueType':  measurement_technique.type,
-        'techniqueUnits': measurement_technique.units,
+        'techniqueType':          measurement_technique.type,
+        'techniqueOriginalUnits': measurement_technique.units,
+        'techniqueUnits':         requested_units,
     }
     if cell_type := measurement_technique.cellType:
         fields['techniqueCellType'] = cell_type
@@ -318,3 +347,44 @@ def _contexts_by_subject(subject_type, subject_id):
             )
             .options(*sql_options)
         ).all()
+
+
+def _get_metabolite_mass(measurement_context):
+    if measurement_context.subjectType != 'metabolite':
+        return None
+
+    return measurement_context.get_subject(g.db_session).averageMass
+
+
+def _convert_unit_label_to_requested(source_units, metabolite_mass=None):
+    if source_units in CELL_COUNT_UNITS:
+        return request.args.get('cellCountUnits', 'Cells/mL')
+    elif source_units in CFU_COUNT_UNITS:
+        return request.args.get('cfuCountUnits', 'CFUs/mL')
+    elif source_units in METABOLITE_UNITS and metabolite_mass:
+        return request.args.get('metaboliteUnits', 'mM')
+    else:
+        return source_units
+
+
+def _convert_to_requested_units(df, source_units, metabolite_mass=None):
+    if source_units in CELL_COUNT_UNITS:
+        target_units = request.args.get('cellCountUnits', 'Cells/mL')
+        if target_units not in CELL_COUNT_UNITS:
+            raise ClientError(f"Unexpected cell count units requested: {target_units}")
+
+        convert_df_units(df, source_units, target_units)
+
+    elif source_units in CFU_COUNT_UNITS:
+        target_units  = request.args.get('cfuCountUnits', 'CFUs/mL')
+        if target_units not in CFU_COUNT_UNITS:
+            raise ClientError(f"Unexpected CFU count units requested: {target_units}")
+
+        convert_df_units(df, source_units, target_units)
+
+    elif source_units in METABOLITE_UNITS and metabolite_mass:
+        target_units = request.args.get('metaboliteUnits', 'mM')
+        if target_units not in METABOLITE_UNITS:
+            raise ClientError(f"Unexpected metabolite count units requested: {target_units}")
+
+        convert_df_units(df, source_units, target_units, metabolite_mass)
