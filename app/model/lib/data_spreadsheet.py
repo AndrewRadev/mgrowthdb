@@ -6,6 +6,7 @@ from openpyxl.utils import get_column_letter
 from app.model.lib.excel import export_to_xlsx
 
 _TIME_UNITS = {
+    'd': 'days',
     'h': 'hours',
     'm': 'minutes',
     's': 'seconds',
