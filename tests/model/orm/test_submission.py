@@ -6,15 +6,14 @@ import tempfile
 import unittest
 from datetime import datetime, UTC
 from pathlib import Path
+import contextlib
 
-from app.model.orm import Submission
 from tests.database_test import DatabaseTest
+
 
 class TestStudyTechnique(DatabaseTest):
     def test_export_data(self):
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            os.chdir(tmp_dir)
-
+        with self._cd_in_tmpdir():
             study = self.create_study(
                 publicId="S1",
                 name="Exported submission",
@@ -38,6 +37,18 @@ class TestStudyTechnique(DatabaseTest):
             messages = re.sub(r'\[.+?\] ', '[<time>] ', changelog).split("\n")
 
             self.assertEqual(messages, ["[<time>] Initial export", "[<time>] Minor updates", ""])
+
+    @contextlib.contextmanager
+    def _cd_in_tmpdir(self):
+        current_dir = os.getcwd()
+
+        try:
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                os.chdir(tmp_dir)
+                yield
+        finally:
+            os.chdir(current_dir)
+
 
 if __name__ == '__main__':
     unittest.main()
