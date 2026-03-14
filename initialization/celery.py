@@ -4,6 +4,7 @@ from celery import Celery, Task
 from celery.schedules import crontab
 
 from app.model.tasks.tracking import aggregate_page_visits
+from app.model.tasks.submissions import publish_eligible_studies
 
 
 def init_celery(app):
@@ -41,7 +42,13 @@ def init_celery(app):
                 # 1pm UTC on Sunday:
                 'schedule': crontab(hour=13, minute=0, day_of_week='sunday'),
                 'args': (),
-            }
+            },
+            'publish-eligible-studies': {
+                'task': 'app.model.tasks.submissions.publish_eligible_studies',
+                # Daily at 2am UTC
+                'schedule': crontab(hour=2, minute=0),
+                'args': (),
+            },
         }
     })
     celery_app.set_default()

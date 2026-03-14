@@ -1,5 +1,7 @@
 import os
 import unittest
+import shutil
+from pathlib import Path
 from uuid import uuid4
 from decimal import Decimal
 from datetime import datetime, UTC
@@ -43,6 +45,12 @@ class DatabaseTest(unittest.TestCase):
             'test',
             "Make sure you `import tests.init` before anything else in the test",
         )
+
+        # Clean up temporary directory:
+        var_dir = Path('var/test')
+        if var_dir.exists():
+            shutil.rmtree(var_dir)
+        var_dir.mkdir(parents=True, exist_ok=True)
 
         self.db_conn = db.get_connection()
         self.db_session = db.get_session(conn=self.db_conn)
