@@ -59,12 +59,14 @@ class Submission(OrmBase):
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
 
+    changelogText: Mapped[sql.String] = mapped_column(sql.String)
+
     @hybrid_property
     def isPublished(self):
         return self.publishedAt != None
 
     @property
-    def completed_step_count(self):
+    def completedStepCount(self):
         return sum([
             1 if self.projectUniqueID and self.studyUniqueID else 0,
             1 if len(self.studyDesign.get('strains', [])) + len(self.studyDesign.get('custom_strains', [])) > 0 else 0,
@@ -74,10 +76,6 @@ class Submission(OrmBase):
             1 if self.dataFileId else 0,
             1 if self.study and self.study.isPublished else 0,
         ])
-
-    @property
-    def is_finished(self):
-        return self.completed_step_count == 7
 
     def build_techniques(self):
         from app.model.orm import StudyTechnique, MeasurementTechnique
@@ -121,9 +119,11 @@ class Submission(OrmBase):
             json.dump(self.studyDesign, f, use_decimal=True, indent=2)
 
         # Export data files:
-        for name, df in self.dataFile.extract_sheets().items():
-            file_name = '_'.join(name.lower().split()) + '.csv'
-            df.to_csv(base_dir / file_name, index=False)
+        # (Note: file should always exist, but it might not in tests)
+        if self.dataFile:
+            for name, df in self.dataFile.extract_sheets().items():
+                file_name = '_'.join(name.lower().split()) + '.csv'
+                df.to_csv(base_dir / file_name, index=False)
 
         # Record a changelog entry
         with open(base_dir / 'changes.log', 'a') as f:

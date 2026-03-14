@@ -27,6 +27,7 @@ from app.model.orm import (
 )
 from app.model.lib.util import group_by_unique_name, is_non_negative_float
 from app.model.lib.conversion import convert_time
+from app.model.tasks.submissions import export_submission_data
 
 
 def persist_submission_to_database(submission_form):
@@ -64,13 +65,8 @@ def persist_submission_to_database(submission_form):
 
         db_trans_session.commit()
 
-        # TODO (2026-03-01) Extract to background job:
         if study.isPublished:
-            message = "Study update."
-            if submission.changelogText:
-                changelog_text = " ".join(submission.changelogText.splitlines())
-                message += f" Changes: {changelog_text}"
-            submission_form.submission.export_data(message=message)
+            export_submission_data.delay(submission.id)
 
         return []
 
