@@ -28,7 +28,7 @@
 
       {% include 'pages/studies/_navigation_buttons.html' %}
 
-      {% if true or not study.isPublished and study.isPublishable: %}
+      {% if not study.isPublished and study.isPublishable: %}
         <div class="manager-message small help margin-top-10">
           {% if study.embargoExpiresAt: %}
             This study was submitted with an embargo date of
