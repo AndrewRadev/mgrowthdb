@@ -83,6 +83,7 @@ class UploadStep5Form(BaseForm):
                 raise ValidationError("at least one is required")
 
     timeUnits = SelectField('timeUnits', choices=[
+        ('d', 'Days (d)'),
         ('h', 'Hours (h)'),
         ('m', 'Minutes (m)'),
         ('s', 'Seconds (s)'),

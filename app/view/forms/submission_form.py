@@ -29,7 +29,7 @@ DEFAULT_STUDY_DESIGN = {
         'embargoExpiresAt': None,
     },
 
-    'timeUnits': None,
+    'timeUnits': 'h',
 
     'strains':        [],
     'custom_strains': [],

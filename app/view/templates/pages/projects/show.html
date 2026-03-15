@@ -8,14 +8,27 @@
       <h2>{{ project.name }}</h2>
 
       {% if g.current_user and g.current_user.uuid in project.managerUuids: %}
-        <br>
-        <div class="warning-message">
-          Private UUID: <code class="inline">{{ project.uuid }}</code>
-
+        <div class="manager-message margin-top-10">
           <div class="help">
             This private ID can be used to gain access to the project for
             editing purposes. Only share it with other users that need that
             access.
+          </div>
+
+          <div class="copy-button-wrapper flex-row flex-grow margin-top-10">
+            <button type="button" class="js-copy-button copy-button green-button">
+              Copy 📋
+            </button>
+            <input
+                autocomplete="off"
+                data-real-value="{{ project.uuid }}"
+                type="text"
+                value="{{ "*" * 36 }}"
+                class="js-export-url export-url form-input-blue full"
+                readonly />
+            <button type="button" class="js-show-button show-button green-button">
+              Show 🕵️
+            </button>
           </div>
         </div>
       {% endif %}

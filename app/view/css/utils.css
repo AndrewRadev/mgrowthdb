@@ -168,6 +168,13 @@ hr {
   border-left: 4px solid #ffeeba;
 }
 
+.manager-message {
+  display: block;
+  background: #fff3cd;
+  padding: 10px;
+  border-left: 4px solid coral;
+}
+
 .notice-message,
 .flash-notice {
   display: block;
@@ -336,11 +343,6 @@ form.simple-form {
     color: gray;
   }
 
-  input.green-button[disabled] {
-    color: lightgray;
-    opacity: 0.5;
-  }
-
   button[disabled] {
     background-color: gray;
     &:hover {
@@ -387,6 +389,11 @@ form.simple-form {
 
   &.small-button {
     padding: 0.3rem;
+  }
+
+  &[disabled] {
+    color: lightgray;
+    opacity: 0.5;
   }
 }
 
@@ -470,7 +477,13 @@ form.simple-form {
   }
 
   input[type="text"] {
+    border-radius: 0;
+  }
+
+  .show-button {
+    white-space: nowrap;
     border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    cursor: pointer;
   }
 }
 

@@ -30,8 +30,8 @@
         </form>
       {% elif study.lastSubmission: %}
         <p class="help">
-          You can also edit the latest submission that updated this study by
-          clicking on this button:
+          You can edit the latest submission for this study by clicking on this
+          button:
         </p>
 
         <p>
@@ -53,10 +53,15 @@
             Copy 📋
           </button>
           <input
+              autocomplete="off"
+              data-real-value="{{ study.uuid }}"
               type="text"
-              value="{{ study.uuid }}"
+              value="{{ "*" * 36 }}"
               class="js-export-url export-url form-input-blue full"
               readonly />
+          <button type="button" class="js-show-button show-button green-button">
+            Show 🕵️
+          </button>
         </div>
       </p>
 

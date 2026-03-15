@@ -51,7 +51,7 @@
         <p class="small">
           {% if study.studyTechniques: %}
             <strong>Measurement techniques</strong>:
-            {{ study.studyTechniques|map(attribute="short_name")|unique|join(", ") }}
+            {{ study.studyTechniques|map(attribute="long_name")|unique|join(", ") }}
             <br>
           {% endif %}
 

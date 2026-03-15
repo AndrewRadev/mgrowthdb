@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from datetime import datetime, UTC
 from pathlib import Path
@@ -59,12 +60,14 @@ class Submission(OrmBase):
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
 
+    changelogText: Mapped[sql.String] = mapped_column(sql.String)
+
     @hybrid_property
     def isPublished(self):
         return self.publishedAt != None
 
     @property
-    def completed_step_count(self):
+    def completedStepCount(self):
         return sum([
             1 if self.projectUniqueID and self.studyUniqueID else 0,
             1 if len(self.studyDesign.get('strains', [])) + len(self.studyDesign.get('custom_strains', [])) > 0 else 0,
@@ -74,10 +77,6 @@ class Submission(OrmBase):
             1 if self.dataFileId else 0,
             1 if self.study and self.study.isPublished else 0,
         ])
-
-    @property
-    def is_finished(self):
-        return self.completed_step_count == 7
 
     def build_techniques(self):
         from app.model.orm import StudyTechnique, MeasurementTechnique
@@ -107,26 +106,35 @@ class Submission(OrmBase):
         if timestamp is None:
             timestamp = datetime.now(UTC)
 
-        base_dir = Path(f"static/export/{self.study.publicId}")
-        base_dir.mkdir(parents=True, exist_ok=True)
+        app_env = os.getenv('APP_ENV', 'development')
+
+        if app_env == 'test':
+            base_dir = Path("var/test/export")
+        else:
+            base_dir = Path("static/export")
+
+        study_dir = base_dir / self.study.publicId
+        study_dir.mkdir(parents=True, exist_ok=True)
 
         # Clean up previous files:
-        for file in base_dir.glob('*.csv'):
+        for file in study_dir.glob('*.csv'):
             file.unlink()
-        for file in base_dir.glob('*.json'):
+        for file in study_dir.glob('*.json'):
             file.unlink()
 
         # Export study design:
-        with open(base_dir / 'study_design.json', 'w') as f:
+        with open(study_dir / 'study_design.json', 'w') as f:
             json.dump(self.studyDesign, f, use_decimal=True, indent=2)
 
         # Export data files:
-        for name, df in self.dataFile.extract_sheets().items():
-            file_name = '_'.join(name.lower().split()) + '.csv'
-            df.to_csv(base_dir / file_name, index=False)
+        # (Note: file should always exist, but it might not in tests)
+        if self.dataFile:
+            for name, df in self.dataFile.extract_sheets().items():
+                file_name = '_'.join(name.lower().split()) + '.csv'
+                df.to_csv(study_dir / file_name, index=False)
 
         # Record a changelog entry
-        with open(base_dir / 'changes.log', 'a') as f:
+        with open(study_dir / 'changes.log', 'a') as f:
             print(f"[{timestamp.isoformat()}] {message}", file=f)
 
         # Zip data for batch downloads
@@ -135,10 +143,9 @@ class Submission(OrmBase):
 
             subprocess.run(
                 [zip_exe, f"{self.study.publicId}.zip", '-r', f"{self.study.publicId}/"],
-                cwd=f"static/export/"
+                cwd=base_dir
             )
-
             subprocess.run(
                 [zip_exe, f"all_studies.zip", '-r', f"{self.study.publicId}/"],
-                cwd=f"static/export/"
+                cwd=base_dir
             )

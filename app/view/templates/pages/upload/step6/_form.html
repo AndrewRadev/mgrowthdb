@@ -99,7 +99,7 @@
   </div>
 
   <div class="preview js-preview">
-    {% if submission_form.submission.dataFileId: %}
+    {% if submission.dataFileId: %}
       {{ render_spreadsheet_preview(submission_form.submission.dataFile, errors) }}
     {% else: %}
       {{ render_form_errors(errors) }}
@@ -120,7 +120,7 @@
         class="hidden"
         accept=".xls,.xlsx,.ods" />
 
-    {% if submission.study: %}
+    {% if submission.study and submission.study.isPublished: %}
       <div class="form-row">
         <label class="full">
           <span class="required">Changes</span>
@@ -145,15 +145,16 @@
     {% else: %}
       <p>
         When you click "Next", your file will be validated and your study will
-        be created. You will get a link to see the processed data and you'll be
-        able to publish it
+        be created. You will get a link to see the processed data
 
-        {% set embargo = submission_form.submission.studyDesign['study']['embargoExpiresAt'] %}
+        {% set embargo = submission.studyDesign['study']['embargoExpiresAt'] %}
 
         {% if embargo: %}
-          after the embargo date you specified of <strong>{{ embargo }}</strong> ({{ embargo|relative_date }}).
+          and, after the embargo date you specified of
+          <strong>{{ embargo }}</strong> ({{ embargo|relative_date }}),
+          the study will be published automatically.
         {% else: %}
-          after a period of 24 hours.
+          and you'll be able to publish it after a period of 24 hours.
         {% endif  %}
       </p>
 

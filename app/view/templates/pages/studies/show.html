@@ -28,6 +28,49 @@
 
       {% include 'pages/studies/_navigation_buttons.html' %}
 
+      {% if not study.isPublished and study.isPublishable: %}
+        <div class="manager-message small help margin-top-10">
+          {% if study.embargoExpiresAt: %}
+            This study was submitted with an embargo date of
+            <strong>{{ study.embargoExpiresAt.strftime("%F") }}</strong>
+            (based on UTC time) and it should shortly be automatically
+            published. However, you can now publish it yourself by pressing the
+            "Publish" button if you'd prefer not to wait.
+          {% else: %}
+            You can now click the "Publish" button to make your study visible in
+            search results and make its data accessible to other people.
+          {% endif %}
+
+          <form
+              class="simple-form margin-top-10"
+              method="POST"
+              action="{{ url_for('upload_step7_page', id=study.lastSubmission.id) }}">
+            <div class="form-row">
+              <input style="padding-left: 30px; padding-right: 30px;" type="submit" value="Publish" />
+            </div>
+          </form>
+        </div>
+      {% else: %}
+        <div class="manager-message small help margin-top-10">
+          This study will be publishable approximately
+          <u>{{ time_tag(study.publishableAt, relative=True) }}</u>.
+
+          {% if study.embargoExpiresAt: %}
+            Since you've set an embargo date, this will happen automatically.
+          {% else: %}
+            At that time, the "Publish" button will become active.
+
+            <button
+                type="button"
+                class="green-button margin-top-10"
+                style="padding-left: 30px; padding-right: 30px;"
+                disabled>
+              Publish
+            </button>
+          {% endif %}
+        </div>
+      {% endif %}
+
       <h2>Basic information</h2>
 
       {% if study.url: %}
