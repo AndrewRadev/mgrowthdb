@@ -53,10 +53,15 @@
             Copy 📋
           </button>
           <input
+              autocomplete="off"
+              data-real-value="{{ study.uuid }}"
               type="text"
-              value="{{ study.uuid }}"
+              value="{{ "*" * 36 }}"
               class="js-export-url export-url form-input-blue full"
               readonly />
+          <button type="button" class="js-show-button show-button green-button">
+            Show 🕵️
+          </button>
         </div>
       </p>
 

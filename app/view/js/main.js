@@ -71,26 +71,42 @@ $(document).ready(function() {
     $($bodies[clickedIndex]).addClass('active');
   });
 
-  if (navigator.clipboard) {
-    $(document).on('click', '.js-copy-button', function(e) {
-      e.preventDefault();
+  // Copy button for secrets:
+  $(document).on('click', '.js-copy-button', function(e) {
+    e.preventDefault();
 
-      let $button = $(this);
-      let input = $button.next('input');
+    let $button = $(this);
+    let $input = $button.next('input');
 
-      navigator.clipboard.writeText(input.val());
+    let value;
+    if ($input.data('realValue')) {
+      // Then the value property is censored
+      value = $input.data('realValue');
+    } else {
+      value = $input.val();
+    }
 
-      $button.text('Copied ✅');
-      $button.prop('disabled', true);
+    navigator.clipboard.writeText(value);
 
-      setTimeout(function () {
-        $button.text('Copy 📋');
-        $button.prop('disabled', false);
-      }, 2000);
-    });
-  } else {
-    // TODO Hide button and just show an input?
-  }
+    $button.text('Copied ✅');
+    $button.prop('disabled', true);
+
+    setTimeout(function () {
+      $button.text('Copy 📋');
+      $button.prop('disabled', false);
+    }, 2000);
+  });
+
+  // Show button after the secret with a copy button
+  $(document).on('click', '.js-show-button', function(e) {
+    e.preventDefault();
+
+    let $button = $(this);
+    let $input = $button.prev('input');
+
+    $input.val($input.data('realValue'));
+    $button.prop('disabled', true);
+  });
 
   // Open single select2 dropdowns on focus
   // Reference: https://stackoverflow.com/a/49261426

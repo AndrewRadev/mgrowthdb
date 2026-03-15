@@ -28,8 +28,8 @@
 
       {% include 'pages/studies/_navigation_buttons.html' %}
 
-      {% if not study.isPublished and study.isPublishable: %}
-        <div class="notice-message margin-top-10">
+      {% if true or not study.isPublished and study.isPublishable: %}
+        <div class="manager-message small help margin-top-10">
           {% if study.embargoExpiresAt: %}
             This study was submitted with an embargo date of
             <strong>{{ study.embargoExpiresAt.strftime("%F") }}</strong>
@@ -51,7 +51,7 @@
           </form>
         </div>
       {% else: %}
-        <div class="notice-message margin-top-10">
+        <div class="manager-message small help margin-top-10">
           This study will be publishable approximately
           <u>{{ time_tag(study.publishableAt, relative=True) }}</u>.
 
