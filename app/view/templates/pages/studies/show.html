@@ -50,7 +50,7 @@
             </div>
           </form>
         </div>
-      {% else: %}
+      {% elif not study.isPublished: %}
         <div class="manager-message small help margin-top-10">
           This study will be publishable approximately
           <u>{{ time_tag(study.publishableAt, relative=True) }}</u>.
@@ -59,7 +59,7 @@
             Since you've set an embargo date, this will happen automatically.
           {% else: %}
             At that time, the "Publish" button will become active.
-
+            <br>
             <button
                 type="button"
                 class="green-button margin-top-10"
