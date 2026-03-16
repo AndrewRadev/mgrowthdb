@@ -16,6 +16,8 @@ from app.view.forms.base_form import BaseForm
 
 
 class UploadStep5Form(BaseForm):
+    class Meta:
+        csrf_time_limit = None
 
     class ExperimentForm(BaseForm):
         class Meta:

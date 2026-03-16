@@ -12,6 +12,8 @@ from app.model.orm import StudyTechnique
 
 
 class UploadStep3Form(BaseForm):
+    class Meta:
+        csrf_time_limit = None
 
     class TechniqueForm(BaseForm):
         class Meta:
