@@ -346,5 +346,8 @@ $.fn.initClientSideSubform = function(params) {
 
     // Trigger necessary javascript
     params.initializeSubform($newSubform, subformCount);
+
+    // Initialize any new tooltips:
+    initTooltips();
   });
 }
