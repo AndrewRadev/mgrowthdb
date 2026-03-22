@@ -3,19 +3,28 @@
 
   <div class="compact-subform-container js-subform-container" data-subject-type="bioreplicate">
     <div class="form-row">
-      <label class="full" data-tooltip="A unique identifier that will be placed in the data spreadsheet rows">
-        <div class="required">Name</div>
+      <label class="full">
+        <div class="required">
+          Name
+          <span class="icon icon-info" data-tooltip="A unique identifier that will be placed in the data spreadsheet rows"></span>
+        </div>
         {# Note: Have to access the input using [], since there is an existing `.name` attribute #}
         {{ form['name'](class='form-input-blue form-input-full', placeholder="AB_CD_E") }}
       </label>
 
-      <label class="full" data-tooltip="The bottle/well-plate location, e.g Bottle1 or C3">
-        <div>Position</div>
+      <label class="full">
+        <div>
+          Position
+          <span class="icon icon-info" data-tooltip="The bottle/well-plate location, e.g Bottle1 or C3"></span>
+        </div>
         {{ form['position'](class='form-input-blue form-input-full', placeholder="A1") }}
       </label>
 
-      <label class="full" data-tooltip="A link to an external URL with additional information about the biological sample">
-        <div>Biosample URL</div>
+      <label class="full">
+        <div>
+          Biosample URL
+          <span class="icon icon-info" data-tooltip="A link to an external URL with additional information about the biological sample"></span>
+        </div>
         {{ form['biosampleUrl'](class='form-input-blue form-input-full', placeholder="https://example.org") }}
       </label>
 

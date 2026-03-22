@@ -16,8 +16,11 @@
         {{ form.mediumName(class="form-input-blue form-input-full", placeholder="e.g. Wilkins-Chalgren") }}
       </label>
 
-      <label data-tooltip="A link to a URL with information about the medium. MediaDive is recommended">
-        <div>Medium URL</div>
+      <label>
+        <div>
+          Medium URL
+          <span class="icon icon-info" data-tooltip="A link to a URL with information about the medium. MediaDive is recommended"></span>
+        </div>
         {{ form.mediumUrl(class="form-input-blue form-input-full", placeholder="https://mediadive.dsmz.de/medium/339") }}
       </label>
     </div>
@@ -43,8 +46,11 @@
         {{ form.stirringSpeed(class='form-input-blue') }}
       </label>
 
-      <label data-tooltip="For chemostat experiments">
-        <div>Dilution rate (h<sup>-1</sup>)</div>
+      <label >
+        <div>
+          Dilution rate (h<sup>-1</sup>)
+          <span class="icon icon-info" data-tooltip="For chemostat experiments"></span>
+        </div>
         {{ form.dilutionRate(class='form-input-blue') }}
       </label>
     </div>
