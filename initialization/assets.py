@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import flask_assets
 
@@ -16,6 +17,16 @@ def init_assets(app):
 
     assets = flask_assets.Environment(app)
 
+    # Minify in production, not in development:
+    app_env = os.getenv('APP_ENV', 'development')
+
+    if app_env == 'production':
+        js_filters = dict(filters='rjsmin')
+        css_filters = dict(filters='cssmin')
+    else:
+        js_filters = {}
+        css_filters = {}
+
     assets.register('app_js', flask_assets.Bundle(
         # External libraries:
         '../app/view/js/vendor/jquery-3.7.1.js',
@@ -30,9 +41,11 @@ def init_assets(app):
         '../app/view/js/lib/util.js',
         '../app/view/js/lib/page.js',
         '../app/view/js/lib/tooltips.js',
+        '../app/view/js/lib/animations.js',
         '../app/view/js/lib/compare_buttons.js',
         '../app/view/js/lib/custom_file_input.js',
         # Pages:
+        '../app/view/js/upload/common.js',
         '../app/view/js/upload/step1.js',
         '../app/view/js/upload/step2.js',
         '../app/view/js/upload/step3.js',
@@ -49,18 +62,20 @@ def init_assets(app):
         '../app/view/js/comparison.js',
         '../app/view/js/help.js',
         '../app/view/js/sandbox.js',
-        filters='rjsmin',
+        **js_filters,
         output='build/app.js'
     ))
 
+    # Pre-minified, no js_filters:
     assets.register('plotly_js', flask_assets.Bundle(
-        '../app/view/js/vendor/plotly-basic-3.3.1.js',
+        '../app/view/js/vendor/plotly-basic-3.4.0.min.js',
         output='build/plotly.js'
     ))
 
     assets.register('katex_js', flask_assets.Bundle(
         '../app/view/js/vendor/katex-0.16.27.js',
         '../app/view/js/vendor/katex-0.16.27-auto-render.js',
+        **js_filters,
         output='build/katex.js'
     ))
 
@@ -70,13 +85,13 @@ def init_assets(app):
         '../app/view/css/vendor/select2-4.0.13.css',
         '../app/view/css/vendor/tippy-fix.css',
         *app_css_files,
-        filters='cssmin',
+        **css_filters,
         output='build/app.css'
     ))
 
     assets.register('katex_css', flask_assets.Bundle(
         '../app/view/css/vendor/katex-0.16.27.css',
-        filters='cssmin',
+        **css_filters,
         output='build/katex.css'
     ))
 

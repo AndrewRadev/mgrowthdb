@@ -100,6 +100,9 @@ class Study(OrmBase):
         viewonly=True,
     )
 
+    lastSubmissionId: Mapped[int] = mapped_column(sql.ForeignKey('Submissions.id'), nullable=True)
+    lastSubmission: Mapped['Submission'] = relationship()
+
     @hybrid_property
     def isPublished(self):
         return self.publishedAt != None

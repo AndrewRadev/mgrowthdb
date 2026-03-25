@@ -1,7 +1,9 @@
 import sqlalchemy as sql
+from sqlalchemy.orm.attributes import flag_modified
 import requests
 import json
 
+from app.model.lib.crossref_fetcher import CrossrefFetcher
 from app.model.orm import Study
 from main import create_app
 from db import FLASK_DB
@@ -19,28 +21,24 @@ with app.app_context():
     )
 
     for study in studies:
+        print(f"Study: [{study.publicId}] {study.name}")
+
         doi = study.url
+        fetcher = CrossrefFetcher(doi)
 
-        # Author records for linking and searching:
-        crossref_url = f"https://api.crossref.org/works/{doi}"
-        response = requests.get(crossref_url).json()
+        fetcher.make_request()
 
-        if response["status"] != "ok":
-            raise ValueError(f"Response was unsuccessful:\n{json.dumps(response, indent=2)}")
+        study.authors = fetcher.authors
+        study.authorCache = fetcher.author_cache
 
-        study.authors = response.get("message", {}).get("author", [])
-        if study.authors:
-            study.authorCache = ', '.join([a['family'].lower() for a in study.authors])
-            print(study.authorCache)
-        else:
-            print("No authors found")
+        if submission := study.lastSubmission:
+            submission.studyDesign['study']['authors']     = study.authors
+            submission.studyDesign['study']['authorCache'] = study.authorCache
 
-        # # Citation:
-        # citation_url = f"https://citation.doi.org/format?doi={doi}&style=apa&lang=en-US"
-        # response = requests.get(citation_url).text.strip()
-        # study.citation = response
+            flag_modified(submission, 'studyDesign')
+            db_session.add(submission)
 
-        # print(response)
+        print(f" > Author cache: {study.authorCache}")
 
         db_session.add(study)
 

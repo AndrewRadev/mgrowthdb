@@ -59,8 +59,8 @@ class UploadStep4Form(BaseForm):
 
     def validate_compartments(self, field):
         names = [c['name'] for c in field.data]
-        self._validate_uniqueness("Compartment names are not unique", names)
+        self._validate_uniqueness("compartment_names", "Compartment names are not unique", names)
 
     def validate_communities(self, field):
         names = [c['name'] for c in field.data]
-        self._validate_uniqueness("Community names are not unique", names)
+        self._validate_uniqueness("community_names", "Community names are not unique", names)

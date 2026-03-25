@@ -21,10 +21,6 @@
     opacity: 0.8;
     margin-top: 6px;
   }
-
-  .loading-input {
-    background: url(/static/images/loader.svg) no-repeat right 10px center, var(--light-blue);
-  }
 }
 
 .help-page {

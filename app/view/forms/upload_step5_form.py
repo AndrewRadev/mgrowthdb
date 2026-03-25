@@ -77,7 +77,7 @@ class UploadStep5Form(BaseForm):
 
         def validate_bioreplicates(self, field):
             names = [b['name'] for b in field.data]
-            self._validate_uniqueness("names are not unique", names)
+            self._validate_uniqueness("name", "names are not unique", names)
 
             if len(names) == 0:
                 raise ValidationError("at least one is required")
@@ -92,7 +92,14 @@ class UploadStep5Form(BaseForm):
     def validate_experiments(self, field):
         # Local validation:
         names = [e['name'] for e in field.data]
-        self._validate_uniqueness("names are not unique", names)
+
+        try:
+            self._validate_uniqueness("experiment_names", "names are not unique", names)
+        except ValidationError as e:
+            for field in self.experiments:
+                if field.data['name'] in self._duplicated_attributes['experiment_names']:
+                    field.form_errors.append('name: not unique')
+            raise e
 
         # Global bioreplicate validation:
         names = [
@@ -100,4 +107,4 @@ class UploadStep5Form(BaseForm):
             for experiment in field.data
             for bioreplicate in experiment['bioreplicates']
         ]
-        self._validate_uniqueness("bioreplicate names are not globally unique", names)
+        self._validate_uniqueness("bioreplicate_names", "bioreplicate names are not globally unique", names)

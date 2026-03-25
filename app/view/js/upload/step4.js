@@ -7,7 +7,7 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
 
     buildSubform: function (index) {
       let templateHtml = $('template.compartment-form').html();
-      let $newForm = $(templateHtml);
+      let $newForm = $("<div />").html(templateHtml).children();
 
       $newForm.addPrefix(`compartments-${index}-`);
 
@@ -28,7 +28,7 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
 
     buildSubform: function (index) {
       let templateHtml = $('template.community-form').html();
-      let $newForm = $(templateHtml);
+      let $newForm = $("<div />").html(templateHtml).children();
 
       $newForm.addPrefix(`communities-${index}-`);
 

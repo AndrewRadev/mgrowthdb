@@ -38,6 +38,7 @@ pytest
 pytest-env
 pytest-cov
 freezegun
+requests_mock
 
 # Development
 long_task_printer

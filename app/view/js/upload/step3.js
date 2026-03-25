@@ -3,6 +3,10 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
     prefixRegex:    /techniques-(\d+)-/,
     prefixTemplate: 'techniques-{}-',
 
+    addNewSubform: function ($subformList, $button, $newSubform) {
+      $button.parents('.js-button-row').before($newSubform);
+    },
+
     buildSubform: function (index, $addButton) {
       let templateHtml;
 
@@ -14,7 +18,7 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
         templateHtml = $('template.metabolite-form').html();
       }
 
-      let $newForm = $(templateHtml);
+      let $newForm = $("<div />").html(templateHtml).children();
       $newForm.addPrefix(`techniques-${index}-`);
 
       return $newForm;
@@ -36,9 +40,9 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
 
       // When the type or unit of measurement change, generate preview:
       $subform.on('change', '.js-preview-trigger', function() {
-        updatePreview($subform, subjectType);
+        updateTitleAndPreview($subform, subjectType);
       });
-      updatePreview($subform, subjectType);
+      updateTitleAndPreview($subform, subjectType);
 
       // If there is a metabolite dropdown, set up its behaviour
       $subform.find('.js-metabolites-select').each(function() {
@@ -68,13 +72,13 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
     let type = $typeSelect.val();
 
     if (type == 'ph' || type == 'od') {
-      $unitsSelect.val('');
+      $unitsSelect.animateVal('');
     } else if (type == '16s') {
-      $unitsSelect.val('reads');
+      $unitsSelect.animateVal('reads');
     } else if (type == 'plates') {
-      $unitsSelect.val('CFUs/mL');
+      $unitsSelect.animateVal('CFUs/mL');
     } else if (type == 'fc') {
-      $unitsSelect.val('Cells/mL');
+      $unitsSelect.animateVal('Cells/mL');
     }
   }
 
@@ -88,8 +92,8 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
     }
   }
 
-
-  function updatePreview($container, subjectType) {
+  function updateTitleAndPreview($container, subjectType) {
+    let $title = $container.find('.js-title');
     let $typeSelect = $container.find('.js-type-select');
 
     let columnName     = $typeSelect.find('option:selected').data('columnName');
@@ -108,24 +112,34 @@ Page('.upload-page .step-content.step-3.active', function($step3) {
     if ($container.find('.js-include-dead').is(':checked')) cellTypes.push('dead');
     if ($container.find('.js-include-total').is(':checked')) cellTypes.push('total');
 
-    let subject = null;
+    let titleSubject = null;
+    let previewSubject = null;
 
     if (subjectType == 'bioreplicate') {
-      subject = 'Community';
+      titleSubject = 'Community';
+      previewSubject = 'Community';
     } else if (subjectType == 'strain') {
-      subject = '<strain name>';
+      titleSubject = 'Strain';
+      previewSubject = '<strain name>';
     } else if (subjectType == 'metabolite') {
-      subject = '<metabolite name>';
+      titleSubject = 'Metabolites';
+      previewSubject = '<metabolite name>';
       columnName = null;
     }
 
     let columnNames = []
 
+    // General name for the title, combining types, if any:
+    let techniqueTitle = [titleSubject, cellTypes.join('/'), columnName, label].filter(Boolean).join(' ');
+    $title.html(_.escape(techniqueTitle))
+
+    // Several column names based on cell types. For each of these, a STD
+    // column is added later, if required:
     if (cellTypes.length == 0) {
-      columnNames.push([subject, columnName, label].filter(Boolean).join(' '));
+      columnNames.push([previewSubject, columnName, label].filter(Boolean).join(' '));
     } else {
       for (let cellType of cellTypes) {
-        columnNames.push([subject, cellType, columnName, label].filter(Boolean).join(' '));
+        columnNames.push([previewSubject, cellType, columnName, label].filter(Boolean).join(' '));
       }
     }
 

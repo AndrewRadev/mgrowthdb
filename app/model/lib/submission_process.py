@@ -60,13 +60,17 @@ def persist_submission_to_database(submission_form):
         for experiment in study.experiments:
             _create_average_measurements(db_trans_session, study, experiment)
 
-        submission_form.save()
-        submission_form.save_backup(study_id=study.publicId, project_id=project.publicId)
+        _finalize_submission(db_trans_session, submission_form, study, project)
 
         db_trans_session.commit()
 
+        # TODO (2026-03-01) Extract to background job:
         if study.isPublished:
-            submission_form.submission.export_data(message="Study update")
+            message = "Study update."
+            if submission.changelogText:
+                changelog_text = " ".join(submission.changelogText.splitlines())
+                message += f" Changes: {changelog_text}"
+            submission_form.submission.export_data(message=message)
 
         return []
 
@@ -179,13 +183,15 @@ def _save_study(db_session, submission_form, user_uuid=None):
         'name':             submission.studyDesign['study']['name'].strip(),
         'description':      submission.studyDesign['study'].get('description', '').strip(),
         'url':              submission.studyDesign['study'].get('url', '').strip(),
+        'authors':          submission.studyDesign['study'].get('authors', []),
+        'authorCache':      submission.studyDesign['study'].get('authorCache', ''),
         'uuid':             submission.studyUniqueID,
         'projectUuid':      submission.projectUniqueID,
         'timeUnits':        submission.studyDesign['timeUnits'],
         'embargoExpiresAt': embargo_datetime,
     }
 
-    if submission_form.type != 'update_study':
+    if submission_form.study_id is None:
         params['ownerUuid'] = user_uuid
 
         study = Study(**Study.filter_keys(params))
@@ -196,11 +202,7 @@ def _save_study(db_session, submission_form, user_uuid=None):
             userUniqueID=submission.userUniqueID,
         ))
     else:
-        study = db_session.scalars(
-            sql.select(Study)
-            .where(Study.uuid == submission.studyUniqueID)
-            .limit(1)
-        ).one()
+        study = db_session.get(Study, submission_form.study_id)
         study.update(**Study.filter_keys(params))
 
     tomorrow = datetime.now(UTC) + timedelta(hours=24)
@@ -224,7 +226,7 @@ def _save_project(db_session, submission_form, user_uuid=None):
         'uuid':        submission.projectUniqueID,
     }
 
-    if submission_form.type == 'new_project':
+    if submission_form.project_id is None:
         params['ownerUuid'] = user_uuid
 
         project = Project(**Project.filter_keys(params))
@@ -234,11 +236,7 @@ def _save_project(db_session, submission_form, user_uuid=None):
             userUniqueID=submission.userUniqueID,
         ))
     else:
-        project = db_session.scalars(
-            sql.select(Project)
-            .where(Project.uuid == submission.projectUniqueID)
-            .limit(1)
-        ).one()
+        project = db_session.get(Project, submission_form.project_id)
         project.update(**Project.filter_keys(params))
 
     db_session.add(project)
@@ -575,6 +573,15 @@ def _create_average_measurement_context(
             study=study,
         )
         db_session.add(measurement)
+
+
+def _finalize_submission(db_session, submission_form, study, project):
+    study.lastSubmissionId = submission_form.submission.id
+    if study.isPublished:
+        submission_form.submission.publishedAt = study.publishedAt
+
+    submission_form.save()
+    submission_form.save_backup(study_id=study.publicId, project_id=project.publicId)
 
 
 def _find_custom_strain(submission, identifier):
