@@ -132,8 +132,23 @@ def user_claim_study_action():
     if study_user:
         flash(f"You already have access to this study: [{study.publicId}] {study.name}", "error")
     else:
-        # Create link:
+        # Create link to study:
         g.db_session.add(StudyUser(userUniqueID=user_uuid, studyUniqueID=study_uuid))
+        g.db_session.commit()
+
+    # Check for project link existence:
+    project_user = g.db_session.scalars(
+        sql.select(ProjectUser)
+        .where(
+            ProjectUser.userUniqueID == user_uuid,
+            ProjectUser.projectUniqueID == study.projectUuid,
+        )
+        .limit(1)
+    ).one_or_none()
+
+    if not project_user:
+        # Create link to project:
+        g.db_session.add(ProjectUser(userUniqueID=user_uuid, projectUniqueID=study.projectUuid))
         g.db_session.commit()
 
     return redirect(request.referrer)
