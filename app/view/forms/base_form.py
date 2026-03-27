@@ -1,7 +1,10 @@
 from flask_wtf import FlaskForm
 from wtforms.validators import ValidationError
 
-from app.model.lib.util import humanize_camelcased_string
+from app.model.lib.util import (
+    humanize_camelcased_string,
+    find_duplicates,
+)
 
 
 class BaseForm(FlaskForm):
@@ -18,16 +21,7 @@ class BaseForm(FlaskForm):
         return list(_iterate_error_messages(prefixes=[], errors=self.errors))
 
     def _validate_uniqueness(self, attribute, message, value_list):
-        seen       = set()
-        duplicated = set()
-
-        for value in value_list:
-            if value in seen:
-                duplicated.add(value)
-            else:
-                seen.add(value)
-
-        if duplicated:
+        if duplicated := find_duplicates(value_list):
             self._duplicated_attributes[attribute] = list(duplicated)
             value_description = ', '.join([repr(d) for d in duplicated])
 
