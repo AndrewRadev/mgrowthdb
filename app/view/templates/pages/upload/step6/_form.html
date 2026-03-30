@@ -101,8 +101,12 @@
   <div class="preview js-preview">
     {% if submission.dataFileId: %}
       {{ render_spreadsheet_preview(submission_form.submission.dataFile, errors) }}
-    {% else: %}
+    {% elif errors: %}
       {{ render_form_errors(errors) }}
+    {% else: %}
+      <p class="box help">
+        A preview of your data will be shown here once you upload a data file
+      </p>
     {% endif %}
   </div>
 
