@@ -168,6 +168,9 @@ class Study(OrmBase):
             return False
         else:
             self.publishedAt = datetime.now(UTC)
+            if submission := self.lastSubmission:
+                submission.publishedAt = datetime.now(UTC)
+
             return True
 
     @staticmethod

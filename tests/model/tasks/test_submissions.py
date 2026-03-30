@@ -20,6 +20,9 @@ class TestSubmissions(DatabaseTest):
             s1 = self.create_study(embargoExpiresAt=deadline)
             s2 = self.create_study(embargoExpiresAt=None, publishableAt=tomorrow)
 
+            sub = self.create_submission()
+            s3 = self.create_study(embargoExpiresAt=deadline, lastSubmissionId=sub.id, uuid=sub.studyUniqueID)
+
             # After 1 day and a bit, the embargoed study does not become
             # published yet:
             frozen_time.tick(delta=timedelta(days=1, hours=1))
@@ -30,9 +33,11 @@ class TestSubmissions(DatabaseTest):
 
             self.assertFalse(s1.isPublishable)
             self.assertTrue(s2.isPublishable)
+            self.assertFalse(s3.isPublishable)
 
             self.assertFalse(s1.isPublished)
             self.assertFalse(s2.isPublished)
+            self.assertFalse(s3.isPublished)
 
             # After 1 more day and a bit, it becomes published, the other one
             # does not:
@@ -41,12 +46,17 @@ class TestSubmissions(DatabaseTest):
 
             self.db_session.refresh(s1)
             self.db_session.refresh(s2)
+            self.db_session.refresh(sub)
 
             self.assertTrue(s1.isPublishable)
             self.assertTrue(s2.isPublishable)
+            self.assertTrue(s3.isPublishable)
 
             self.assertTrue(s1.isPublished)
             self.assertFalse(s2.isPublished)
+            self.assertTrue(s3.isPublished)
+
+            self.assertTrue(sub.isPublished)
 
 
 if __name__ == '__main__':
