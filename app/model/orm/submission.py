@@ -60,7 +60,7 @@ class Submission(OrmBase):
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
 
-    changelogText: Mapped[sql.String] = mapped_column(sql.String)
+    changelogText: Mapped[sql.String] = mapped_column(sql.String, nullable=True)
 
     @hybrid_property
     def isPublished(self):
