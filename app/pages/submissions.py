@@ -13,6 +13,14 @@ from app.model.lib.errors import LoginRequired
 from app.view.forms.submission_form import SubmissionForm
 
 
+def download_submission_metadata(id):
+    submission = g.db_session.get(Submission, id)
+    if not submission.isPublished:
+        raise Forbidden
+
+    return submission.studyDesign
+
+
 def edit_submission_action(id):
     session['submission_id'] = id
 

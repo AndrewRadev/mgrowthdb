@@ -90,6 +90,7 @@ def init_routes(app):
     app.add_url_rule("/study/<string:publicId>/visualize/",      view_func=study_pages.study_visualize_page)
     app.add_url_rule("/study/<string:publicId>/visualize/chart", view_func=study_pages.study_chart_fragment, methods=["POST"])
     app.add_url_rule("/study/<string:publicId>/reset",           view_func=study_pages.study_reset_action,   methods=["POST"])
+    app.add_url_rule("/study/<string:publicId>/history/",        view_func=study_pages.study_history_page)
 
     app.add_url_rule("/modeling/<string:publicId>/",           view_func=modeling_pages.modeling_page)
     app.add_url_rule("/modeling/<string:publicId>/models.csv", view_func=modeling_pages.modeling_params_csv, methods=["POST"])
@@ -159,7 +160,8 @@ def init_routes(app):
     app.add_url_rule("/claim-project/", view_func=user_pages.user_claim_project_action, methods=["POST"])
     app.add_url_rule("/claim-study/",   view_func=user_pages.user_claim_study_action,   methods=["POST"])
 
-    app.add_url_rule("/excel_files/<id>.xlsx", view_func=excel_file_pages.download_excel_file)
+    app.add_url_rule("/submission_metadata/<id>.json", view_func=submission_pages.download_submission_metadata)
+    app.add_url_rule("/excel_files/<id>.xlsx",         view_func=excel_file_pages.download_excel_file)
 
     app.add_url_rule(
         "/sandbox/",
