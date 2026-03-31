@@ -150,9 +150,10 @@ def init_routes(app):
     app.add_url_rule("/search/",          view_func=search_pages.search_index_page)
     app.add_url_rule("/advanced-search/", view_func=search_pages.advanced_search_index_page)
 
-    app.add_url_rule("/profile/", view_func=user_pages.user_show_page)
-    app.add_url_rule("/login/",   view_func=user_pages.user_login_page)
-    app.add_url_rule("/logout/",  view_func=user_pages.user_logout_action, methods=["POST"])
+    app.add_url_rule("/profile/",              view_func=user_pages.user_show_page)
+    app.add_url_rule("/login/",                view_func=user_pages.user_login_page)
+    app.add_url_rule("/logout/",               view_func=user_pages.user_logout_action,  methods=["POST"])
+    app.add_url_rule("/dashboards/<orcidId>/", view_func=user_pages.user_dashboard_page)
 
     if app_env in ('development', 'test'):
         app.add_url_rule("/backdoor/", view_func=user_pages.user_backdoor_page, methods=["GET", "POST"])
@@ -184,5 +185,7 @@ def init_routes(app):
     app.add_url_rule("/api/v1/bioreplicate/<int:id>.csv",  view_func=api_pages.bioreplicate_csv)
 
     app.add_url_rule("/api/v1/search.json",  view_func=api_pages.search_json)
+
+    app.add_url_rule("/api/v1/dashboard.json", view_func=api_pages.dashboard_json, methods=["POST"])
 
     return app

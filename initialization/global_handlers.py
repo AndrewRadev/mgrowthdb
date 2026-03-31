@@ -43,6 +43,7 @@ def init_global_handlers(app):
 
     app.errorhandler(ClientError)(_render_client_error)
 
+    app.errorhandler(400)(_render_bad_request)
     app.errorhandler(403)(_render_forbidden)
     app.errorhandler(500)(_render_server_error)
 
@@ -135,6 +136,13 @@ def _close_db_connection(response):
         db_conn.close()
 
     return response
+
+
+def _render_bad_request(error):
+    if _is_json(request):
+        return {'error': '400 Bad request'}, 400
+    else:
+        raise error
 
 
 def _render_not_found(_error):

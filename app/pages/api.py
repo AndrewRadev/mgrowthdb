@@ -1,10 +1,12 @@
 import re
+import json
 
 from flask import (
     g,
     request,
+    url_for,
 )
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 import sqlalchemy as sql
 
 from app.model.lib.conversion import (
@@ -15,6 +17,7 @@ from app.model.lib.conversion import (
 )
 from app.model.orm import (
     Bioreplicate,
+    DashboardEntry,
     Experiment,
     Measurement,
     MeasurementContext,
@@ -22,6 +25,7 @@ from app.model.orm import (
     Project,
     Study,
     StudyStrain,
+    User,
 )
 from app.model.lib.errors import ClientError
 
@@ -281,6 +285,42 @@ def search_json():
             }
             for mc in measurement_contexts
         ]
+    }
+
+
+def dashboard_json():
+    request_json = json.loads(request.data)
+
+    if 'apiKey' not in request_json:
+        raise Forbidden
+    if 'entries' not in request_json:
+        raise BadRequest
+
+    user = g.db_session.scalars(
+        sql.select(User)
+        .where(User.apiKey == request_json['apiKey'].strip())
+        .limit(1)
+    ).one_or_none()
+
+    if user is None:
+        raise Forbidden
+
+    user.dashboardEntries.clear()
+    g.db_session.add(user)
+
+    for entry in request_json['entries']:
+        dashboard_entry = DashboardEntry(
+            user=user,
+            label=entry['label'],
+            data=entry['data'],
+        )
+        g.db_session.add(dashboard_entry)
+
+    g.db_session.commit()
+
+    return {
+        "dashboardUrl": url_for('user_dashboard_page', orcidId=user.orcidId),
+        "dashboardEntryId": dashboard_entry.id,
     }
 
 
