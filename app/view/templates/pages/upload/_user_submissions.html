@@ -65,7 +65,7 @@
           <td>{{ time_tag(user_submission.updatedAt, relative=True) }}</td>
           <td>{{ time_tag(user_submission.createdAt, relative=True) }}</td>
           <td align="center">
-            {{ user_submission.completed_step_count }}/7
+            {{ user_submission.completedStepCount }}/7
           </td>
           <td align="center">
             <span data-tooltip="Edit">
@@ -74,13 +74,15 @@
                 url_for('edit_submission_action', id=user_submission.id)
               ) }}
             </span>
-            <span data-tooltip="Delete">
-              {{ post_icon_button(
+            {% if not user_submission.study or user_submission.study.isPublished: %}
+              <span data-tooltip="Delete">
+                {{ post_icon_button(
                 "delete",
                 url_for('delete_submission_action', id=user_submission.id),
                 confirm="This will discard the data in this submission, are you sure?"
-              ) }}
-            </span>
+                ) }}
+              </span>
+            {% endif %}
           </td>
         </tr>
       {% endfor %}

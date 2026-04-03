@@ -24,6 +24,10 @@ pre {
   font-family: monospace;
 }
 
+time {
+  display: inline-block;
+}
+
 a:hover {
   color: #0060df;
 }

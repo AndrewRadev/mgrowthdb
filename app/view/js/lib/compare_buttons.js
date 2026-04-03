@@ -6,31 +6,26 @@
 // and to update the sidebar UI.
 //
 function initCompareButtons($page) {
-  let $compareData = $(document).find('[data-compare-ids]')
+  let $compareData = $(document).find('[data-compare-context-ids]');
 
-  let compareIds;
-  if ($compareData.length > 0) {
-    compareIds = new Set($compareData.data('compareIds').toString().split(','));
-  } else {
-    compareIds = new Set();
-  }
+  let compareContextIds = new Set(getDataIds($compareData, 'compareContextIds'));
+  let compareModelIds   = new Set(getDataIds($compareData, 'compareModelIds'));
 
   let studyId = $page.data('studyId');
 
   $page.find('.js-compare-container').each(function() {
     let $container = $(this);
-    if (!$container.data('contextIds')) {
-      return;
-    }
+    let contextIds = new Set(getDataIds($container, 'contextIds'));
+    let modelIds   = new Set(getDataIds($container, 'modelIds'));
 
-    let ids = new Set($container.data('contextIds').toString().split(','));
-    if (!ids.isSubsetOf(compareIds)) {
-      return;
+    if (
+      (contextIds.size > 0 && contextIds.isSubsetOf(compareContextIds)) ||
+      (modelIds.size > 0 && modelIds.isSubsetOf(compareModelIds))
+    ) {
+      $container.find('.js-uncompare').removeClass('hidden');
+      $container.find('.js-compare').addClass('hidden');
+      $container.parents('.js-table-row').addClass('highlight');
     }
-
-    $container.find('.js-uncompare').removeClass('hidden');
-    $container.find('.js-compare').addClass('hidden');
-    $container.parents('.js-table-row').addClass('highlight');
   });
 
   $page.on('click', '.js-compare a', function(e) {
@@ -40,15 +35,8 @@ function initCompareButtons($page) {
     let $wrapper   = $button.parents('.js-compare');
     let $container = $button.parents('.js-compare-container');
 
-    let contextIds = [];
-    let modelIds   = [];
-
-    if ($container.data('contextIds')) {
-      contextIds = $container.data('contextIds').toString().split(',');
-    }
-    if ($container.data('modelIds')) {
-      modelIds = $container.data('modelIds').toString().split(',');
-    }
+    let contextIds = getDataIds($container, 'contextIds');
+    let modelIds   = getDataIds($container, 'modelIds');
 
     updateCompareData('add', contextIds, modelIds, function(compareData) {
       // Hide "compare" button, show "uncompare" button
@@ -67,15 +55,8 @@ function initCompareButtons($page) {
     let $wrapper   = $button.parents('.js-uncompare');
     let $container = $button.parents('.js-compare-container');
 
-    let contextIds = [];
-    let modelIds   = [];
-
-    if ($container.data('contextIds')) {
-      contextIds = $container.data('contextIds').toString().split(',');
-    }
-    if ($container.data('modelIds')) {
-      modelIds = $container.data('modelIds').toString().split(',');
-    }
+    let contextIds = getDataIds($container, 'contextIds');
+    let modelIds   = getDataIds($container, 'modelIds');
 
     updateCompareData('remove', contextIds, modelIds, function(compareData) {
       // Hide "uncompare" section, show "compare" button
@@ -116,4 +97,13 @@ function updateCompareData(action, contexts, models, successCallback) {
       successCallback(compareData)
     },
   })
+}
+
+function getDataIds($element, key) {
+  let data = $element.data(key);
+  if (!data) {
+    return [];
+  }
+
+  return data.toString().split(',');
 }

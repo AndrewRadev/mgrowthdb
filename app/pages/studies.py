@@ -202,6 +202,26 @@ def study_visualize_page(publicId):
     )
 
 
+def study_history_page(publicId):
+    study = _fetch_study_for_visitor(publicId)
+
+    study_submissions = g.db_session.scalars(
+        sql.select(Submission)
+        .where(Submission.studyUniqueID == study.uuid)
+        .where(Submission.isPublished)
+        .order_by(
+            Submission.publishedAt.desc(),
+            Submission.updatedAt.desc(),
+        )
+    ).all()
+
+    return render_template(
+        'pages/studies/history.html',
+        study=study,
+        study_submissions=study_submissions,
+    )
+
+
 def study_chart_fragment(publicId):
     study = _fetch_study_for_visitor(publicId)
     args = request.form.to_dict()

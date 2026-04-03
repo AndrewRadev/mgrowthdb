@@ -1,5 +1,6 @@
 import io
 
+from sqlalchemy.orm.exc import NoResultFound
 from flask import (
     g,
     render_template,
@@ -32,6 +33,10 @@ def upload_status_page():
         return redirect(url_for('upload_step1_page', id=submission_form.submission.id))
 
     submission_form = _load_submission_form(session.get('submission_id', None), step=0)
+    if submission_form is None:
+        # Then there was a mismatch between the session and the database, clear the submission id:
+        del session['submission_id']
+        return redirect(url_for('upload_status_page'))
 
     if g.current_user:
         user_submissions = [s for s in g.current_user.submissions if not s.isPublished]
@@ -325,11 +330,14 @@ def _load_submission_form(submission_id, step):
     if step > 0 and g.current_user is None:
         raise LoginRequired()
 
-    return SubmissionForm.load(
-        db_session=g.db_session,
-        submission_id=submission_id,
-        step=step,
-    )
+    try:
+        return SubmissionForm.load(
+            db_session=g.db_session,
+            submission_id=submission_id,
+            step=step,
+        )
+    except NoResultFound as e:
+        return None
 
 
 def _init_upload_form(form_class, submission):

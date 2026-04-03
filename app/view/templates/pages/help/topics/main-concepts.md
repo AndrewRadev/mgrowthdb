@@ -6,6 +6,12 @@ A project represents a distinct research endeavor focused on microbial growth. I
 
 A study conducted within the framework of a project refers to a focused investigation aimed at exploring a specific aspect of microbial growth. Each study is carefully designed to address particular research questions or hypotheses and may involve multiple experiments.
 
+## Submission
+
+In order to create a new study or update an existing one, a user of μGrowthDB needs to create a submission that organizes the data step by step. Once the submission is finalized, the collected data is compiled into a new study or the changes it describes are applied to an existing one.
+
+There could be many submissions to create or update a study. Ideally, studies should not be updated significantly, but they might need fixes or additional data uploads. The method of adding those is by creating a new submission.
+
 ## Experiment
 
 An experiment represents a unique set of experimental conditions or treatments applied to a set/group of biological replicates. Control cases should be considered as distinct experiments.

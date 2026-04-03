@@ -14,6 +14,19 @@ import requests
 from flask import url_for, request
 
 
+def find_duplicates(collection):
+    seen       = set()
+    duplicated = set()
+
+    for value in collection:
+        if value in seen:
+            duplicated.add(value)
+        else:
+            seen.add(value)
+
+    return duplicated
+
+
 def is_non_negative_float(string: str, *, isnan_check: bool):
     """
     Check if the given string value represents a finite float.

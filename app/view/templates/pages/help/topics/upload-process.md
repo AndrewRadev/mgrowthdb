@@ -1,4 +1,4 @@
-To upload a study, first you need to log in using an {{ "https://orcid.org/"|external_link("ORCID") }}. After that, you can follow the step-by-step process in the "Upload data" section of the navigation sidebar.
+To upload a study, first you need to log in using an {{ "https://orcid.org/"|external_link("ORCID") }}. After that, you can go to the "Upload data" section, click on "New submission" and then follow the step-by-step process in the "Upload data" section of the navigation sidebar.
 
 A "study" in μGrowthDB could contain the data of a publication, either a paper or a pre-print, but it could also be unpublished data that is currently being worked on. Upon finishing the upload process, the study will receive a stable identifier of the form "SMGDBxxx..." that you can share in your publications.
 
@@ -22,7 +22,7 @@ The data is taken from {{ "https://www.ebi.ac.uk/chebi/init.do"|external_link("C
 </li>
 
 <li>
-Once a particular step is submitted, the interface shows the sub-forms in the next step and renders a "status" view for the other ones. In this subfigure, we can see green check-marks that indicate completed steps and yellow minus signs for pending ones. You do not have to navigate steps in order, even if the forms are interconnected. You can investigate the submission process in its entirety before entering the data in order.
+Once a particular step is submitted, the interface shows the sub-forms in the next step and renders a "status" view for the other ones. In this subfigure, you can see green check-marks that indicate completed steps and yellow minus signs for pending ones. You do not have to navigate steps in order, even if the forms are interconnected. You can investigate the submission process in its entirety before entering the data in order.
 </li>
 
 <li>
@@ -38,21 +38,47 @@ During partial submission on "Add" or "Duplicate", or after the final submission
 
 <h2 id="step-1">Step 1: Project and study information</h2>
 
-The first step requests basic information about the study that is being uploaded, including its name and description, but also a description of its parent project:
+The first step requests basic information about the study that is being uploaded, including its name and description, but also a description of its parent project. First, you can pre-fill the title and attach a list of authors if we have an existing publication. You need to enter a [DOI](https://doi.org/) and click on "Fetch information":
 
 <p>
     <div style="width: 100%; text-align: center">
-    <img style="width: 80%; margin: 0 auto;" title="Step 1: Project and study form" src="/static/images/help/upload-process/step_1.png" />
+    <img style="width: 100%; margin: 0 auto;" title="Step 1: Project and study form, publication input" src="/static/images/help/upload-process/step_1_1.png" />
     </div>
 </p>
 
-Each of the two dropdowns can either be "New project"/"New study" or it can be a selection of projects/studies that the user has access to. If you've uploaded a study before, its data will show up in these dropdowns. If someone has shared a study for you, it will also be available.
+This part is optional: it's perfectly acceptable to enter unpublished data, and you can attach a pre-print or publication later, in a follow-up submission.
 
-Depending on whether you pick existing uploads or new ones, the submission process will result in updating a new version of a study, adding a new study to an existing project, or starting a new project and study. The first two cases also allow you to change the textual descriptions or add a publication link if it is available.
+After, you need to enter information about the study, including its title and description:
 
-The bottom dropdown allows you to copy a previous study's design for the following steps. This is only useful if you're creating a new study, but you'd like to avoid entering some of the details. In this particular example, we have an existing "Controls" study that contains some of the vessels in the larger project and we are adding a "Perturbations" study with another set of vessels. Many parts of the experimental design will be the same, so we can reuse the previous upload.
+<p>
+    <div style="width: 100%; text-align: center">
+    <img style="width: 100%; margin: 0 auto;" title="Step 1: Project and study form, study fields" src="/static/images/help/upload-process/step_1_2.png" />
+    </div>
+</p>
 
-In the description of the study, you can refer to an existing study, project, or experiment, by writing down its public identifier, e.g. "PMGDB000001", "SMGDB00000011", or "EMGDB000000051". This will be turned into a link to that entity on the site. In case the study is connected to a different one or if some of its data is reused elsewhere, you are encouraged to add that link to the description.
+In the description, you can refer to an existing study, project, or experiment, by writing down its public identifier, e.g. "PMGDB000001", "SMGDB00000011", or "EMGDB000000051". This will be turned into a link to that entity on the site. In case the study is connected to a different one or if some of its data is reused elsewhere, you are encouraged to add that link to the description.
+
+A study needs to be contained inside a project, a group of connected studies. You can create a new project or pick one of the previous one you've created or have been given access to. If you don't intend to connect this particular study to a larger collection, you can re-use the name of the study as its project name:
+
+<p>
+    <div style="width: 100%; text-align: center">
+    <img style="width: 100%; margin: 0 auto;" title="Step 1: Project and study form, project fields" src="/static/images/help/upload-process/step_1_3.png" />
+    </div>
+</p>
+
+There's two additional fields if you're preparing a submission that creates a new study:
+
+<p>
+    <div style="width: 100%; text-align: center">
+    <img style="width: 100%; margin: 0 auto;" title="Step 1: Project and study form, additional fields" src="/static/images/help/upload-process/step_1_4.png" />
+    </div>
+</p>
+
+The left field lets you specify an embargo date. The study will not be published until that date has passed. The day after, at 2am UTC, the system will automatically make the study publicly available. This means that visitors will be able to see its data and find it in the search interface.
+
+If no embargo date is set, you need to publish the study yourself whenever you choose, after a 24-hour buffer period. You can view the data and submit updates to it, but visitors will only see a placeholder page.
+
+The right dropdown allows you to copy a previous study's design for the following steps. This is only useful if you're creating a new study, but you'd like to avoid entering some of the details like the microbial strains or technique descriptions. If you commonly use the same or similar methodology, this could save you some time, but we recommend carefully going over the study design to make sure the description is accurate to your current study.
 
 <h2 id="step-2">Step 2: Microbial strains</h2>
 
@@ -70,15 +96,12 @@ The textual input completes species and strains from an NCBI export. As you type
 
 <div class="image-container" style="width: 50%; float: right; margin-left: 20px; margin-top: 20px;">
     <img
-        class="no-border"
         src="/static/images/help/upload-process/step_3_1.png"
         title="Step 3: Community-level subform" />
     <img
-        class="no-border"
         src="/static/images/help/upload-process/step_3_2.png"
         title="Step 3: Strain-level subform" />
     <img
-        class="no-border"
         src="/static/images/help/upload-process/step_3_3.png"
         title="Step 3: Metabolite subform" />
 </div>
@@ -92,7 +115,11 @@ The methods of measurement need to be described by the technique that was used, 
 - **pH** measurements are included in the "Community" measurements, since they are considered a property of the growth vessel/compartment.
 - **Metabolite** measurements do not require describing the specific measurement technique, but it is encouraged to enter it in the "description" field. Units can be either molar concentrations (e.g. mM) or mass concentrations (e.g. g/L), or they could be unitless AUC values that can be used for relative comparisons.
 
-At the bottom of each sub-form, a preview shows the names of the columns that will be requested in the data spreadsheet in step 6. Depending on the type of measurement, the column may be a static string like "Community OD" or the name of the measurement subject like "Roseburia intestinalis rRNA reads". You can check the "Include STD" checkbox to add columns to the data spreadsheet for standard deviation measurements. If you have multiple technical replicates, you can upload point averages and standard deviations to quantify the variability of the measurements.
+At the bottom of each sub-form, a preview shows the names of the columns that will be requested in the data spreadsheet in step 6. Depending on the type of measurement, the column may be a static string like "Community OD" or the name of the measurement subject like "Roseburia intestinalis rRNA reads".
+
+You can check the "Include STD" checkbox to add columns to the data spreadsheet for standard deviation measurements. If you have multiple technical replicates, you can upload point averages and standard deviations to quantify the variability of the measurements.
+
+For strain-level measurements, you can check the "Include unknown" checkbox to add an additional column for recording unknown reads, like contamination.
 
 <h2 id="step-4">Step 4: Compartments and communities</h2>
 
@@ -168,5 +195,7 @@ In step 7, the data will already have been processed and your study should be cr
 </p>
 
 You can review your study, but it will only be visible to the public once you click the "Publish" button. This will only be allowed after a 24-hour period. If you are just experimenting with the interface, you can simply avoid publishing altogether. In the future, the application may have a "test mode" to more clearly separate "test" studies and ones intended for publishing.
+
+If you set an embargo date in step 1, the application will make your study public automatically once that date has passed, so you don't need to worry about remembering to publish at the right time.
 
 After submitting and publishing your study, you can still come back to this submission to update it, if necessary. To retract a study, please send us an email to explain your situation. You can can contact us at <a href="mailto:mgrowthdb@kuleuven.be">mgrowthdb@kuleuven.be</a>.

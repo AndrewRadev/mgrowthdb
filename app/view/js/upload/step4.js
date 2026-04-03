@@ -14,9 +14,17 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
       return $newForm;
     },
 
+    initializeSubform: function($subform, index) {
+      $subform.on('change', 'input[name$="name"]', function() {
+        updateIndexAndName($subform, index + 1, $(this));
+      });
+      updateIndexAndName($subform, index + 1, null);
+    },
+
     onDuplicate: function($newForm) {
       // Reset name
       $newForm.find('input[name$="name"]').val('');
+      $newForm.find('.js-title').html('[New]')
     },
   });
 
@@ -53,4 +61,14 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
       $newForm.find('input[name$="name"]').val('');
     },
   });
+
+  function updateIndexAndName($container, index, $nameInput) {
+    let $index = $container.find('.js-index');
+    let $title = $container.find('.js-title');
+
+    $index.html(index);
+    if ($nameInput) {
+      $title.html($nameInput.val());
+    }
+  }
 });

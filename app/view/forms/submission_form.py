@@ -29,7 +29,7 @@ DEFAULT_STUDY_DESIGN = {
         'embargoExpiresAt': None,
     },
 
-    'timeUnits': None,
+    'timeUnits': 'h',
 
     'strains':        [],
     'custom_strains': [],
@@ -76,7 +76,7 @@ class SubmissionForm:
 
         if submission_id is not None:
             # Find existing submission:
-            self.submission = self.db_session.get(Submission, submission_id)
+            self.submission = self.db_session.get_one(Submission, submission_id)
             self.submission.studyDesign = {
                 **self._default_study_design,
                 **self.submission.studyDesign,

@@ -43,6 +43,15 @@
           You can now click the "Publish" button to make your study visible in
           search results and make its data accessible to other people.
         </p>
+      {% elif submission.study.embargoExpiresAt: %}
+        <p>
+          The day after
+          <strong>{{ submission.study.embargoExpiresAt.strftime("%F") }}</strong>
+          (based on UTC time), the study will be published automatically by our
+          systems and your data will be visible to other people. If you want to
+          stop this from happening for whatever reason, you can update your
+          submission to remove the embargo date.
+        </p>
       {% else: %}
         <p>
           At that time, the button below will be enabled and will allow you to
@@ -65,8 +74,15 @@
 
       <p>
         You are free to explore the data and validate that it matches your
-        expectations. If you see any issues, you can update the study using this
-        form.
+        expectations. If you see any issues, you can change any step of this
+        form, but if you do, make sure to go through the following steps and
+        confirm their validity. For instance, changing the strains you select
+        in step 2 may change your defined communities in step 4.
+      </p>
+
+      <p>
+        Finally, in <strong>step 6</strong>, click "Update data" to apply your
+        changes to the study.
       </p>
 
     {% endif %}

@@ -12,6 +12,8 @@ from app.view.forms.base_form import BaseForm
 
 
 class UploadStep2Form(BaseForm):
+    class Meta:
+        csrf_time_limit = None
 
     class NewStrainForm(BaseForm):
         class Meta:

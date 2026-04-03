@@ -25,8 +25,9 @@ from app.model.orm import (
     StudyUser,
     Taxon,
 )
-from app.model.lib.util import group_by_unique_name, is_non_negative_float
+from app.model.lib.util import group_by_unique_name, is_non_negative_float, find_duplicates
 from app.model.lib.conversion import convert_time
+from app.model.tasks.submissions import export_submission_data
 
 
 def persist_submission_to_database(submission_form):
@@ -64,13 +65,8 @@ def persist_submission_to_database(submission_form):
 
         db_trans_session.commit()
 
-        # TODO (2026-03-01) Extract to background job:
         if study.isPublished:
-            message = "Study update."
-            if submission.changelogText:
-                changelog_text = " ".join(submission.changelogText.splitlines())
-                message += f" Changes: {changelog_text}"
-            submission_form.submission.export_data(message=message)
+            export_submission_data.delay(submission.id)
 
         return []
 
@@ -139,7 +135,7 @@ def validate_data_file(submission_form, data_file=None):
     # Validate values:
     for sheet_name, df in sheets.items():
         missing_time_rows = []
-        missing_values = {}
+        missing_values    = {}
 
         # Check for missing Time values:
         if 'Time' in df:
@@ -165,6 +161,23 @@ def validate_data_file(submission_form, data_file=None):
             if column in missing_values:
                 row_description = _format_row_list_error(missing_values[column])
                 errors.append(f"{sheet_name}: Invalid values in column \"{column}\" on row(s) {row_description}")
+
+        # Check for unique timepoints
+        grouped_timepoints = {}
+        time_data = df[['Biological Replicate', 'Compartment', 'Time']]
+
+        for _, row in time_data.iterrows():
+            key = (row['Biological Replicate'], row['Compartment'])
+
+            if row['Time']:
+                if key not in grouped_timepoints:
+                    grouped_timepoints[key] = []
+                grouped_timepoints[key].append(row['Time'])
+
+        for (b, c), timepoints in grouped_timepoints.items():
+            if duplicates := find_duplicates(timepoints):
+                duplicates_description = ', '.join([str(d) for d in duplicates])
+                errors.append(f"{sheet_name}: Time points are not unique for bioreplicate {b}, compartment {c}: {duplicates_description}")
 
     return errors
 

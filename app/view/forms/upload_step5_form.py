@@ -16,6 +16,8 @@ from app.view.forms.base_form import BaseForm
 
 
 class UploadStep5Form(BaseForm):
+    class Meta:
+        csrf_time_limit = None
 
     class ExperimentForm(BaseForm):
         class Meta:
@@ -83,6 +85,7 @@ class UploadStep5Form(BaseForm):
                 raise ValidationError("at least one is required")
 
     timeUnits = SelectField('timeUnits', choices=[
+        ('d', 'Days (d)'),
         ('h', 'Hours (h)'),
         ('m', 'Minutes (m)'),
         ('s', 'Seconds (s)'),

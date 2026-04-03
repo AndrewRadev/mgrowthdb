@@ -73,6 +73,10 @@ def _aggregate_page_visits(db_session):
         )
     ).one()
 
+    if last_id is None:
+        _LOGGER.info("There have been no new page visits since last aggregation")
+        return
+
     _LOGGER.info(f"Recording page visits from {start_time} to {end_time}")
 
     total_count           = 0
