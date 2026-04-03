@@ -15,27 +15,36 @@ To upload your own data, you need to authenticate by using [ORCID](https://orcid
 
 - Upload process: <https://mgrowthdb.gbiomed.kuleuven.be/help/upload-process/>
 
-## Local installation using docker
+## Local installation inside a docker container
 
 If you'd like to get the app running to use in a local environment, a docker container can be a working cross-platform choice. The provided Dockerfile is meant for launching the app in production mode and not for development purposes.
 
-First, copy the `.env.example` file to an `.env` file and fill in the environment variables. Ideally, you should set a random string for session encryption. If you want to be able to log in, you'll need to follow [the ORCID documentation](https://info.orcid.org/documentation/integration-guide/) to create an ORCID app and fill in its information. If you skip that part, you'll only have read access to the data.
+First, copy the `.env.example` file to an `.env` file and fill in the environment variables. Ideally, you should set a random string for session encryption in `MGROWTHDB_SECRET_KEY`. An example of how to generate it can be found in the [flask documentation](https://flask.palletsprojects.com/en/stable/config/#SECRET_KEY):
+
+``` .sh-session
+$ python -c 'import secrets; print(secrets.token_hex())'
+'192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc987d54727823bcbf'
+```
+
+If you want to be able to log in with a user, you'll need to follow [the ORCID documentation](https://info.orcid.org/documentation/integration-guide/) to create an ORCID app and fill in the relevant information information. The particular tutorial that goes over the process is this one: <https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/>, under "How do I register a Public API client?".
+
+If you skip that part, you'll only have read access to the data. You can leave the "ORCID" environment variables as they are in the config and use the several studies that are imported in the bootstrap process below.
 
 To start the application, you can run the following docker-compose command in the root of the application:
 
-```
+``` bash
 docker compose -f docker-compose-full.yml up --build
 ```
 
 The file `docker-compose-full.yml` starts a complete app with a mysql server and a redis server. You can "detach" it by adding `-d` to the command-line, or you can keep it running in a terminal or in a systemd service to see the app's logs. To bootstrap the data the application needs, you can run bash inside the running compartment with `docker compose exec`:
 
-```
+``` bash
 docker compose -f docker-compose-full.yml exec -it mgrowthdb_app bash
 ```
 
 While inside the container, you can run the script `./scripts/init.sh` that will create the initial structure, download ontology data from ChEBI and [JensenLab](https://jensenlab.org/), and create a few initial studies:
 
-```
+``` bash
 ADMIN_ORCID="1234-1234-1234-1234" ./scripts/init.sh
 ```
 
@@ -43,7 +52,7 @@ Note the variable `$ADMIN_ORCID`, which is set to the ORCID identifier of the fi
 
 When updating the application from git, make sure to run migrations (inside the "app" container) to apply database changes before taking the docker container down and then back up:
 
-```
+``` bash
 bin/migrations-run
 ```
 
@@ -53,20 +62,20 @@ First, you should copy the `.env.example` file to `.env` and fill in the environ
 
 To set up a working python environment, it's recommended to use [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) with the given environment file:
 
-```
+``` bash
 micromamba create -f micromamba_env.yml
 micromamba activate mgrowthdb
 ```
 
 This will install python version 3.12 and R and activate the environment by name in the current shell. Python dependencies can now be installed using:
 
-```
+``` bash
 pip install -r requirements.txt
 ```
 
 There are a few R dependencies, most notably the package [growthrates](https://cran.r-project.org/package=growthrates), which you can install using `Rscript`:
 
-```
+``` bash
 Rscript -e 'install.packages(c("growthrates", "jsonlite"), repos="https://cloud.r-project.org")'
 ```
 
@@ -74,21 +83,21 @@ In the root of the repository, there is an `.env.example` file that contains env
 
 In the database config directory, the file [`db/config.toml.example`](db/config.toml.example) contains a template for the database configuration. Copy this file to `db/config.toml` and update it with the correct credentials to access a running mysql database. You can launch one by using the provided "services" dockerfile:
 
-```
+``` bash
 docker-compose -f docker-compose-services.yml up --build -d
 ```
 
-In case you decide to use this, take a look at the file to see the mysql usernames, passwords, etc, for your configuration.
+In case you decide to use this, take a look at the file to see the mysql usernames, passwords, etc, for your configuration. If you already have running mysql and redis servers, you won't need docker.
 
 You can manually interact with the configured database using:
 
-```
+``` bash
 bin/dbconsole
 ```
 
 To load the full database structure, you can pipe the schema file into that command:
 
-```
+``` bash
 bin/dbconsole < db/schema.sql
 ```
 
@@ -110,13 +119,13 @@ bin/migrations-run up
 
 To launch the application in development mode on <http://localhost:8081>, run:
 
-```
+``` bash
 bin/server
 ```
 
 To launch a background job worker that processes growth modeling requests, run (in another terminal):
 
-```
+``` bash
 bin/worker
 ```
 
