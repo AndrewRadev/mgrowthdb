@@ -36,7 +36,9 @@ To start the application, you can run the following docker-compose command in th
 docker compose -f docker-compose-full.yml up --build
 ```
 
-The file `docker-compose-full.yml` starts a complete app with a mysql server and a redis server. You can "detach" it by adding `-d` to the command-line, or you can keep it running in a terminal or in a systemd service to see the app's logs. To bootstrap the data the application needs, you can run bash inside the running compartment with `docker compose exec`:
+The file `docker-compose-full.yml` starts a complete app with a mysql server and a redis server. You can "detach" it by adding `-d` to the command-line, or you can keep it running in a terminal or in a systemd service to see the app's logs.
+
+At this point in time, the app is **not yet ready** to be used. You may see errors in the console about the user not having access to the database "BacterialGrowth". To create the database and bootstrap the data the application needs, you need to run bash inside the running compartment with `docker compose exec`:
 
 ``` bash
 docker compose -f docker-compose-full.yml exec -it mgrowthdb_app bash
