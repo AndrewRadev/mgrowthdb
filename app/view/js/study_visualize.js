@@ -59,6 +59,29 @@ Page('.study-visualize-page', function($page) {
     }
   });
 
+  // Group checkboxes updated together:
+  $page.on('change', 'input.js-axis-group', function(e) {
+    let $checkbox = $(e.currentTarget);
+    let $row = $checkbox.parents('.js-row')
+
+    let checkboxSelector;
+    let otherCheckboxSelector;
+
+    if ($checkbox.is('.js-axis-left')) {
+      checkboxSelector      = '.js-axis-left';
+      otherCheckboxSelector = '.js-axis-right';
+    } else if ($checkbox.is('.js-axis-right')) {
+      checkboxSelector      = '.js-axis-right';
+      otherCheckboxSelector = '.js-axis-left';
+    }
+
+    let $groupRows = $row.nextUntil('.js-group-row');
+    $groupRows.each(function() {
+      $(this).find(checkboxSelector).prop('checked', true);
+      $(this).find(otherCheckboxSelector).prop('checked', false);
+    });
+  });
+
   $page.on('change', 'form.js-chart-form', function(e) {
     let $form = $(e.currentTarget);
     updateChart($form);

@@ -1,3 +1,5 @@
+import itertools
+
 import sqlalchemy as sql
 
 from app.model.lib.db import execute_into_df
@@ -195,6 +197,10 @@ class ComparativeChartForm:
         }
 
         return '&'.join([f"{k}={v}" for k, v in parts.items() if v != ''])
+
+    @property
+    def measurement_contexts_by_units(self):
+        return itertools.groupby(self.measurement_contexts, lambda mc: mc.technique.units)
 
     def _extract_args(self, args):
         self.left_axis_ids  = set()
