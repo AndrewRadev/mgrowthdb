@@ -31,9 +31,11 @@ class ComparativeChartForm:
 
         self.left_axis_ids  = set(left_axis_ids)
         self.right_axis_ids = set(right_axis_ids)
+        self.no_axis_ids    = set()
 
         self.left_axis_model_ids  = set(left_axis_model_ids)
         self.right_axis_model_ids = set(right_axis_model_ids)
+        self.no_axis_model_ids    = set()
 
         self.measurement_context_ids = list(self.left_axis_ids) + list(self.right_axis_ids)
         self.measurement_contexts = []
@@ -87,12 +89,14 @@ class ComparativeChartForm:
         for measurement_context in self.measurement_contexts:
             technique = measurement_context.technique
 
-            if measurement_context.id in self.right_axis_ids:
+            if measurement_context.id in self.left_axis_ids:
+                axis = 'left'
+                log_transform = self.log_left
+            elif measurement_context.id in self.right_axis_ids:
                 axis = 'right'
                 log_transform = self.log_right
             else:
-                axis = 'left'
-                log_transform = self.log_left
+                continue
 
             measurement_df = measurements_df[measurements_df['contextId'] == measurement_context.id]
             label = measurement_context.get_chart_label()
@@ -120,12 +124,12 @@ class ComparativeChartForm:
             measurement_context = modeling_result.measurementContext
             technique = measurement_context.technique
 
-            if modeling_result.id in self.right_axis_model_ids:
-                axis = 'right'
-                log_transform = self.log_right
-            else:
+            if modeling_result.id in self.left_axis_model_ids:
                 axis = 'left'
                 log_transform = self.log_left
+            elif modeling_result.id in self.right_axis_model_ids:
+                axis = 'right'
+                log_transform = self.log_right
 
             measurement_df = measurements_df[measurements_df['contextId'] == measurement_context.id]
             if measurement_df.empty:
@@ -195,9 +199,11 @@ class ComparativeChartForm:
     def _extract_args(self, args):
         self.left_axis_ids  = set()
         self.right_axis_ids = set()
+        self.no_axis_ids    = set()
 
         self.left_axis_model_ids  = set()
         self.right_axis_model_ids = set()
+        self.no_axis_model_ids    = set()
 
         self.log_left  = False
         self.log_right = False
@@ -215,23 +221,34 @@ class ComparativeChartForm:
 
             elif arg.startswith('axis|'):
                 record_type, record_id = arg.removeprefix('axis|').split('|')
+                record_id = int(record_id)
+
+                left_axis  = None
+                right_axis = None
+                no_axis    = None
+
+                if record_type == 'measurementContext':
+                    left_axis  = self.left_axis_ids
+                    right_axis = self.right_axis_ids
+                    no_axis    = self.no_axis_ids
+                elif record_type == 'modelingResult':
+                    left_axis  = self.left_axis_model_ids
+                    right_axis = self.right_axis_model_ids
+                    no_axis    = self.no_axis_model_ids
+                else:
+                    raise ValueError(f"Unexpected record type: {record_type}")
 
                 if value == 'left':
                     # Left axis by default
                     pass
                 elif value == 'right':
-                    if record_type == 'measurementContext':
-                        context_id = int(record_id)
-
-                        self.left_axis_ids.discard(context_id)
-                        self.right_axis_ids.add(context_id)
-                    elif record_type == 'modelingResult':
-                        result_id = int(record_id)
-
-                        self.left_axis_model_ids.discard(result_id)
-                        self.right_axis_model_ids.add(result_id)
-                    else:
-                        raise ValueError(f"Unexpected record type: {record_type}")
+                    left_axis.discard(record_id)
+                    right_axis.add(record_id)
+                elif value == 'blank':
+                    # Special case, hidden "blank" checkbox was activated, remove from both:
+                    left_axis.discard(record_id)
+                    right_axis.discard(record_id)
+                    no_axis.add(record_id)
                 else:
                     raise ValueError(f"Unexpected axis: {value}")
 

@@ -38,6 +38,7 @@ Page('.study-visualize-page', function($page) {
   // Exclusive checkboxes on one row:
   $page.on('change', 'input.js-axis', function(e) {
     let $checkbox = $(e.currentTarget);
+    let $blank = $checkbox.parents('.js-row').find('.js-axis-blank');
     let $other;
 
     if ($checkbox.is('.js-axis-left')) {
@@ -46,10 +47,12 @@ Page('.study-visualize-page', function($page) {
       $other = $checkbox.parents('.js-row').find('.js-axis-left');
     }
 
-    if ($checkbox.is(':checked')) {
+    if ($checkbox.is(':checked') && $other.is(':checked')) {
       $other.prop('checked', false);
+    } else if (!$checkbox.is(':checked') && !$other.is(':checked')) {
+      $blank.prop('checked', true);
     } else {
-      $other.prop('checked', true);
+      $blank.prop('checked', false);
     }
   });
 

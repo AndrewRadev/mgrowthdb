@@ -56,6 +56,15 @@
               value="right" />
           <span class="icon icon-right"></span>
         </div>
+
+        <div class="hidden">
+          <input
+              type="checkbox"
+              class="js-axis js-axis-blank"
+              {{ "checked" if measurement_context.id in chart_form.no_axis_ids }}
+              name="axis|measurementContext|{{ measurement_context.id }}"
+              value="blank" />
+        </div>
       </div>
     {% endfor %}
 
@@ -86,6 +95,15 @@
               {{ "checked" if modeling_result.id in chart_form.right_axis_model_ids }}
               value="right" />
           <span class="icon icon-right"></span>
+        </div>
+
+        <div class="hidden">
+          <input
+              type="checkbox"
+              class="js-axis js-axis-blank"
+              name="axis|modelingResult|{{ measurement_context.id }}"
+              {{ "checked" if modeling_result.id in chart_form.no_axis_model_ids }}
+              value="blank" />
         </div>
       </div>
     {% endfor %}
