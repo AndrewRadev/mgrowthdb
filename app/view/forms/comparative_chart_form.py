@@ -12,6 +12,11 @@ from app.model.orm import (
     ModelingResult,
     Perturbation,
 )
+from app.model.lib.conversion import (
+    CELL_COUNT_UNITS,
+    CFU_COUNT_UNITS,
+    METABOLITE_UNITS,
+)
 
 
 class ComparativeChartForm:
@@ -200,7 +205,19 @@ class ComparativeChartForm:
 
     @property
     def measurement_contexts_by_units(self):
-        return itertools.groupby(self.measurement_contexts, lambda mc: mc.technique.units)
+        return itertools.groupby(self.measurement_contexts, self._converted_units)
+
+    def _converted_units(self, measurement_context):
+        units = measurement_context.technique.units
+
+        if units in CELL_COUNT_UNITS:
+            return self.cell_count_units
+        elif units in CFU_COUNT_UNITS:
+            return self.cfu_count_units
+        elif units in METABOLITE_UNITS:
+            return self.metabolite_units
+        else:
+            return units
 
     def _extract_args(self, args):
         self.left_axis_ids  = set()
