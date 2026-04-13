@@ -29,7 +29,9 @@
 
   <div class="contexts-list js-contexts-list">
     {% for measurement_context in chart_form.measurement_contexts: %}
-      <div class="flex-row context-row js-row" data-context-id="{{ measurement_context.id }}">
+      <div
+        class="flex-row context-row js-row {{ "blank" if measurement_context.id in chart_form.no_axis_ids }}"
+        data-context-id="{{ measurement_context.id }}">
         <div class="left flex-row" data-tooltip="Move data trace to the left axis">
           <span class="icon icon-left"></span>
           <input
@@ -69,7 +71,9 @@
     {% endfor %}
 
     {% for modeling_result in chart_form.modeling_results: %}
-      <div class="flex-row context-row js-row" data-model-id="{{ modeling_result.id }}">
+      <div
+          class="flex-row context-row js-row {{ "blank" if modeling_result.id in chart_form.no_axis_model_ids }}"
+          data-model-id="{{ modeling_result.id }}">
         <div class="left flex-row" data-tooltip="Move data trace to the left axis">
           <span class="icon icon-left"></span>
           <input

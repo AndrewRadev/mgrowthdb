@@ -45,6 +45,9 @@
     .context-row {
       display: flex;
       flex-direction: row;
+      &.blank {
+        opacity: 0.6;
+      }
     }
 
     .left, .right {
@@ -77,6 +80,10 @@
   .model-row {
     padding-left: 6px;
     margin-top: -4px;
+
+    &.blank {
+      opacity: 0.6;
+    }
 
     input[type="checkbox"] {
       margin-left: -4px;
