@@ -175,8 +175,6 @@ class Chart:
                 x=0,
                 orientation='h',
                 maxheight=0.25,
-                entrywidthmode='fraction',
-                entrywidth=0.9,
             ),
             modebar=dict(orientation='v'),
             font_family="Public Sans",
