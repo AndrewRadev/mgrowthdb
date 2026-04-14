@@ -99,14 +99,15 @@ class Chart:
             self.mixed_units_right = True
 
         for (df, label) in converted_data_left:
-            scatter_params = self._get_scatter_params(df, label, log=self.log_left)
-            fig.add_trace(go.Scatter(**scatter_params), secondary_y=False)
+            scatter_param_list = self._get_scatter_params(df, label, log=self.log_left)
+            for scatter_params in scatter_param_list:
+                fig.add_trace(go.Scatter(**scatter_params), secondary_y=False)
 
         for (df, label) in converted_data_right:
-            scatter_params = self._get_scatter_params(df, label, log=self.log_right)
-            scatter_params = dict(**scatter_params, line={'dash': 'dot'})
-
-            fig.add_trace(go.Scatter(**scatter_params), secondary_y=True)
+            scatter_param_list = self._get_scatter_params(df, label, log=self.log_right)
+            for scatter_params in scatter_param_list:
+                scatter_params = dict(**scatter_params, line={'dash': 'dot'})
+                fig.add_trace(go.Scatter(**scatter_params), secondary_y=True)
 
         if self.clamp_x_data:
             # Fit the x-axis of the shortest chart:
@@ -229,30 +230,60 @@ class Chart:
         return converted_data, tuple(converted_units)[0]
 
     def _get_scatter_params(self, df, label, log=False):
+        scatter_param_list = []
         value = df['value']
 
-        if self.show_std and 'std' in df:
-            if df['std'].isnull().all():
-                # STD values were blank, don't draw error bars
-                error_y = None
-            else:
-                # We want to clip negative error bars to 0
-                positive_err = df['std']
-                negative_err = np.clip(df['std'], max=df['value'])
-
-                if (positive_err == negative_err).all():
-                    error_y = go.scatter.ErrorY(array=positive_err)
-                else:
-                    error_y = go.scatter.ErrorY(array=positive_err, arrayminus=negative_err)
-        else:
-            error_y = None
-
-        return dict(
+        main_scatter_params = dict(
             x=df['time'],
             y=value,
             name=label,
-            error_y=error_y,
         )
+
+        if self.show_std and 'std' in df and not df['std'].isnull().all():
+            # We want to clip negative error bars to 0
+            positive_err = df['std']
+            negative_err = np.clip(df['std'], max=df['value'])
+
+            # Use error bars, add them to the main trace:
+            if (positive_err == negative_err).all():
+                error_y = go.scatter.ErrorY(array=positive_err)
+            else:
+                error_y = go.scatter.ErrorY(array=positive_err, arrayminus=negative_err)
+
+            main_scatter_params['error_y'] = error_y
+            scatter_param_list.append(main_scatter_params)
+
+            if value.size >= 100:
+                # We have many points, let's hide the error bars and show a band:
+                scatter_param_list[0]['error_y'].thickness = 0
+                scatter_param_list[0]['error_y'].width = 0
+
+                # Upper bound:
+                scatter_param_list.append(dict(
+                    name=f"{label} upper bound",
+                    x=df['time'],
+                    y=df['value'] + positive_err,
+                    mode='lines',
+                    line=dict(width=0),
+                    showlegend=False,
+                    hoverinfo='skip',
+                ))
+
+                # Lower bound:
+                scatter_param_list.append(dict(
+                    name=f"{label} lower bound",
+                    x=df['time'],
+                    y=df['value'] - negative_err,
+                    mode='lines',
+                    line=dict(width=0),
+                    showlegend=False,
+                    hoverinfo='skip',
+                    fill='tonexty',
+                ))
+        else:
+            scatter_param_list.append(main_scatter_params)
+
+        return scatter_param_list
 
     def _calculate_x_range(self, data):
         # With multiple charts, fit the x-axis of the shortest one:
