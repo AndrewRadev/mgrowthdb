@@ -205,7 +205,26 @@ class ComparativeChartForm:
 
     @property
     def measurement_contexts_by_units(self):
-        return itertools.groupby(self.measurement_contexts, self._converted_units)
+        groups = [
+            (group, list(items))
+            for group, items in itertools.groupby(self.measurement_contexts, self._converted_units)
+        ]
+        should_group = False
+
+        if len(groups) <= 1:
+            # If we only have 1 group, there's no need to:
+            should_group = False
+        else:
+            # If at least one group has more than 1 items, we should group:
+            for _, measurement_contexts in groups:
+                if len(measurement_contexts) > 1:
+                    should_group = True
+                    break
+
+        if should_group:
+            return groups
+        else:
+            return [("__ungrouped__", self.measurement_contexts)]
 
     def _converted_units(self, measurement_context):
         units = measurement_context.technique.units

@@ -89,11 +89,13 @@ Page('.study-visualize-page', function($page) {
 
   $page.on('click', '.js-select-all', function(e) {
     e.preventDefault();
+    toggleCheckboxes($(e.currentTarget), true);
+    updateChart($form)
+  });
 
-    let $link = $(e.currentTarget);
-    let $form = $link.parents('form');
-    $form.find('input[type=checkbox].js-measurement-toggle:visible').prop('checked', true);
-
+  $page.on('click', '.js-deselect-all', function(e) {
+    e.preventDefault();
+    toggleCheckboxes($(e.currentTarget), false);
     updateChart($form)
   });
 
@@ -117,6 +119,12 @@ Page('.study-visualize-page', function($page) {
 
     updateCompareData('add', contextIds);
   });
+
+  function toggleCheckboxes($button, value) {
+    let $row = $button.parents('.form-row');
+    let $targetRows = $row.nextUntil('.js-header-row');
+    $targetRows.find('input[type=checkbox]:visible').prop('checked', value);
+  }
 
   function updateChart($form) {
     let selectedExperimentId = $form.find('select[name="experimentId"]').val();

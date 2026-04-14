@@ -58,14 +58,14 @@
 
   {% for experiment in study.experiments: %}
     <div
-        class="experiment-container margin-top-10 hidden js-experiment-container"
+        class="experiment-container margin-top-10 scroll-shadows hidden js-experiment-container"
         data-experiment-id="{{ experiment.publicId }}">
       <div class="experiment">
         {% for technique in study.measurementTechniques: %}
           {% for (bioreplicate, compartment), contexts in technique.get_grouped_contexts() if bioreplicate.experimentId == experiment.publicId: %}
             {% if technique.subjectType != 'bioreplicate': %}
               <div
-                  class="form-row hidden js-technique-row"
+                  class="form-row hidden js-technique-row js-header-row"
                   data-technique-id="{{ technique.id }}">
                 {% if bioreplicate.name.startswith('Average('): %}
                   {% set description = "Average measurements over compartment {} across all biological replicates of the experiment {}.".format(compartment.name, experiment.name) %}
@@ -81,12 +81,30 @@
                   {% endif %}
 
                   {% if bioreplicate.calculationType == 'average': %}
-                    <span
-                        class="icon icon-inline icon-calculated">
+                    <span class="icon icon-inline icon-calculated">
                     </span>
                   {% endif %}
                 </h4>
               </div>
+
+              {% if contexts|length > 1: %}
+                <div
+                    class="form-row hidden js-technique-row"
+                    data-technique-id="{{ technique.id }}">
+                  <button
+                      type="button"
+                      class="white-button small-button smaller js-select-all">
+                    🗹 Select all
+                  </button>
+
+                  <button
+                      type="button"
+                      class="white-button small-button smaller flex-right js-deselect-all"
+                      style="margin-right: 10px;">
+                    ☐ Deselect all
+                  </button>
+                </div>
+              {% endif %}
             {% endif %}
 
             {% for measurement_context in contexts: %}
@@ -148,7 +166,6 @@
             {% endfor %}
           {% endfor %}
         {% endfor %}
-
       </div>
     </div>
   {% endfor %}
