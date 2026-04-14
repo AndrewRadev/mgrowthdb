@@ -216,15 +216,18 @@ class ModelingResult(OrmBase):
 
         return self.measurementContext.get_chart_label(model_name=model_name)
 
-    def generate_chart_df(self, measurements_df):
-        start_time = measurements_df['time'].min()
-        end_time   = measurements_df['time'].max()
-
+    def generate_chart_df(self, measurements_df=None):
         if self.type.startswith('custom_'):
             timepoints = _map_float(self.xValues)
             values     = _map_float(self.yValues)
             errors     = _map_float(self.yErrors)
         else:
+            if measurements_df is None:
+                raise ValueError("A dataframe with measurements need to be provided")
+
+            start_time = measurements_df['time'].min()
+            end_time   = measurements_df['time'].max()
+
             timepoints = np.linspace(start_time, end_time, 200)
             values     = self._predict(timepoints)
             errors     = None
@@ -232,7 +235,7 @@ class ModelingResult(OrmBase):
         data = {
             'time':  timepoints,
             'value': values,
-            'std': errors or [float('nan') for _ in range(len(timepoints))],
+            'std':   errors or [float('nan') for _ in range(len(timepoints))],
         }
 
         df = pd.DataFrame.from_dict(data)
