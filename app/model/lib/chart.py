@@ -11,6 +11,7 @@ from app.model.lib.conversion import (
     CFU_COUNT_UNITS,
     METABOLITE_UNITS,
 )
+from app.model.lib.util import hex_to_rgba
 
 PLOTLY_TEMPLATE = 'plotly_white'
 "List of templates can be found at plotly.com/python/templates"
@@ -59,6 +60,9 @@ class Chart:
 
         self.regions = []
 
+        self.colors = px.colors.qualitative.Plotly
+        self.color_index = 0
+
     def add_df(self, df, *, units, label=None, axis='left', metabolite_mass=None):
         if 'std' not in df:
             df['std'] = [float('nan') for _ in range(df['value'].size)]
@@ -88,6 +92,7 @@ class Chart:
         self.regions.append((start_time, end_time, label, text))
 
     def to_html(self):
+        self.color_index = 0
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         converted_data_left,  left_units_label  = self._convert_units(self.data_left)
@@ -235,7 +240,9 @@ class Chart:
             x=df['time'],
             y=value,
             name=label,
+            fillcolor=self.colors[self.color_index % len(self.colors)]
         )
+        self.color_index += 1
 
         if self.show_std and 'std' in df and not df['std'].isnull().all():
             # We want to clip negative error bars to 0
@@ -265,6 +272,7 @@ class Chart:
                     line=dict(width=0),
                     showlegend=False,
                     hoverinfo='skip',
+                    fillcolor=hex_to_rgba(scatter_param_list[0]['fillcolor'], 0.25),
                 ))
 
                 # Lower bound:
@@ -277,6 +285,7 @@ class Chart:
                     showlegend=False,
                     hoverinfo='skip',
                     fill='tonexty',
+                    fillcolor=hex_to_rgba(scatter_param_list[0]['fillcolor'], 0.25),
                 ))
         else:
             scatter_param_list.append(main_scatter_params)
