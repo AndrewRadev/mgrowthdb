@@ -1,4 +1,5 @@
-{% from 'pages/studies/visualize/_chart_form.html' import render_chart_form %}
+{% from 'pages/studies/visualize/_chart_form_by_et.html' import render_chart_form_by_et %}
+{% from 'pages/studies/visualize/_chart_form_by_es.html' import render_chart_form_by_es %}
 
 {% extends '_layout.html' %}
 
@@ -28,10 +29,29 @@
 
       {% include 'pages/studies/_navigation_buttons.html' %}
 
+      <ul class="tabs">
+        <li>
+          <a href="{{ url_for('study_visualize_page', publicId=study.publicId, by='et') }}">
+            By experiment and technique
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('study_visualize_page', publicId=study.publicId, by='es') }}">
+            By subject
+          </a>
+        </li>
+      </ul>
+
       <form class="simple-form chart-form js-chart-form">
         <div class="columns">
           <div class="controls-column">
-            {{ render_chart_form(chart_form, study) }}
+            {% set selection_type = request.args.get('by', 'et') %}
+
+            {% if selection_type == 'et': %}
+              {{ render_chart_form_by_et(chart_form, study) }}
+            {% elif selection_type == 'es': %}
+              {{ render_chart_form_by_es(chart_form, study) }}
+            {% endif %}
           </div>
 
           <div class="chart-column">

@@ -1,6 +1,7 @@
 import re
 from typing import List
 from datetime import datetime, UTC
+import itertools
 
 import sqlalchemy as sql
 from sqlalchemy.orm import (
@@ -158,6 +159,32 @@ class Study(OrmBase):
             .order_by(Submission.updatedAt.desc())
             .limit(1)
         ).one_or_none()
+
+    def fetch_grouped_measurement_subjects(self, db_session):
+        from app.model.orm import MeasurementContext, MeasurementTechnique, StudyTechnique
+
+        records = db_session.execute(
+            sql.select(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+                MeasurementContext.subjectName,
+            )
+            .join(MeasurementContext.technique)
+            .join(MeasurementTechnique.studyTechnique)
+            .where(StudyTechnique.studyId == self.publicId)
+            .distinct()
+            .order_by(MeasurementContext.subjectId)
+        ).all()
+
+        sort_order = ["bioreplicate", "strain", "metabolite"]
+        sorted_records = sorted(records, key=lambda r: sort_order.index(r[0]))
+
+        grouped_records = [
+            (type, [(id, name) for (_, id, name) in group])
+            for type, group in itertools.groupby(sorted_records, key=lambda r: r[0])
+        ]
+
+        return grouped_records
 
     @property
     def managerUuids(self):

@@ -135,15 +135,27 @@ Page('.study-visualize-page', function($page) {
     let $experiment = $form.find(`.js-experiment-container[data-experiment-id="${selectedExperimentId}"]`);
     $experiment.removeClass('hidden');
 
-    let selectedOption = $form.
-      find('select[name="techniqueId"] option:selected');
+    let $techniqueSelect = $form.find('select[name="techniqueId"]');
+    let $subjectSelect   = $form.find('select[name="subject"]');
 
-    let selectedTechniqueId          = selectedOption.val();
-    let selectedTechniqueSubjectType = selectedOption.data('subjectType');
+    if ($techniqueSelect.length > 0) {
+      let selectedOption      = $techniqueSelect.find('option:selected');
+      let selectedTechniqueId = selectedOption.val();
 
-    $experiment.
-      find(`.js-trace-row[data-technique-id="${selectedTechniqueId}"]`).
-      removeClass('hidden');
+      $experiment.
+        find(`.js-trace-row[data-technique-id="${selectedTechniqueId}"]`).
+        removeClass('hidden');
+    } else if ($subjectSelect.length > 0) {
+      let selectedOption = $subjectSelect.find('option:selected');
+      let selectedSubject = selectedOption.val();
+
+      $experiment.
+        find(`.js-trace-row[data-subject="${selectedSubject}"]`).
+        removeClass('hidden');
+    } else {
+      console.error("Could not find technique or subject select dropdown");
+      return;
+    }
 
     // Update chart:
 

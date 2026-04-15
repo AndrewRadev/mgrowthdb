@@ -69,6 +69,42 @@ class TestStudy(DatabaseTest):
 
         self.assertEqual(study.find_last_submission(self.db_session), s4)
 
+    def test_fetch_grouped_measurement_subjects(self):
+        study = self.create_study()
+
+        st1 = self.create_study_technique(subjectType="bioreplicate", studyId=study.publicId)
+        st2 = self.create_study_technique(subjectType="strain", studyId=study.publicId)
+        st3 = self.create_study_technique(subjectType="metaboilte", studyId=study.publicId)
+
+        mt1 = self.create_measurement_technique(studyTechniqueId=st1.id, subjectType="bioreplicate")
+        mt2 = self.create_measurement_technique(studyTechniqueId=st2.id, subjectType="strain")
+        mt3 = self.create_measurement_technique(studyTechniqueId=st3.id, subjectType="metabolite")
+
+        self.create_measurement_context(techniqueId=mt1.id, subjectId=3, subjectName="br1",       subjectType="bioreplicate")
+        self.create_measurement_context(techniqueId=mt1.id, subjectId=4, subjectName="br2",       subjectType="bioreplicate")
+        self.create_measurement_context(techniqueId=mt2.id, subjectId=1, subjectName="Blautia",   subjectType="strain")
+        self.create_measurement_context(techniqueId=mt2.id, subjectId=2, subjectName="Roseburia", subjectType="strain")
+        self.create_measurement_context(techniqueId=mt3.id, subjectId=2, subjectName="glucose",   subjectType="metabolite")
+        self.create_measurement_context(techniqueId=mt3.id, subjectId=1, subjectName="trehalose", subjectType="metabolite")
+        # Duplicated, ignored:
+        self.create_measurement_context(techniqueId=mt1.id, subjectId=3, subjectName="br1",       subjectType="bioreplicate")
+        self.create_measurement_context(techniqueId=mt2.id, subjectId=1, subjectName="Blautia",   subjectType="strain")
+        self.create_measurement_context(techniqueId=mt3.id, subjectId=1, subjectName="trehalose", subjectType="metabolite")
+        # Different study, ignored:
+        self.create_measurement_context(subjectId=10, subjectName="br3", subjectType="bioreplicate")
+
+        subjects = study.fetch_grouped_measurement_subjects(self.db_session)
+        print(subjects)
+
+        # Grouped, ordered by type, then ID:
+        self.assertEqual(
+            subjects,
+            [
+                ('bioreplicate', [(3, 'br1'),       (4, 'br2')]),
+                ('strain',       [(1, 'Blautia'),   (2, 'Roseburia')]),
+                ('metabolite',   [(1, 'trehalose'), (2, 'glucose')]),
+            ]
+        )
 
 if __name__ == '__main__':
     unittest.main()
