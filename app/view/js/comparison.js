@@ -73,7 +73,7 @@ Page('.comparison-page', function($page) {
 
     let $link = $(e.currentTarget);
     let $form = $link.parents('form');
-    $form.find('.js-technique-row input[type=checkbox]').prop('checked', false);
+    $form.find('.js-trace-row input[type=checkbox]').prop('checked', false);
 
     updateChart($form)
   });

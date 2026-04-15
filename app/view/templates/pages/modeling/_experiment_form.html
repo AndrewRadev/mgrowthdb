@@ -67,7 +67,7 @@
           {% for (bioreplicate, compartment), contexts in technique.get_grouped_contexts() if bioreplicate.experimentId == experiment.publicId: %}
             {% if technique.subjectType != 'bioreplicate': %}
               <div
-                  class="form-row hidden js-technique-row"
+                  class="form-row hidden js-trace-row"
                   data-technique-id="{{ technique.id }}">
                 {% if bioreplicate.name.startswith('Average('): %}
                   {% set description = "Average measurements over compartment {} across all biological replicates of the experiment {}.".format(compartment.name, experiment.name) %}
@@ -89,7 +89,7 @@
               {% set key = "measurementContext|{}".format(measurement_context.id) %}
 
               <div
-                  class="form-row hidden model-row js-technique-row"
+                  class="form-row hidden model-row js-trace-row"
                   data-technique-id="{{ technique.id }}">
                 <input
                     type="radio"

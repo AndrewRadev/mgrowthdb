@@ -104,7 +104,7 @@ Page('.study-visualize-page', function($page) {
 
     let $link = $(e.currentTarget);
     let $form = $link.parents('form');
-    $form.find('.js-technique-row input[type=checkbox]').prop('checked', false);
+    $form.find('.js-trace-row input[type=checkbox]').prop('checked', false);
 
     updateChart($form)
   });
@@ -130,7 +130,7 @@ Page('.study-visualize-page', function($page) {
     let selectedExperimentId = $form.find('select[name="experimentId"]').val();
 
     $form.find('.js-experiment-container').addClass('hidden');
-    $form.find('.js-technique-row').addClass('hidden');
+    $form.find('.js-trace-row').addClass('hidden');
 
     let $experiment = $form.find(`.js-experiment-container[data-experiment-id="${selectedExperimentId}"]`);
     $experiment.removeClass('hidden');
@@ -142,7 +142,7 @@ Page('.study-visualize-page', function($page) {
     let selectedTechniqueSubjectType = selectedOption.data('subjectType');
 
     $experiment.
-      find(`.js-technique-row[data-technique-id="${selectedTechniqueId}"]`).
+      find(`.js-trace-row[data-technique-id="${selectedTechniqueId}"]`).
       removeClass('hidden');
 
     // Update chart:
