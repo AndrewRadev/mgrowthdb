@@ -35,7 +35,7 @@
 
         {% for (subjectType, group) in study.fetch_grouped_measurement_subjects(g.db_session): %}
           {% if subjectType == 'bioreplicate': %}
-            {% set group_label = "Community-level growth" %}
+            {% set group_label = "Community-level growth and pH" %}
           {% elif subjectType == 'strain': %}
             {% set group_label = "Strain-level growth" %}
           {% elif subjectType == 'metabolite': %}
