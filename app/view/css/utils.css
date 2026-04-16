@@ -361,6 +361,14 @@ form.simple-form {
   border: 1px solid transparent;
   border-radius: var(--border-radius);
   padding: 0.7rem;
+
+  transition: color var(--transition-length) ease;
+  transition: background-color var(--transition-length) ease;
+
+  &.highlight {
+    color: var(--dark-blue);
+    background-color: var(--sidebar-hover-color);
+  }
 }
 
 .green-button {

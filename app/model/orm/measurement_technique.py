@@ -49,6 +49,11 @@ class MeasurementTechnique(OrmBase):
         viewonly=True,
     )
 
+    connectedBioreplicates: Mapped[List['Bioreplicate']] = relationship(
+        secondary='MeasurementContexts',
+        viewonly=True
+    )
+
     # Order techniques based on their type, according to the way they're
     # defined in the name index: FC first, then OD, etc.
     typeOrdering = column_property(OrmBase.list_ordering(
@@ -95,6 +100,10 @@ class MeasurementTechnique(OrmBase):
     @property
     def is_growth(self):
         return self.type not in ('ph', 'metabolite')
+
+    @property
+    def connectedExperimentIds(self):
+        return sorted({b.experimentId for b in self.connectedBioreplicates})
 
     def get_bioreplicates(self, db_session):
         from app.model.orm import Bioreplicate, MeasurementContext

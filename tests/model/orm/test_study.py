@@ -94,7 +94,6 @@ class TestStudy(DatabaseTest):
         self.create_measurement_context(subjectId=10, subjectName="br3", subjectType="bioreplicate")
 
         subjects = study.fetch_grouped_measurement_subjects(self.db_session)
-        print(subjects)
 
         # Grouped, ordered by type, then ID:
         self.assertEqual(
@@ -105,6 +104,30 @@ class TestStudy(DatabaseTest):
                 ('metabolite',   [(1, 'trehalose'), (2, 'glucose')]),
             ]
         )
+
+    def test_fetch_experiment_ids_by_subject(self):
+        study = self.create_study()
+
+        e1 = self.create_experiment(studyId=study.publicId)
+        e2 = self.create_experiment(studyId=study.publicId)
+        b1 = self.create_bioreplicate(experimentId=e1.publicId)
+        b2 = self.create_bioreplicate(experimentId=e2.publicId)
+
+        self.create_measurement_context(bioreplicateId=b1.id, subjectId=4, subjectType="strain")
+        self.create_measurement_context(bioreplicateId=b1.id, subjectId=b1.id, subjectType="bioreplicate")
+        self.create_measurement_context(bioreplicateId=b2.id, subjectId=b2.id, subjectType="bioreplicate")
+        self.create_measurement_context(bioreplicateId=b2.id, subjectId=4, subjectType="strain")
+        self.create_measurement_context(bioreplicateId=b2.id, subjectId=5, subjectType="strain")
+
+        experiments = study.fetch_experiment_ids_by_measurement_subject(self.db_session)
+
+        self.assertEqual(experiments, {
+            ('bioreplicate', b1.id): [e1.publicId],
+            ('bioreplicate', b2.id): [e2.publicId],
+            ('strain', 4): [e1.publicId, e2.publicId],
+            ('strain', 5): [e2.publicId],
+        })
+
 
 if __name__ == '__main__':
     unittest.main()

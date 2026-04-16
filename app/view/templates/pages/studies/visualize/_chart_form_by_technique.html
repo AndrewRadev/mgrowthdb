@@ -1,8 +1,7 @@
-{% macro render_chart_form_by_es(form, study) %}
+{% macro render_chart_form_by_technique(form, study) %}
 
   {% set selectedExperimentId = request.args.get('selectedExperimentId', '') %}
-  {% set selectedSubjectType  = request.args.get('selectedSubjectType', '') %}
-  {% set selectedSubjectId    = request.args.get('selectedSubjectId', '0')|int %}
+  {% set selectedTechniqueId  = request.args.get('selectedTechniqueId',  '0')|int %}
 
   <div class="form-row">
     <label>
@@ -29,26 +28,31 @@
 
   <div class="form-row margin-top-10">
     <label class="full">
-      <span>Measurement subject:</span>
-      <select name="subject" class="form-input-blue full">
-        {% for (subjectType, group) in study.fetch_grouped_measurement_subjects(g.db_session): %}
-          {% if subjectType == 'bioreplicate': %}
-            {% set group_label = "Community-level growth" %}
-          {% elif subjectType == 'strain': %}
-            {% set group_label = "Strain-level growth" %}
-          {% elif subjectType == 'metabolite': %}
-            {% set group_label = "Metabolites" %}
+      <span>Measurement technique:</span>
+      <select name="techniqueId" class="form-input-blue full">
+        {% for study_technique in study.studyTechniques: %}
+          {% if study_technique.measurementTechniques|length > 1: %}
+            <optgroup label="{{- study_technique.long_name_with_subject_type -}}">
+              {% for measurement_technique in study_technique.measurementTechniques: %}
+                <option
+                    {{ "selected" if measurement_technique.id == selectedTechniqueId }}
+                    value="{{ measurement_technique.id }}"
+                    data-experiment-ids='{{ measurement_technique.connectedExperimentIds|tojson }}'
+                    data-subject-type="{{ measurement_technique.subjectType }}">
+                  {{- measurement_technique.short_name -}}
+                </option>
+              {% endfor %}
+            </optgroup>
+          {% else: %}
+            {% set measurement_technique = study_technique.measurementTechniques[0] %}
+            <option
+                {{ "selected" if measurement_technique.id == selectedTechniqueId }}
+                value="{{ measurement_technique.id }}"
+                data-experiment-ids='{{ measurement_technique.connectedExperimentIds|tojson }}'
+                data-subject-type="{{ measurement_technique.subjectType }}">
+              {{- measurement_technique.long_name_with_subject_type -}}
+            </option>
           {% endif %}
-
-          <optgroup label="{{- group_label -}}">
-            {% for (subjectId, subjectName) in group: %}
-              <option
-                  {{ "selected" if subjectType == selectedSubjectType and subjectId == selectedSubjectId }}
-                  value="{{ subjectType}}|{{ subjectId }}">
-                {{- subjectName -}}
-              </option>
-            {% endfor %}
-          </optgroup>
         {% endfor %}
       </select>
     </label>
@@ -106,7 +110,6 @@
             {% endif %}
 
             {% for measurement_context in contexts: %}
-              {% set subjectId   = measurement_context.subjectId %}
               {% set subjectType = measurement_context.subjectType %}
               {% set subjectName = measurement_context.subjectName %}
 
@@ -114,7 +117,8 @@
 
               <div
                   class="form-row hidden js-trace-row"
-                  data-subject="{{ subjectType}}|{{ subjectId }}">
+                  data-subject="{{ subjectType}}|{{ subjectId }}"
+                  data-technique-id="{{ measurement_context.techniqueId }}">
                 <input
                     type="checkbox"
                     name="{{ key }}"
@@ -124,14 +128,17 @@
                     {{ "data-axis-right" if measurement_context.id in form.right_axis_ids }}
                     class="js-measurement-toggle" />
                 <label for="{{ key }}">
-                  {{ measurement_context.technique.short_name }}
-
-                  in
-
-                  {% if experiment.compartments|length > 1: %}
-                    {{ bioreplicate.name }}<sub>{{ measurement_context.compartment.name }}</sub>
+                  {% if subjectType == 'bioreplicate' and experiment.compartments|length > 1: %}
+                    {{ subjectName }}<sub>{{ measurement_context.compartment.name }}</sub>
                   {% else: %}
-                    {{ bioreplicate.name }}
+                    {{ subjectName }}
+                  {% endif %}
+
+                  {% if subjectType == 'strain' and subjectName == 'Unknown': %}
+                    <span
+                        class="icon icon-inline icon-unknown-strain"
+                        data-tooltip="This data represents measurements (reads/counts) of subjects that couldn't be identified">
+                    </span>
                   {% endif %}
                 </label>
               </div>

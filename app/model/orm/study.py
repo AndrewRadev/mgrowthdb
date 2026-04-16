@@ -176,13 +176,44 @@ class Study(OrmBase):
             .order_by(MeasurementContext.subjectId)
         ).all()
 
+        # Hack: sort averages first by checking the name. Annoying, but we
+        # don't have `calculationType` here
         sort_order = ["bioreplicate", "strain", "metabolite"]
-        sorted_records = sorted(records, key=lambda r: sort_order.index(r[0]))
+        sorted_records = sorted(
+            records,
+            key=lambda r: (sort_order.index(r[0]), not r[2].startswith('Average('))
+        )
 
         grouped_records = [
             (type, [(id, name) for (_, id, name) in group])
             for type, group in itertools.groupby(sorted_records, key=lambda r: r[0])
         ]
+
+        return grouped_records
+
+    def fetch_experiment_ids_by_measurement_subject(self, db_session):
+        from app.model.orm import Bioreplicate, Experiment, MeasurementContext
+
+        records = db_session.execute(
+            sql.select(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+                Experiment.publicId,
+            )
+            .join(MeasurementContext.bioreplicate)
+            .join(Bioreplicate.experiment)
+            .where(Experiment.studyId == self.publicId)
+            .order_by(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+            )
+            .distinct()
+        ).all()
+
+        grouped_records = {
+            (type, id): sorted([record[2] for record in group])
+            for (type, id), group in itertools.groupby(records, key=lambda r: (r[0], r[1]))
+        }
 
         return grouped_records
 

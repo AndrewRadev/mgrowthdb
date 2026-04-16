@@ -40,7 +40,13 @@
           </div>
 
           <div class="middle {{ "align-right" if right_axis }}">
-            <strong>Measurements in {{ units }}</strong>
+            <strong>
+              {% if units == '': %}
+                Unitless measurements
+              {% else: %}
+                Measurements in {{ units }}
+              {% endif %}
+            </strong>
           </div>
 
           <div class="flex-row right" data-tooltip="Move data trace to the right axis">

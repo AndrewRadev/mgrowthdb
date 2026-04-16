@@ -205,9 +205,11 @@ class ComparativeChartForm:
 
     @property
     def measurement_contexts_by_units(self):
+        sorted_contexts = sorted(self.measurement_contexts, key=self._converted_unit_sort)
+
         groups = [
             (group, list(items))
-            for group, items in itertools.groupby(self.measurement_contexts, self._converted_units)
+            for group, items in itertools.groupby(sorted_contexts, self._converted_units)
         ]
         should_group = False
 
@@ -237,6 +239,20 @@ class ComparativeChartForm:
             return self.metabolite_units
         else:
             return units
+
+    def _converted_unit_sort(self, measurement_context):
+        units = measurement_context.technique.units
+
+        if units in CELL_COUNT_UNITS:
+            return 1
+        elif units in CFU_COUNT_UNITS:
+            return 2
+        elif units in METABOLITE_UNITS:
+            return 3
+        elif units != '':
+            return 4
+        else:
+            return 5
 
     def _extract_args(self, args):
         self.left_axis_ids  = set()

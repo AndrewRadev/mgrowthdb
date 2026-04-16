@@ -138,16 +138,37 @@ Page('.study-visualize-page', function($page) {
     let $techniqueSelect = $form.find('select[name="techniqueId"]');
     let $subjectSelect   = $form.find('select[name="subject"]');
 
+    // Filter secondary select values by the experiment id:
+    for (let $select of [$techniqueSelect, $subjectSelect]) {
+      $select.find('option').each(function() {
+        let $option = $(this);
+        let experimentIds = $option.data('experimentIds');
+
+        if (experimentIds.indexOf(selectedExperimentId) >= 0) {
+          $option.removeClass('hidden');
+        } else {
+          $option.addClass('hidden');
+        }
+      });
+
+      // If the selected option was hidden, pick the first visible one:
+      let $selectedOption = $select.find('option:selected');
+      if ($selectedOption.hasClass('hidden')) {
+        $select.find('option:not(.hidden):first').prop('selected', true);
+        $select.animateClass('highlight', 500);
+      }
+    }
+
     if ($techniqueSelect.length > 0) {
-      let selectedOption      = $techniqueSelect.find('option:selected');
-      let selectedTechniqueId = selectedOption.val();
+      let $selectedOption     = $techniqueSelect.find('option:selected');
+      let selectedTechniqueId = $selectedOption.val();
 
       $experiment.
         find(`.js-trace-row[data-technique-id="${selectedTechniqueId}"]`).
         removeClass('hidden');
     } else if ($subjectSelect.length > 0) {
-      let selectedOption = $subjectSelect.find('option:selected');
-      let selectedSubject = selectedOption.val();
+      let $selectedOption = $subjectSelect.find('option:selected');
+      let selectedSubject = $selectedOption.val();
 
       $experiment.
         find(`.js-trace-row[data-subject="${selectedSubject}"]`).
@@ -172,8 +193,33 @@ Page('.study-visualize-page', function($page) {
       success: function(response) {
         $chart.html(response);
         $(document).scrollTop(scrollPosition);
+
+        updateTabLinks();
       }
     })
+  }
+
+  // Take the permalink parameters, set them onto the tab links:
+  function updateTabLinks() {
+    $permalink = $page.find('.js-permalink');
+    if ($permalink.length == 0) {
+      return;
+    }
+
+    let rootUrl = window.location.origin;
+
+    for (let selection of ['technique', 'subject']) {
+      let permalinkUrl = new URL($permalink.attr('href'), rootUrl);
+
+      let tabParams = permalinkUrl.searchParams;
+      tabParams.append('by', selection);
+
+      let $tab = $page.find(`.js-tab-${selection}`);
+      let tabUrl = new URL($tab.attr('href'), rootUrl);
+      tabUrl.search = tabParams.toString();
+
+      $tab.attr('href', tabUrl)
+    }
   }
 
   // TODO duplicates study.js, extract
