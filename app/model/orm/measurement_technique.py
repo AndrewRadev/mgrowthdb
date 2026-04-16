@@ -30,17 +30,7 @@ class MeasurementTechnique(OrmBase):
     cellType:    Mapped[str] = mapped_column(sql.String(100), nullable=True)
     subjectType: Mapped[str] = mapped_column(sql.String(100), nullable=False)
 
-    # TODO (2025-11-10) Remove
-    units: Mapped[str] = mapped_column(sql.String(100), nullable=False)
-
-    # TODO (2025-11-10) Remove
-    description: Mapped[str]  = mapped_column(sql.String)
-
     metaboliteIds: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
-
-    # TODO (2025-11-10) Remove
-    studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.publicId'), nullable=False)
-    study: Mapped['Study'] = relationship(back_populates="measurementTechniques")
 
     createdAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     updatedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
@@ -74,6 +64,10 @@ class MeasurementTechnique(OrmBase):
 
     def __lt__(self, other):
         return self.id < other.id
+
+    @property
+    def units(self):
+        return self.studyTechnique.units
 
     @property
     def short_name(self):

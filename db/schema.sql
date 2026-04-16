@@ -236,19 +236,14 @@ CREATE TABLE MeasurementTechniques (
   id int NOT NULL AUTO_INCREMENT,
   `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   subjectType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  units varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `description` text,
   includeStd tinyint(1) NOT NULL DEFAULT '0',
   metaboliteIds json DEFAULT (json_array()),
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   studyTechniqueId int DEFAULT NULL,
   cellType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (id),
-  KEY MeasurementTechniques_studyId (studyId),
   KEY MeasurementTechniques_studyTechniqueId (studyTechniqueId),
-  CONSTRAINT MeasurementTechniques_studyId FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT MeasurementTechniques_studyTechniqueId FOREIGN KEY (studyTechniqueId) REFERENCES StudyTechniques (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -787,7 +782,8 @@ INSERT INTO MigrationVersions VALUES
 (90,'2026_01_28_155444_track_country_in_page_visit_counters','2026-01-28 15:14:22'),
 (91,'2026_01_29_165248_add_authorship_fields_to_studies','2026-02-04 11:42:55'),
 (92,'2026_02_06_164753_create_page_errors','2026-02-06 16:10:14'),
-(93,'2026_02_18_115807_add_api_count_to_page_visit_counter','2026-02-18 11:11:29'),
-(94,'2026_02_16_111742_link_studies_last_submissions','2026-02-18 14:00:21'),
-(96,'2026_03_01_175101_add_changelog_text_to_submissions','2026-03-01 16:51:45');
+(93,'2026_02_18_115807_add_api_count_to_page_visit_counter','2026-02-18 11:17:48'),
+(94,'2026_02_16_111742_link_studies_last_submissions','2026-03-13 14:05:27'),
+(95,'2026_03_01_175101_add_changelog_text_to_submissions','2026-03-13 14:05:27'),
+(98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-04-16 07:59:49');
 

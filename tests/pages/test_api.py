@@ -153,10 +153,11 @@ class TestApiPages(PageTest):
         self.assertTrue(response_df['std'].isna().all())
 
     def test_measurement_json(self):
-        study        = self.create_study(publishedAt=datetime.now(UTC))
-        experiment   = self.create_experiment(studyId=study.publicId)
-        bioreplicate = self.create_bioreplicate(name='B1', experimentId=experiment.publicId)
-        technique    = self.create_measurement_technique(units='Cells/μL')
+        study           = self.create_study(publishedAt=datetime.now(UTC))
+        experiment      = self.create_experiment(studyId=study.publicId)
+        bioreplicate    = self.create_bioreplicate(name='B1', experimentId=experiment.publicId)
+        study_technique = self.create_study_technique(studyId=study.publicId, units='Cells/μL')
+        technique       = self.create_measurement_technique(studyTechniqueId=study_technique.id)
 
         measurement_context = self.create_measurement_context(
             studyId=study.publicId,
@@ -443,46 +444,40 @@ class TestApiPages(PageTest):
         mc_args = dict(studyId=study.publicId, bioreplicateId=bioreplicate.id)
 
         # Bioreplicate/community measurements:
+        st1 = self.create_study_technique(units='Cells/mL')
+        mt1 = self.create_measurement_technique(studyTechniqueId=st1.id, subjectType='bioreplicate')
         mc_b1 = self.create_measurement_context(
             **mc_args,
-            techniqueId=self.create_measurement_technique(units='Cells/mL', subjectType='bioreplicate').id,
+            techniqueId=mt1.id,
             subjectId=bioreplicate.id,
             subjectType='bioreplicate',
         )
+        st2 = self.create_study_technique(units='')
+        mt2 = self.create_measurement_technique(studyTechniqueId=st2.id, subjectType='bioreplicate')
         mc_b2 = self.create_measurement_context(
             **mc_args,
-            techniqueId=self.create_measurement_technique(units='', subjectType='bioreplicate').id,
+            techniqueId=mt2.id,
             subjectId=bioreplicate.id,
             subjectType='bioreplicate',
         )
 
         # Strain measurements:
-        mc_s1 = self.create_measurement_context(
-            **mc_args,
-            techniqueId=self.create_measurement_technique(units='Cells/μL', subjectType='strain').id,
-            subjectId=strain.id,
-            subjectType='strain',
-        )
-        mc_s2 = self.create_measurement_context(
-            **mc_args,
-            techniqueId=self.create_measurement_technique(units='CFUs/mL', subjectType='strain').id,
-            subjectId=strain.id,
-            subjectType='strain',
-        )
-        mc_s3 = self.create_measurement_context(
-            **mc_args,
-            techniqueId=self.create_measurement_technique(units='g/L', subjectType='strain').id,
-            subjectId=strain.id,
-            subjectType='strain',
-        )
+        st3 = self.create_study_technique(units='Cells/μL')
+        mt3 = self.create_measurement_technique(studyTechniqueId=st3.id, subjectType='strain')
+        mc_s1 = self.create_measurement_context(**mc_args, techniqueId=mt3.id, subjectId=strain.id, subjectType='strain')
+
+        st4 = self.create_study_technique(units='CFUs/mL')
+        mt4 = self.create_measurement_technique(studyTechniqueId=st4.id, subjectType='strain')
+        mc_s2 = self.create_measurement_context(**mc_args, techniqueId=mt4.id, subjectId=strain.id, subjectType='strain')
+
+        st5 = self.create_study_technique(units='g/L')
+        mt5 = self.create_measurement_technique(studyTechniqueId=st5.id, subjectType='strain')
+        mc_s3 = self.create_measurement_context(**mc_args, techniqueId=mt5.id, subjectId=strain.id, subjectType='strain')
 
         # Metabolite measurements:
-        mc_m1 = self.create_measurement_context(
-            **mc_args,
-            techniqueId=self.create_measurement_technique(units='mM', subjectType='metabolite').id,
-            subjectId=metabolite.id,
-            subjectType='metabolite',
-        )
+        st6 = self.create_study_technique(units='mM')
+        mt6 = self.create_measurement_technique(studyTechniqueId=st6.id, subjectType='metabolite')
+        mc_m1 = self.create_measurement_context(**mc_args, techniqueId=mt6.id, subjectId=metabolite.id, subjectType='metabolite')
 
         # All measured values are 1000, 2000, 3000
         for mc in [mc_b1, mc_s1, mc_s2, mc_m1, mc_s3, mc_b2]:
@@ -573,10 +568,12 @@ class TestApiPages(PageTest):
         metabolite   = self.create_metabolite(averageMass=None)
 
         # Metabolite measurements:
+        st = self.create_study_technique(units='mM')
+        mt = self.create_measurement_technique(studyTechniqueId=st.id, subjectType='metabolite')
         mc = self.create_measurement_context(
             studyId=study.publicId,
             bioreplicateId=bioreplicate.id,
-            techniqueId=self.create_measurement_technique(units='mM', subjectType='metabolite').id,
+            techniqueId=mt.id,
             subjectId=metabolite.id,
             subjectType='metabolite',
         )

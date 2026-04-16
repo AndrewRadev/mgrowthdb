@@ -96,11 +96,10 @@ class TestMeasurement(DatabaseTest):
         ).metabolite.id
 
         self.create_measurement_technique(
-            study_technique={'studyId': study.publicId},
+            study_technique={'studyId': study.publicId, 'units': 'mM'},
             subjectType='metabolite',
             type='Metabolite',
             metaboliteIds=[glucose_id, trehalose_id],
-            units='mM',
         )
 
         # Note: missing trehalose measurement at t=75
@@ -256,17 +255,15 @@ class TestMeasurement(DatabaseTest):
         s1 = self.create_study_strain(name='B. thetaiotaomicron', studyId=study.publicId)
 
         self.create_measurement_technique(
-            study_technique={'studyId': study.publicId},
+            study_technique={'studyId': study.publicId, 'units': 'mM'},
             subjectType='metabolite',
             type='Metabolite',
             metaboliteIds=[glucose_id, trehalose_id],
-            units='mM',
         )
         self.create_measurement_technique(
-            study_technique={'studyId': study.publicId, 'includeStd': True},
+            study_technique={'studyId': study.publicId, 'includeStd': True, 'units': 'reads'},
             subjectType='strain',
             type='16s',
-            units='reads',
         )
 
         self.db_session.commit()
