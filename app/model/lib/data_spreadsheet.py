@@ -118,7 +118,7 @@ def create_excel(submission_form):
 
 def _add_header(sheet, index, title, description):
     cell         = sheet.cell(row=1, column=index, value=title)
-    cell.comment = Comment(description, author="μGrowthDB")
+    cell.comment = Comment(description, author="mGrowthDB")
 
     # Built-in styles:
     # <https://openpyxl.readthedocs.io/en/stable/styles.html#using-builtin-styles>

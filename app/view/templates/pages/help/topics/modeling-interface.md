@@ -24,7 +24,7 @@ The calculation may fail with an error message if the fitting process fails to c
         title="Modeling interface" />
 </div>
 
-Instead of trying to fit models through μGrowthDB, you may wish to perform this process yourself. This can give you the most flexibility and allow you to use a modeling approach beyond what the site offers. In that case, you can select "Custom model" from the modeling dropdown and describe the details of your modeling approach. Ideally, you should provide a link to wherever your modeling software is located or a publication that describes it. You can also select what common coefficients (maximum growth rate, lag time, carrying capacity...) your model uses. This can be used by researchers to extract quantifiable metrics from your models.
+Instead of trying to fit models through mGrowthDB, you may wish to perform this process yourself. This can give you the most flexibility and allow you to use a modeling approach beyond what the site offers. In that case, you can select "Custom model" from the modeling dropdown and describe the details of your modeling approach. Ideally, you should provide a link to wherever your modeling software is located or a publication that describes it. You can also select what common coefficients (maximum growth rate, lag time, carrying capacity...) your model uses. This can be used by researchers to extract quantifiable metrics from your models.
 
 Once the specifics of the model are described, you can upload CSV files for model predictions corresponding to specific data traces. Ideally, this file would include around 100-200 data points that visualize the model curve. These will be stored in our database, along with any parameters and measures of fit that you fill in the form.
 
