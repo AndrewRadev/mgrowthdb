@@ -44,13 +44,16 @@ The double-arrows icon adds the measurements represented by the line to the "Com
     <img
         src="/static/images/help/study-pages/chart_left_right_controls.png"
         title="Left/right axis controls" />
+    <img
+        src="/static/images/help/study-pages/chart_trace_groups.png"
+        title="Grouped left/right axis controls" />
 </div>
 
-On the visualize page (<a target="_blank" href="{{ url_for("study_show_page", publicId="SMGDB00000002") }}">Example: SMGDB00000002</a>), you can see the form interface shown on the right figure. You can select an experiment from the top-most dropdown and a measurement technique from the one below. As you change these filters, the visible checkboxes show the available measurement subjects.
+On the visualize page (<a target="_blank" href="{{ url_for("study_show_page", publicId="SMGDB00000002") }}">Example: SMGDB00000002</a>), you can see the form interface shown on the right figure. You can select an experiment from the top-most dropdown and a measurement technique from the one below. As you change these filters, the visible checkboxes show the available measurement subjects. Alternatively, above the chart, you can find tabs that let you change the filter organization -- by subject rather than by technique. This can make it easier to, for example, find all measurements of a particular metabolite or strain within the chosen experiment.
 
 This example shows the BT\_MUCIN experiment, in which mucin beads were added to a bottle with Wilkins-Chalgrens (WC) medium. Because the WC broth and the mucin beads are in the same biological system, they are considered part of the same **biological replicate** of the experiment. Because they represent different physical locations that the researchers measure separately, they are described by separate **compartments**.
 
-You can move individual measurement traces between the left and right axis using the controls under the chart. Ticking a checkbox aligns the label to the left or right and updates the visuals. This can allow you to fit observations of two different kinds of measurements onto the same chart and observe their correspondence over time. The "Log view" checkboxes control whether the data is log-transformed on either axis.
+You can move individual measurement traces between the left and right axis using the controls under the chart. Ticking a checkbox aligns the label to the left or right and updates the visuals. This can allow you to fit observations of two different kinds of measurements onto the same chart and observe their correspondence over time. If there are groups of measurement traces with different units, they will be organized into sections. You can use the left and right checkboxes on those headers to move the entire group between axes. The "Log view" checkboxes control whether the data is log-transformed on either axis.
 
 The software allows you to add multiple incompatible types of measurements on the same axis. Its label is set to "[mixed units]" and the user is free to decide how to organize their data. In some cases, values may be at the right orders of magnitude to provide useful information even when mixed. For instance, the pH level and metabolite concentrations might both be readable on the same axis. You can use the "Log view" checkboxes to apply a natural logarithm to either one of the axes.
 
