@@ -38,19 +38,48 @@ Page('.comparison-page', function($page) {
   // Exclusive checkboxes on one row:
   $page.on('change', 'input.js-axis', function(e) {
     let $checkbox = $(e.currentTarget);
+    let $row = $checkbox.parents('.js-row')
+    let $blank = $row.find('.js-axis-blank');
     let $other;
 
     if ($checkbox.is('.js-axis-left')) {
-      $other = $checkbox.parents('.js-row').find('.js-axis-right');
+      $other = $row.find('.js-axis-right');
     } else if ($checkbox.is('.js-axis-right')) {
-      $other = $checkbox.parents('.js-row').find('.js-axis-left');
+      $other = $row.find('.js-axis-left');
     }
 
-    if ($checkbox.is(':checked')) {
+    if ($checkbox.is(':checked') && $other.is(':checked')) {
       $other.prop('checked', false);
+    } else if (!$checkbox.is(':checked') && !$other.is(':checked')) {
+      $blank.prop('checked', true);
+      $row.addClass('blank');
     } else {
-      $other.prop('checked', true);
+      $blank.prop('checked', false);
+      $row.removeClass('blank');
     }
+  });
+
+  // Group checkboxes updated together:
+  $page.on('change', 'input.js-axis-group', function(e) {
+    let $checkbox = $(e.currentTarget);
+    let $row = $checkbox.parents('.js-row')
+
+    let checkboxSelector;
+    let otherCheckboxSelector;
+
+    if ($checkbox.is('.js-axis-left')) {
+      checkboxSelector      = '.js-axis-left';
+      otherCheckboxSelector = '.js-axis-right';
+    } else if ($checkbox.is('.js-axis-right')) {
+      checkboxSelector      = '.js-axis-right';
+      otherCheckboxSelector = '.js-axis-left';
+    }
+
+    let $groupRows = $row.nextUntil('.js-group-row');
+    $groupRows.each(function() {
+      $(this).find(checkboxSelector).prop('checked', true);
+      $(this).find(otherCheckboxSelector).prop('checked', false);
+    });
   });
 
   $page.on('change', 'form.js-chart-form', function(e) {
