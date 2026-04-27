@@ -195,6 +195,27 @@ class TestApiPages(PageTest):
         self.assertEqual(response_json['subject']['type'], 'bioreplicate')
         self.assertEqual(response_json['subject']['name'], 'B1')
 
+    def test_modeling_result_json(self):
+        study               = self.create_study(name='Example study', publishedAt=datetime.now(UTC))
+        measurement_context = self.create_measurement_context(studyId=study.publicId)
+        modeling_result     = self.create_modeling_result(measurementContextId=measurement_context.id)
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/model-prediction/{modeling_result.id}.json")
+        self.assertEqual(response.status, '200 OK')
+
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['id'], modeling_result.id)
+        self.assertEqual(response_json['measurementContextId'], measurement_context.id)
+        self.assertEqual(response_json['studyId'], study.publicId)
+
+        # Check that the modeling result is present in the measurement context json:
+        response = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.json")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json['modelPredictionIds'], [modeling_result.id])
+
     def test_non_published_measurement_endpoints(self):
         study        = self.create_study(publishedAt=None)
         experiment   = self.create_experiment(studyId=study.publicId)

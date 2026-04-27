@@ -494,13 +494,14 @@ Example output:
   "techniqueType": "fc",
   "techniqueOriginalUnits": "Cells/μL",
   "techniqueUnits": "Cells/mL",
+  "measurementCount": 14,
+  "measurementTimeUnits": "h"
+  "modelPredictionIds": [],
   "subject": {
     "type": "strain",
     "name": "Bacteroides thetaiotaomicron VPI-5482",
     "NCBId": 226186
   },
-  "measurementCount": 14,
-  "measurementTimeUnits": "h"
 }
 ```
 
@@ -546,13 +547,14 @@ curl -s "$ROOT_URL/api/v1/measurement-context/1314.csv"
   "techniqueType": "metabolite",
   "techniqueOriginalUnits": "mM",
   "techniqueUnits": "mM",
+  "measurementCount": 14,
+  "measurementTimeUnits": "h"
+  "modelPredictionIds": [],
   "subject": {
     "type": "metabolite",
     "name": "succinate",
     "chebiId": 26806
   },
-  "measurementCount": 14,
-  "measurementTimeUnits": "h"
 }
 ```
 
@@ -682,4 +684,67 @@ measurementContextId,subjectType,subjectName,subjectExternalId,time,value,std
 3331,metabolite,pyruvate,CHEBI:15361,0.0,9.663,0.061
 3331,metabolite,pyruvate,CHEBI:15361,4.0,9.69,0.127
 [...218 more lines...]
+```
+
+## Model predictions
+
+The database includes modeling functionality -- users can fit models in the application interface, or they can upload custom models. The modeling records will be returned when fetching measurement contexts in the `modelPredictionIds` key, which in the examples so far has been empty.
+
+If you have a model prediction id, you can fetch the JSON metadata that describes this fit and a CSV of its predictions from the `/model-prediction/` endpoint.
+
+Structure:
+
+```typescript
+{
+  id: number,
+  measurementContextId: number,
+  studyId: "SMGDBxxx",
+  type: "easy_linear"|"logistic"|"baranyi_roberts"|"custom_<number>",
+  params: dict,
+  calculatedAt: datetime,
+}
+```
+
+The `params` dictionary will have variable contents that describe input parameters to the modeling process, quality of fit, growth parameters, and potentially other important information. If the type of the model is a custom one, the `type` key will start with `custom_` but have a variable label.
+
+Example:
+
+```bash
+curl -s "$ROOT_URL/api/v1/model-prediction/29.json"
+curl -s "$ROOT_URL/api/v1/model-prediction/29.csv"
+```
+
+```json
+{
+  "id": 29,
+  "measurementContextId": 9522,
+  "studyId": "SMGDB00000007",
+  "type": "logistic",
+  "params": {
+    "fit": {
+      "r2": "0.9972",
+      "rss": "0.0942"
+    },
+    "inputs": {
+      "endTime": "30"
+    },
+    "r_version": "4.4.3 (2025-02-28)",
+    "coefficients": {
+      "K": "858879.5694",
+      "y0": "2381.8389",
+      "mumax": "0.6582"
+    },
+    "growthrates_version": "0.8.5"
+  },
+  "calculatedAt": "Tue, 20 Jan 2026 10:53:39 GMT"
+}
+```
+
+```csv
+time,value,std
+0.0,2381.8389,
+0.6030150753768844,3537.524301675712,
+1.2060301507537687,5250.519088490064,
+1.809045226130653,7785.456559068567,
+[...196 more lines...]
 ```

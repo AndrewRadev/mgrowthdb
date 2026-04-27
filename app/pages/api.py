@@ -160,10 +160,11 @@ def measurement_context_json(id):
         'studyId':              measurement_context.studyId,
         'bioreplicateId':       measurement_context.bioreplicate.id,
         'bioreplicateName':     measurement_context.bioreplicate.name,
-        **_measurement_technique_fields(measurement_context),
-        **_measurement_subject_fields(measurement_context),
         'measurementCount':     measurement_count,
         'measurementTimeUnits': 'h',
+        'modelPredictionIds':   [mr.id for mr in measurement_context.modelingResults],
+        **_measurement_technique_fields(measurement_context),
+        **_measurement_subject_fields(measurement_context),
     }
 
 
@@ -185,6 +186,21 @@ def measurement_context_csv(id):
         df.rename(columns={'value': plain_label}, inplace=True)
 
     return df.to_csv(index=False)
+
+
+def model_prediction_json(id):
+    modeling_result = g.db_session.get(ModelingResult, id)
+    if not modeling_result or not modeling_result.study.isPublished:
+        raise NotFound
+
+    return {
+        'id':                   modeling_result.id,
+        'measurementContextId': modeling_result.measurementContextId,
+        'studyId':              modeling_result.study.publicId,
+        'type':                 modeling_result.type,
+        'params':               modeling_result.params,
+        'calculatedAt':         modeling_result.calculatedAt,
+    }
 
 
 def model_prediction_csv(id):
