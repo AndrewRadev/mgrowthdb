@@ -127,9 +127,6 @@ html_js_files = [
 
 html_output_encoding = "utf-8"
 
-# -- Options for PDF output --------------------------------------------------
-latex_logo = "_static/logo-free-white.png"
-
 # -- Templating --------------------------------------------------------------
 
 # The default role will be used for `` so we do not need to do :get:``.
