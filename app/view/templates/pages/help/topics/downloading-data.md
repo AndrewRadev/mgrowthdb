@@ -28,6 +28,6 @@ The URL shown next to the download button can be used to fetch the selected subs
 
 ## API access
 
-It's also possible to get fine-grained access to the data by using the application's REST API, described in the developer documentation: <https://mgrowthdb.readthedocs.io/en/stable/api.html>.
+It's also possible to get fine-grained access to the data by using the application's REST API, described in the developer documentation: <https://mgrowthdb.readthedocs.io/en/latest/api.html>.
 
 At this time, this endpoint is publicly available, but it requires familiarity with either a programming language like Python, or command-line skills with curl. It should be fairly straightforward to use in those cases, but since it requires extensive API documentation, it's been moved to the programmer-friendly "Read the Docs" platform.

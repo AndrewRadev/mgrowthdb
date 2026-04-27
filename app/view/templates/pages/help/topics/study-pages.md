@@ -113,6 +113,6 @@ Once the desired combination of data is selected, the "Download ZIP file" button
 
 The URL shown next to the download button can be used to fetch the selected subset of data on the command-line. This can be particularly useful when working on a remote server, or when the data from multiple studies needs to be processed in batches.
 
-It's possible to fetch all of the data of a single study or the entire database by navigating to the [/static/export](/static/export) page. It's also possible to get fine-grained access to the data by using the application's REST API, described in the developer documentation: <https://mgrowthdb.readthedocs.io/en/stable/api.html>.
+It's possible to fetch all of the data of a single study or the entire database by navigating to the [/static/export](/static/export) page. It's also possible to get fine-grained access to the data by using the application's REST API, described in the developer documentation: <https://mgrowthdb.readthedocs.io/en/latest/api.html>.
 
 These options are described in more detail in a separate help topic: "[Downloading data](/help/downloading-data)".
