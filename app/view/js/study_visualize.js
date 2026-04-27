@@ -38,19 +38,48 @@ Page('.study-visualize-page', function($page) {
   // Exclusive checkboxes on one row:
   $page.on('change', 'input.js-axis', function(e) {
     let $checkbox = $(e.currentTarget);
+    let $row = $checkbox.parents('.js-row')
+    let $blank = $row.find('.js-axis-blank');
     let $other;
 
     if ($checkbox.is('.js-axis-left')) {
-      $other = $checkbox.parents('.js-row').find('.js-axis-right');
+      $other = $row.find('.js-axis-right');
     } else if ($checkbox.is('.js-axis-right')) {
-      $other = $checkbox.parents('.js-row').find('.js-axis-left');
+      $other = $row.find('.js-axis-left');
     }
 
-    if ($checkbox.is(':checked')) {
+    if ($checkbox.is(':checked') && $other.is(':checked')) {
       $other.prop('checked', false);
+    } else if (!$checkbox.is(':checked') && !$other.is(':checked')) {
+      $blank.prop('checked', true);
+      $row.addClass('blank');
     } else {
-      $other.prop('checked', true);
+      $blank.prop('checked', false);
+      $row.removeClass('blank');
     }
+  });
+
+  // Group checkboxes updated together:
+  $page.on('change', 'input.js-axis-group', function(e) {
+    let $checkbox = $(e.currentTarget);
+    let $row = $checkbox.parents('.js-row')
+
+    let checkboxSelector;
+    let otherCheckboxSelector;
+
+    if ($checkbox.is('.js-axis-left')) {
+      checkboxSelector      = '.js-axis-left';
+      otherCheckboxSelector = '.js-axis-right';
+    } else if ($checkbox.is('.js-axis-right')) {
+      checkboxSelector      = '.js-axis-right';
+      otherCheckboxSelector = '.js-axis-left';
+    }
+
+    let $groupRows = $row.nextUntil('.js-group-row');
+    $groupRows.each(function() {
+      $(this).find(checkboxSelector).prop('checked', true);
+      $(this).find(otherCheckboxSelector).prop('checked', false);
+    });
   });
 
   $page.on('change', 'form.js-chart-form', function(e) {
@@ -60,11 +89,13 @@ Page('.study-visualize-page', function($page) {
 
   $page.on('click', '.js-select-all', function(e) {
     e.preventDefault();
+    toggleCheckboxes($(e.currentTarget), true);
+    updateChart($form)
+  });
 
-    let $link = $(e.currentTarget);
-    let $form = $link.parents('form');
-    $form.find('input[type=checkbox].js-measurement-toggle:visible').prop('checked', true);
-
+  $page.on('click', '.js-deselect-all', function(e) {
+    e.preventDefault();
+    toggleCheckboxes($(e.currentTarget), false);
     updateChart($form)
   });
 
@@ -73,7 +104,7 @@ Page('.study-visualize-page', function($page) {
 
     let $link = $(e.currentTarget);
     let $form = $link.parents('form');
-    $form.find('.js-technique-row input[type=checkbox]').prop('checked', false);
+    $form.find('.js-trace-row input[type=checkbox]').prop('checked', false);
 
     updateChart($form)
   });
@@ -89,24 +120,63 @@ Page('.study-visualize-page', function($page) {
     updateCompareData('add', contextIds);
   });
 
+  function toggleCheckboxes($button, value) {
+    let $row = $button.parents('.form-row');
+    let $targetRows = $row.nextUntil('.js-header-row');
+    $targetRows.find('input[type=checkbox]:visible').prop('checked', value);
+  }
+
   function updateChart($form) {
     let selectedExperimentId = $form.find('select[name="experimentId"]').val();
 
     $form.find('.js-experiment-container').addClass('hidden');
-    $form.find('.js-technique-row').addClass('hidden');
+    $form.find('.js-trace-row').addClass('hidden');
 
     let $experiment = $form.find(`.js-experiment-container[data-experiment-id="${selectedExperimentId}"]`);
     $experiment.removeClass('hidden');
 
-    let selectedOption = $form.
-      find('select[name="techniqueId"] option:selected');
+    let $techniqueSelect = $form.find('select[name="techniqueId"]');
+    let $subjectSelect   = $form.find('select[name="subject"]');
 
-    let selectedTechniqueId          = selectedOption.val();
-    let selectedTechniqueSubjectType = selectedOption.data('subjectType');
+    // Filter secondary select values by the experiment id:
+    for (let $select of [$techniqueSelect, $subjectSelect]) {
+      $select.find('option').each(function() {
+        let $option = $(this);
+        let experimentIds = $option.data('experimentIds');
 
-    $experiment.
-      find(`.js-technique-row[data-technique-id="${selectedTechniqueId}"]`).
-      removeClass('hidden');
+        if (experimentIds.indexOf(selectedExperimentId) >= 0) {
+          $option.removeClass('hidden');
+        } else {
+          $option.addClass('hidden');
+        }
+      });
+
+      // If the selected option was hidden, pick the first visible one:
+      let $selectedOption = $select.find('option:selected');
+      if ($selectedOption.hasClass('hidden')) {
+        $select.find('option:not(.hidden):first').prop('selected', true);
+        $select.animateClass('highlight', 500);
+      }
+    }
+
+    if ($techniqueSelect.length > 0) {
+      let $selectedOption     = $techniqueSelect.find('option:selected');
+      let selectedTechniqueId = $selectedOption.val();
+
+      $experiment.
+        find(`.js-trace-row[data-technique-id="${selectedTechniqueId}"]`).
+        removeClass('hidden');
+    } else if ($subjectSelect.length > 0) {
+      let $selectedOption = $subjectSelect.find('option:selected');
+      let selectedSubject = $selectedOption.val();
+
+      $experiment.
+        find(`.js-trace-row[data-subject="${selectedSubject}"]`).
+        removeClass('hidden');
+    } else {
+      console.error("Could not find technique or subject select dropdown");
+      return;
+    }
 
     // Update chart:
 
@@ -123,8 +193,33 @@ Page('.study-visualize-page', function($page) {
       success: function(response) {
         $chart.html(response);
         $(document).scrollTop(scrollPosition);
+
+        updateTabLinks();
       }
     })
+  }
+
+  // Take the permalink parameters, set them onto the tab links:
+  function updateTabLinks() {
+    $permalink = $page.find('.js-permalink');
+    if ($permalink.length == 0) {
+      return;
+    }
+
+    let rootUrl = window.location.origin;
+
+    for (let selection of ['technique', 'subject']) {
+      let permalinkUrl = new URL($permalink.attr('href'), rootUrl);
+
+      let tabParams = permalinkUrl.searchParams;
+      tabParams.append('by', selection);
+
+      let $tab = $page.find(`.js-tab-${selection}`);
+      let tabUrl = new URL($tab.attr('href'), rootUrl);
+      tabUrl.search = tabParams.toString();
+
+      $tab.attr('href', tabUrl)
+    }
   }
 
   // TODO duplicates study.js, extract

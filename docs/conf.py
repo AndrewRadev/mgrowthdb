@@ -41,6 +41,7 @@ extensions = [
     "hacks"
 ]
 
+maximum_signature_line_length = 150
 
 # -- Options for autoapi -------------------------------------------------------
 

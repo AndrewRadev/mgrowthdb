@@ -10,7 +10,7 @@ Page('.study-modeling-page', function($page) {
   });
 
   updateFormVisibility($form);
-  let $activeRadio = $('.js-technique-row:visible input[type=radio]:checked');
+  let $activeRadio = $('.js-trace-row:visible input[type=radio]:checked');
 
   updateCustomModelVisibility($form, $activeRadio);
   if ($activeRadio.length > 0) {
@@ -49,7 +49,7 @@ Page('.study-modeling-page', function($page) {
     let $form = $(e.currentTarget);
 
     updateFormVisibility($form);
-    let $activeRadio = $page.find('.js-technique-row:visible input[type=radio]:checked');
+    let $activeRadio = $page.find('.js-trace-row:visible input[type=radio]:checked');
 
     updateCustomModelVisibility($form, $activeRadio);
     if ($activeRadio.length > 0) {
@@ -62,7 +62,7 @@ Page('.study-modeling-page', function($page) {
     e.preventDefault();
     let $form = $(e.currentTarget);
 
-    let $activeRow = $('.js-technique-row.highlight:visible');
+    let $activeRow = $('.js-trace-row.highlight:visible');
 
     $.ajax({
       url: $form.attr('action'),
@@ -95,7 +95,7 @@ Page('.study-modeling-page', function($page) {
       method: 'POST',
       success: function(response) {
         $form.find('input').prop('disabled', false);
-        let $activeRadio = $('.js-technique-row:visible input[type=radio]:checked');
+        let $activeRadio = $('.js-trace-row:visible input[type=radio]:checked');
         updateChart($activeRadio.first());
       },
       error: function() {
@@ -146,7 +146,7 @@ Page('.study-modeling-page', function($page) {
     let selectedExperimentId = $form.find('select[name="experimentId"]:visible').val();
 
     $form.find('.js-experiment-container').addClass('hidden');
-    $form.find('.js-technique-row').addClass('hidden');
+    $form.find('.js-trace-row').addClass('hidden');
 
     let $experiment = $form.find(`.js-experiment-container[data-experiment-id="${selectedExperimentId}"]`);
     $experiment.removeClass('hidden');
@@ -157,7 +157,7 @@ Page('.study-modeling-page', function($page) {
       find('select[name="techniqueId"] option:selected').data('subjectType');
 
     $experiment.
-      find(`.js-technique-row[data-technique-id="${selectedTechniqueId}"]`).
+      find(`.js-trace-row[data-technique-id="${selectedTechniqueId}"]`).
       removeClass('hidden');
   }
 
@@ -213,8 +213,8 @@ Page('.study-modeling-page', function($page) {
     let logTransform = $form.find('input[name=logTransform]').prop('checked');
     let isPublished  = $form.find('input[name=isPublished]').prop('checked');
 
-    $page.find('.js-technique-row').removeClass('highlight');
-    $radio.parents('.js-technique-row').addClass('highlight');
+    $page.find('.js-trace-row').removeClass('highlight');
+    $radio.parents('.js-trace-row').addClass('highlight');
 
     let measurementContextId = $radio.val().replaceAll('measurementContext|', '');
 
@@ -272,7 +272,7 @@ Page('.study-modeling-page', function($page) {
         if (allReady) {
           $calculationResult.html("Calculations finished. Submit the form to perform another calculation");
 
-          let $activeRadio = $page.find('.js-technique-row:visible input[type=radio]:checked');
+          let $activeRadio = $page.find('.js-trace-row:visible input[type=radio]:checked');
           if ($activeRadio.length > 0) {
             updateChart($activeRadio.first());
           }

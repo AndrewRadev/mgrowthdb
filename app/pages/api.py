@@ -19,6 +19,7 @@ from app.model.orm import (
     Measurement,
     MeasurementContext,
     Metabolite,
+    ModelingResult,
     Project,
     Study,
     StudyStrain,
@@ -182,6 +183,21 @@ def measurement_context_csv(id):
         plain_label = re.sub(r'</?(b|sub)>', '', html_label)
 
         df.rename(columns={'value': plain_label}, inplace=True)
+
+    return df.to_csv(index=False)
+
+
+def model_prediction_csv(id):
+    modeling_result = g.db_session.get(ModelingResult, id)
+    if not modeling_result or not modeling_result.study.isPublished:
+        raise NotFound
+
+    if modeling_result.measurementContext:
+        measurements_df = modeling_result.measurementContext.get_df(g.db_session)
+    else:
+        measurements_df = None
+
+    df = modeling_result.generate_chart_df(measurements_df)
 
     return df.to_csv(index=False)
 

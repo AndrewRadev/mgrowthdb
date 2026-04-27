@@ -57,9 +57,10 @@ class TestExperimentExportForm(DatabaseTest):
         ]
 
         for subject_type, subject, technique_type, units in targets:
+            study_technique = self.create_study_technique(units=units)
             technique = self.create_measurement_technique(
                 type=technique_type,
-                units=units,
+                studyTechniqueId=study_technique.id
             )
 
             mc = self.create_measurement_context(

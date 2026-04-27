@@ -8,7 +8,7 @@ class OrmBase(DeclarativeBase):
 
     @classmethod
     def filter_keys(Self, data: dict):
-        return {k: v for k, v in data.items() if hasattr(Self, k)}
+        return {k: v for k, v in data.items() if hasattr(Self, k) and not isinstance(getattr(Self, k), property)}
 
     @classmethod
     def list_ordering(Self, column, values):

@@ -1,6 +1,7 @@
 import re
 from typing import List
 from datetime import datetime, UTC
+import itertools
 
 import sqlalchemy as sql
 from sqlalchemy.orm import (
@@ -158,6 +159,63 @@ class Study(OrmBase):
             .order_by(Submission.updatedAt.desc())
             .limit(1)
         ).one_or_none()
+
+    def fetch_grouped_measurement_subjects(self, db_session):
+        from app.model.orm import MeasurementContext, MeasurementTechnique, StudyTechnique
+
+        records = db_session.execute(
+            sql.select(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+                MeasurementContext.subjectName,
+            )
+            .join(MeasurementContext.technique)
+            .join(MeasurementTechnique.studyTechnique)
+            .where(StudyTechnique.studyId == self.publicId)
+            .distinct()
+            .order_by(MeasurementContext.subjectId)
+        ).all()
+
+        # Hack: sort averages first by checking the name. Annoying, but we
+        # don't have `calculationType` here
+        sort_order = ["bioreplicate", "strain", "metabolite"]
+        sorted_records = sorted(
+            records,
+            key=lambda r: (sort_order.index(r[0]), not r[2].startswith('Average('))
+        )
+
+        grouped_records = [
+            (type, [(id, name) for (_, id, name) in group])
+            for type, group in itertools.groupby(sorted_records, key=lambda r: r[0])
+        ]
+
+        return grouped_records
+
+    def fetch_experiment_ids_by_measurement_subject(self, db_session):
+        from app.model.orm import Bioreplicate, Experiment, MeasurementContext
+
+        records = db_session.execute(
+            sql.select(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+                Experiment.publicId,
+            )
+            .join(MeasurementContext.bioreplicate)
+            .join(Bioreplicate.experiment)
+            .where(Experiment.studyId == self.publicId)
+            .order_by(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+            )
+            .distinct()
+        ).all()
+
+        grouped_records = {
+            (type, id): sorted([record[2] for record in group])
+            for (type, id), group in itertools.groupby(records, key=lambda r: (r[0], r[1]))
+        }
+
+        return grouped_records
 
     @property
     def managerUuids(self):

@@ -152,6 +152,17 @@ def is_ajax(request):
     return request.headers.get('X-Requested-With', '') == 'XMLHttpRequest'
 
 
+def hex_to_rgba(hex_string, opacity):
+    hex_string = hex_string.removeprefix('#')
+    assert(len(hex_string) == 6)
+
+    r = int(hex_string[0:2], 16)
+    g = int(hex_string[2:4], 16)
+    b = int(hex_string[4:6], 16)
+
+    return f"rgba({r},{g},{b},{opacity})"
+
+
 def _one_or_error(key, iterator):
     value = next(iterator)
     try:

@@ -2,6 +2,10 @@
   {% set projectUrl = url_for('project_show_page', publicId=study.project.publicId) %}
   {% set studyUrl   = url_for('study_show_page',   publicId=study.publicId) %}
 
+  <div style="float: right;">
+    {{ "study-pages"|help_link("❓ Help", css_class="white-button small-button small") }}
+  </div>
+
   <ul>
     <li class="small">
       Project

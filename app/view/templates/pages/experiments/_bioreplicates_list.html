@@ -126,6 +126,15 @@
                         </a>
 
                         {{ modeling_result.model_name }}
+
+                        <a
+                            href="{{ url_for('model_prediction_csv', id=modeling_result.id) }}"
+                            class="white-button no-border small-button"
+                            style="vertical-align: top"
+                            download="model_predictions_{{ modeling_result.id }}.csv"
+                            data-tooltip="Download model predictions">
+                          <span class="flex-row icon icon-download-black"></span>
+                        </a>
                       </li>
                     {% endfor %}
                   </ul>

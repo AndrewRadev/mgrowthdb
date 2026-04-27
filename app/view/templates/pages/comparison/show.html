@@ -53,7 +53,7 @@
             {% set key = "measurementContext|{}".format(measurement_context.id) %}
 
             <div
-                class="form-row js-technique-row"
+                class="form-row js-trace-row"
                 data-technique-id="{{ measurement_context.techniqueId }}"
                 data-bioreplicate-id="{{ measurement_context.bioreplicateId }}"
                 data-compartment-id="{{ measurement_context.compartmentId }}">
@@ -78,7 +78,7 @@
             {% set key = "modelingResult|{}".format(modeling_result.id) %}
 
             <div
-                class="form-row js-technique-row"
+                class="form-row js-trace-row"
                 data-technique-id="{{ measurement_context.techniqueId }}"
                 data-bioreplicate-id="{{ measurement_context.bioreplicateId }}"
                 data-compartment-id="{{ measurement_context.compartmentId }}">
@@ -100,11 +100,11 @@
         <div class="form-row margin-top-10">
           <div class="columns">
             <div class="flex-row flex-gap-6 flex-end small">
-              <a href="#" class="white-button js-select-all">☑️ Select all</a>
-              <a href="#" class="white-button flex-right js-clear-chart">🧹 Clear</a>
+              <a href="#" class="white-button js-select-all">🗹 Select all</a>
+              <a href="#" class="white-button flex-right js-clear-chart">☐ Deselect all</a>
             </div>
 
-            <div class="flex-column flex-right flex-end">
+            <div class="flex-column flex-right flex-end small">
               <label>
                 <input type="checkbox" name="showStd" {{ "checked" if chart_form.show_std }}>
                 Show standard deviation
@@ -115,7 +115,7 @@
               </label>
             </div>
 
-            <label class="flex-column flex-right">
+            <label class="flex-column flex-right small">
               <span>Cell count units:</span>
               <select name="cellCountUnits" class="form-input-blue">
                 <option>Cells/mL</option>
@@ -123,7 +123,7 @@
               </select>
             </label>
 
-            <label class="flex-column">
+            <label class="flex-column small">
               <span>CFU count units</span>
               <select name="cfuCountUnits" class="form-input-blue">
                 <option>CFUs/mL</option>
@@ -131,7 +131,7 @@
               </select>
             </label>
 
-            <label class="flex-column">
+            <label class="flex-column small">
               <span>Metabolite units:</span>
               <select name="metaboliteUnits" class="form-input-blue">
                 <optgroup label="Molar concentration">
