@@ -4,7 +4,7 @@ To extract actionable insights from raw growth data, we need to apply some kind 
 
 **Mechanistic** methods attempt to simulate the process of growth under specific assumptions, which take the form of a mathematical model. **Phenomenological** methods only describe the observed patterns of growth and allow us to extract properties of the data. They may fit the growth measurements to a model, but they could also be "model-free", or "nonparametric". In that case, the data is examined through some algorithm that finds the desired property without fitting the growth curve to a parameterized function.
 
-μGrowthDB provides several methods to fit growth data using the [growthrates](https://github.com/tpetzoldt/growthrates) R package.
+mGrowthDB provides several methods to fit growth data using the [growthrates](https://github.com/tpetzoldt/growthrates) R package.
 
 <h2 id="easy_linear">"Easy linear" method</h2>
 

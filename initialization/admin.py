@@ -226,7 +226,7 @@ def init_admin(app):
 
     admin = Admin(
         app,
-        name='μGrowthDB admin',
+        name='mGrowthDB admin',
         index_view=AppAdminIndexView(),
     )
 

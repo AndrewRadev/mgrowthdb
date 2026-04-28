@@ -1,10 +1,10 @@
-# μGrowthDB
+# mGrowthDB
 
-[μGrowthDB](https://mgrowthdb.gbiomed.kuleuven.be) is the first crowd-sourced database for microbial growth data. It supports a range of measurement techniques: Colony Forming Units (CFU), Flow Cytometry, Optical Density, 16S sequencing, qPCR. It also supports storage of accompanying metabolic data.
+[mGrowthDB](https://mgrowthdb.gbiomed.kuleuven.be) is the first crowd-sourced database for microbial growth data. It supports a range of measurement techniques: Colony Forming Units (CFU), Flow Cytometry, Optical Density, 16S sequencing, qPCR. It also supports storage of accompanying metabolic data.
 
 In this repo, you can find the code of the resource, known issues and discussions, while you are more than welcome to share your thoughts on the resource and of course [contribute](./CONTRIBUTING.md).
 
-## To use μGrowthDB
+## To use mGrowthDB
 
 If you'd like to explore studies and their data, these two documentation resources explain how to do that:
 

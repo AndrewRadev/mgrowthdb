@@ -48,7 +48,7 @@ if [ "$USER_COUNT" -eq 0 ]; then
 
   echo "> No users in the database, creating an admin with ORCID: $ORCID_ID"
 
-  echo "INSERT INTO Users (uuid, orcidId, name, isAdmin) VALUES ('_admin', '$ORCID_ID', 'The μGrowthDB team', 1)" | bin/dbconsole
+  echo "INSERT INTO Users (uuid, orcidId, name, isAdmin) VALUES ('_admin', '$ORCID_ID', 'The mGrowthDB team', 1)" | bin/dbconsole
 fi
 
 #

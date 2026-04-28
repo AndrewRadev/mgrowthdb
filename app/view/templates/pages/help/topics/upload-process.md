@@ -1,6 +1,6 @@
 To upload a study, first you need to log in using an {{ "https://orcid.org/"|external_link("ORCID") }}. After that, you can go to the "Upload data" section, click on "New submission" and then follow the step-by-step process in the "Upload data" section of the navigation sidebar.
 
-A "study" in μGrowthDB could contain the data of a publication, either a paper or a pre-print, but it could also be unpublished data that is currently being worked on. Upon finishing the upload process, the study will receive a stable identifier of the form "SMGDBxxx..." that you can share in your publications.
+A "study" in mGrowthDB could contain the data of a publication, either a paper or a pre-print, but it could also be unpublished data that is currently being worked on. Upon finishing the upload process, the study will receive a stable identifier of the form "SMGDBxxx..." that you can share in your publications.
 
 You are free to upload the same experimental data in multiple different studies, if it's used for a different purpose. For instance, growth experiments of a particular microbial community may be shared in one study as targets of a particular modeling approach, and in another study as a control for perturbation experiments. You may consider grouping said studies under the same "project".
 

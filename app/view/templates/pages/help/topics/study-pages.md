@@ -1,6 +1,6 @@
 ## Study navigation
 
-A study uploaded to μGrowthDB provides multiple different views of its data. You can navigate between them by using a navigation bar that jumps between 5 different sections:
+A study uploaded to mGrowthDB provides multiple different views of its data. You can navigate between them by using a navigation bar that jumps between 5 different sections:
 
 <p>
     <div style="width: 100%; text-align: center">
@@ -29,7 +29,7 @@ This particular example is taken from the study <a target="_blank" href="{{ url_
 
 The central place that acts as a hub for all the different ways to interact with a study is the study homepage. The study has a permanent unique ID, in these examples "<a target="_blank" href="{{ url_for("study_show_page", publicId="SMGDB00000002") }}">SMGDB00000002</a>", which can be shared in publications. Projects have identifiers starting with "PMGDB" and experiment IDs are prefixed with "EMGDB".
 
-The basic information shown right below the title includes the name of the uploader, and timestamps to indicate when the data was uploaded or updated. Ideally, a study would not be changed after uploading, but it is possible that mistakes are made and corrections are necessary. A study owner is allowed to go back to the submission process and upload new data or change the experimental design. However, every separate submission is stored as a data package that can be accessed and potentially restored by the μGrowthDB administrators if necessary.
+The basic information shown right below the title includes the name of the uploader, and timestamps to indicate when the data was uploaded or updated. Ideally, a study would not be changed after uploading, but it is possible that mistakes are made and corrections are necessary. A study owner is allowed to go back to the submission process and upload new data or change the experimental design. However, every separate submission is stored as a data package that can be accessed and potentially restored by the mGrowthDB administrators if necessary.
 
 The study page continues with separate sections for each of its experiments. There are subsections for each biological replicate and individual list items with the measured subjects. In the images on the right, the "BT\_MUCIN\_1<sub>WC</sub>" notation indicates a measurement of the WC **compartment** within the BT\_MUCIN\_1 **replicate**. A synthetic replicate called "Average(BT\_MUCIN<sub>WC</sub>)" is created during the upload process with the average values for all time points across the biological replicates in that compartment of the BT\_MUCIN experiment. This is only done if the time values for all of the measurements align across replicates.
 
@@ -98,7 +98,7 @@ Be advised that the specific parameters you pick can make a big difference in th
 
 For the logistic model and Baranyi-Roberts, the current parameterization is for the end time for the data points that will be fitted. For the "Easy linear" method, you can pick the number of data points used to determine the slope of the fit. Once you have fitted the separate models to the desired data traces, you can download all the model parameters by using a button at the top of the page labeled "Download completed models as CSV". The resulting file has one row per fitted model and columns for its individual parameters.
 
-In the "Modeling type" dropdown, it's possible to choose "Custom model" to upload your own predictions rather than to calculate them through μGrowthDB. For more information, see the dedicated help topic "[Modeling interface](/help/modeling-interface/)".
+In the "Modeling type" dropdown, it's possible to choose "Custom model" to upload your own predictions rather than to calculate them through mGrowthDB. For more information, see the dedicated help topic "[Modeling interface](/help/modeling-interface/)".
 
 ## Data exports
 
