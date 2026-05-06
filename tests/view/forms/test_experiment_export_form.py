@@ -74,6 +74,7 @@ class TestExperimentExportForm(DatabaseTest):
                 self.create_measurement(
                     timeInSeconds=(i * 3600),
                     value=v,
+                    std=0.01,
                     contextId=mc.id,
                     studyId=e1.study.publicId,
                 )
@@ -92,6 +93,28 @@ class TestExperimentExportForm(DatabaseTest):
                 'Community OD (CFUs/mL)',
                 'Community pH',
                 'glucose (mM)',
+            ]),
+        )
+        self.assertEqual(data[e1].shape[0], 9)
+
+        form = ExperimentExportForm(self.db_session, MultiDict([('bioreplicates', b1.id), ('includeStd', 'True')]))
+        data = form.get_experiment_data()
+
+        self.assertTrue(e1 in data)
+        self.assertEqual(
+            sorted(data[e1].columns.tolist()),
+            sorted([
+                'Time (hours)',
+                'Biological Replicate',
+                'Compartment',
+                'Roseburia FC (Cells/mL)',
+                'Roseburia FC STD (Cells/mL)',
+                'Community OD (CFUs/mL)',
+                'Community OD STD (CFUs/mL)',
+                'Community pH',
+                'Community pH STD',
+                'glucose (mM)',
+                'glucose STD (mM)',
             ]),
         )
         self.assertEqual(data[e1].shape[0], 9)
