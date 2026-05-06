@@ -25,6 +25,9 @@ class ExperimentExportForm:
         self.csv_separator = ','
         self._extract_csv_args(args)
 
+        self.include_std = False
+        self._extract_std_args(args)
+
         self.cell_count_units = 'Cells/mL'
         self.cfu_count_units  = 'CFUs/mL'
         self.metabolite_units = 'mM'
@@ -92,7 +95,10 @@ class ExperimentExportForm:
             if len(experiment_df) == 0:
                 continue
 
-            experiment_df.sort_values(inplace=True, by=['Biological Replicate', 'Compartment', 'Time (hours)'])
+            experiment_df.sort_values(
+                inplace=True,
+                by=['Biological Replicate', 'Compartment', 'Time (hours)'],
+            )
 
             experiment_data[experiment] = experiment_df
 
@@ -115,10 +121,12 @@ class ExperimentExportForm:
             units = technique.units
 
         value_label = f"Community {technique.short_name}"
+        std_label = f"Community {technique.short_name} STD"
         if units is not None and units != '':
+            std_label += f" ({units})"
             value_label += f" ({units})"
 
-        return df.rename(columns={'value': value_label})
+        return df.rename(columns={'value': value_label, 'std': std_label})
 
     def _get_strain_df(self, experiment, metabolite, technique):
         condition = (
@@ -138,8 +146,9 @@ class ExperimentExportForm:
             units = technique.units
 
         value_label = f"{metabolite.name} {technique.short_name} ({units})"
+        std_label = f"{metabolite.name} {technique.short_name} STD ({units})"
 
-        return df.rename(columns={'value': value_label})
+        return df.rename(columns={'value': value_label, 'std': std_label})
 
     def _get_metabolite_df(self, experiment, metabolite, technique):
         condition = (
@@ -152,17 +161,22 @@ class ExperimentExportForm:
 
         units = convert_df_units(df, technique.units, self.metabolite_units, metabolite.averageMass)
         value_label = f"{metabolite.name} ({units})"
+        std_label = f"{metabolite.name} STD ({units})"
 
-        return df.rename(columns={'value': value_label})
+        return df.rename(columns={'value': value_label, 'std': std_label})
 
     def _base_bioreplicate_query(self, experiment):
+        select_list = [
+            Measurement.timeInHours.label("Time (hours)"),
+            Bioreplicate.name.label("Biological Replicate"),
+            Compartment.name.label("Compartment"),
+            Measurement.value.label("value"),
+        ]
+        if self.include_std:
+            select_list.append(Measurement.std.label("std"))
+
         return (
-            sql.select(
-                Measurement.timeInHours.label("Time (hours)"),
-                Bioreplicate.name.label("Biological Replicate"),
-                Compartment.name.label("Compartment"),
-                Measurement.value.label("value"),
-            )
+            sql.select(*select_list)
             .select_from(Measurement)
             .join(MeasurementContext)
             .join(Bioreplicate)
@@ -196,6 +210,12 @@ class ExperimentExportForm:
                 self.csv_separator = ' '
         else:
             raise Exception(f"Unknown delimiter requested: {delimiter}")
+
+    def _extract_std_args(self, args):
+        if args.get('includeStd', False):
+            self.include_std = True
+        else:
+            self.include_std = False
 
     def _extract_measurement_unit_args(self, args):
         self.cell_count_units = args.get('cellCountUnits', self.cell_count_units)
