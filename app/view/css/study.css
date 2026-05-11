@@ -22,6 +22,12 @@
     margin-top: 0;
   }
 
+  .uncompare {
+    .white-button {
+      background-color: #eee;
+    }
+  }
+
   .navigation-buttons {
     display: flex;
     flex-direction: row;
