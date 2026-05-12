@@ -1,7 +1,11 @@
 import tests.init  # noqa: F401
 
+import json
 from datetime import datetime, UTC
 
+import sqlalchemy as sql
+
+from app.model.orm import DashboardEntry
 from tests.page_test import PageTest
 
 
@@ -625,3 +629,60 @@ class TestApiPages(PageTest):
         mc_json = [entry for entry in response_json['measurementContexts'] if entry['id'] == mc.id][0]
         self.assertEqual(mc_json['techniqueOriginalUnits'], 'mM')
         self.assertEqual(mc_json['techniqueUnits'], 'mM')
+
+    def test_dashboard_update(self):
+        user = self.create_user(orcidId="test-orcid-id", apiKey="test-api-key")
+        self.db_session.commit()
+
+        payload = {
+            "apiKey": "test-api-key",
+            "data": """
+                time,value
+                1,100,
+                2,200,
+                3,400,
+            """,
+        }
+
+        # Dashboard entry does not exist:
+        self.assertEqual(user.dashboardEntries, [])
+
+        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(payload))
+        self.db_session.commit()
+        self.db_session.refresh(user)
+        response_json = self._get_json(response)
+
+        self.assertTrue(response_json["dashboardUrl"].endswith("/dashboards/test-orcid-id/"))
+
+        # Dashboard entry exists:
+        self.assertNotEqual(user.dashboardEntries, [])
+        dashboard_entry = user.dashboardEntries[0]
+
+        # A new dashboard entry is created after pushing another batch of data:
+        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(payload))
+        self.db_session.commit()
+        self.db_session.refresh(user)
+        response_json = self._get_json(response)
+
+        self.assertEqual(len(user.dashboardEntries), 1)
+
+        new_dashboard_entry = user.dashboardEntries[0]
+        self.assertNotEqual(dashboard_entry, new_dashboard_entry)
+
+        # No data sent: BadRequest
+        bad_payload = {"apiKey": "test-api-key"}
+        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "400 Bad request")
+
+        # Wrong api key: Forbidden
+        bad_payload = {"apiKey": "wrong-api-key", "data": "unused"}
+        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "403 Forbidden")
+
+        # Missing api key: Forbidden
+        bad_payload = {"data": "unused"}
+        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "403 Forbidden")

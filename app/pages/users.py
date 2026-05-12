@@ -24,6 +24,7 @@ from app.model.orm import (
 )
 from app.model.lib import orcid
 from app.model.lib.errors import LoginRequired
+from app.model.lib.chart import Chart
 
 
 def user_show_page():
@@ -170,6 +171,49 @@ def _user_login_show():
     return render_template(
         "pages/users/login.html",
         orcid_url=orcid_url,
+    )
+
+
+def user_dashboard_page(orcidId):
+    user = g.db_session.scalars(
+        sql.select(User)
+        .where(User.orcidId == orcidId)
+        .limit(1)
+    ).one()
+
+    chart = Chart(time_units='h')
+    errors = {}
+
+    for dashboard_entry in user.dashboardEntries:
+        df = dashboard_entry.get_df()
+
+        if len(df.columns) < 2:
+            errors[file.filename] = f"Expected at least 2 columns, found {len(df.columns)}"
+            continue
+
+        c1 = df.columns[0]
+        c2 = df.columns[1]
+        if len(df.columns) > 2:
+            c3 = df.columns[2]
+        else:
+            c3 = None
+
+        label = dashboard_entry.label
+        df.rename(columns={c1: "time", c2: "value", c3: "std"}, inplace=True)
+
+        if label.endswith('__METABOLITE'):
+            axis = "right"
+            units = "[Metabolite units]"
+        else:
+            axis = "left"
+            units = "[Growth units]"
+
+        chart.add_df(df, units=units, label=label, axis=axis)
+
+    return render_template(
+        'pages/users/dashboard.html',
+        chart=chart,
+        errors=errors,
     )
 
 

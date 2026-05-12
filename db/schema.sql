@@ -133,6 +133,25 @@ CREATE TABLE CustomModels (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `DashboardEntries`
+--
+
+DROP TABLE IF EXISTS DashboardEntries;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE DashboardEntries (
+  id int NOT NULL AUTO_INCREMENT,
+  userId int NOT NULL,
+  label varchar(255) NOT NULL,
+  `data` text,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY DashboardEntries_userId (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `ExcelFiles`
 --
 
@@ -677,9 +696,11 @@ CREATE TABLE Users (
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   lastLoginAt datetime DEFAULT NULL,
+  apiKey varchar(100) DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY Users_uuid (uuid),
-  UNIQUE KEY Users_orcidId (orcidId)
+  UNIQUE KEY Users_orcidId (orcidId),
+  UNIQUE KEY Users_apiKey (apiKey)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -785,5 +806,7 @@ INSERT INTO MigrationVersions VALUES
 (93,'2026_02_18_115807_add_api_count_to_page_visit_counter','2026-02-18 11:17:48'),
 (94,'2026_02_16_111742_link_studies_last_submissions','2026-03-13 14:05:27'),
 (95,'2026_03_01_175101_add_changelog_text_to_submissions','2026-03-13 14:05:27'),
-(98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-04-16 07:59:49');
+(96,'2026_03_31_163435_add_api_key_to_users','2026-05-12 14:53:27'),
+(97,'2026_03_31_181039_create_dashboard_entries','2026-05-12 14:55:20'),
+(98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-05-12 14:55:20');
 
