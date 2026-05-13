@@ -61,7 +61,7 @@ def init_assets(app):
         '../app/view/js/experiment.js',
         '../app/view/js/comparison.js',
         '../app/view/js/help.js',
-        '../app/view/js/sandbox.js',
+        '../app/view/js/workspaces.js',
         **js_filters,
         output='build/app.js'
     ))

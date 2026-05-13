@@ -15,7 +15,7 @@ import app.pages.modeling as modeling_pages
 import app.pages.submissions as submission_pages
 import app.pages.upload as upload_pages
 import app.pages.users as user_pages
-import app.pages.sandbox as sandbox_pages
+import app.pages.workspaces as workspace_pages
 
 import app.pages.api as api_pages
 
@@ -150,10 +150,22 @@ def init_routes(app):
     app.add_url_rule("/search/",          view_func=search_pages.search_index_page)
     app.add_url_rule("/advanced-search/", view_func=search_pages.advanced_search_index_page)
 
-    app.add_url_rule("/profile/",              view_func=user_pages.user_show_page)
-    app.add_url_rule("/login/",                view_func=user_pages.user_login_page)
-    app.add_url_rule("/logout/",               view_func=user_pages.user_logout_action,  methods=["POST"])
+    app.add_url_rule("/profile/", view_func=user_pages.user_show_page)
+    app.add_url_rule("/login/",   view_func=user_pages.user_login_page)
+    app.add_url_rule("/logout/",  view_func=user_pages.user_logout_action, methods=["POST"])
+
+    # TODO remove
     app.add_url_rule("/dashboards/<orcidId>/", view_func=user_pages.user_dashboard_page)
+
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/",
+        view_func=workspace_pages.workspaces_index_page,
+        methods=["GET", "POST"],
+    )
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/visualize/",
+        view_func=workspace_pages.workspaces_visualize_page,
+    )
 
     if app_env in ('development', 'test'):
         app.add_url_rule("/backdoor/", view_func=user_pages.user_backdoor_page, methods=["GET", "POST"])
@@ -163,12 +175,6 @@ def init_routes(app):
 
     app.add_url_rule("/submission_metadata/<id>.json", view_func=submission_pages.download_submission_metadata)
     app.add_url_rule("/excel_files/<id>.xlsx",         view_func=excel_file_pages.download_excel_file)
-
-    app.add_url_rule(
-        "/sandbox/",
-        view_func=sandbox_pages.sandbox_index_page,
-        methods=["GET", "POST"],
-    )
 
     #
     # API routes

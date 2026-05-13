@@ -465,30 +465,32 @@ form.simple-form {
 }
 
 .tabs {
-  .tab-headers {
-    display: flex;
-    column-gap: 20px;
-    border-bottom: 2px solid rgba(7, 25, 82, 0.1);
-    font-size: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
 
-    span {
-      cursor: pointer;
-      white-space: nowrap;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  border-bottom: 2px solid var(--border-color);
+
+  li {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: -2px;
+    padding: 0 10px;
+
+    a {
+      text-decoration: none;
+      color: var(--black);
     }
 
-    span.active {
-      color: rgb(7, 110, 126);
-      border-bottom: 2px solid rgb(7, 110, 126);
-      margin-bottom: -2px;
+    &.current {
+      border-bottom: 2px solid var(--dark-blue);
+      a {
+        color: var(--dark-blue);
+      }
     }
-  }
-
-  .tab-body {
-    display: none;
-  }
-
-  .tab-body.active {
-    display: block;
   }
 }
 

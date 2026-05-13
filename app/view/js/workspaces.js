@@ -1,4 +1,4 @@
-Page('.sandbox-page', function($page) {
+Page('.workspaces-page', function($page) {
   $page.find('.js-upload-container-left').customFileInput();
   $page.find('.js-upload-container-right').customFileInput();
 
