@@ -1,0 +1,104 @@
+{% macro render_upload_form(errors) %}
+
+  {% if errors: %}
+    <ul class="error-message-list">
+      {% for filename, error in errors.items(): %}
+        <li>{{ filename }}: {{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <form
+      enctype="multipart/form-data"
+      class="simple-form flex-column flex-gap-10 margin-top-10"
+      method="POST">
+    <div class="form-row">
+      <label>
+        <input type="checkbox" name="includeError" value="True" />
+        Include error columns
+      </label>
+    </div>
+
+    <div class="form-row flex-row flex-gap-10">
+      <div class="js-upload-container flex-1">
+        <div class="upload-container js-file-upload">
+          <div class="flex-row flex-gap-10">
+            <img
+                src="{{ url_for('static', filename='images/icons/cloud-upload.svg') }}"
+                height="40"
+                title="Upload" />
+            <div class="instructions">
+              <span>Drag and drop data CSV</span>
+              <span class="hint small">Limit 200MB per file</span>
+            </div>
+          </div>
+
+          <input class="small" name="data" accept=".csv" type="file" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row preview dataframe-container">
+      <div class="dataframe-container js-preview">
+        <table class="dataframe-table">
+          <tr class="smaller">
+            <th>Time</th>
+            <th>Value 1</th>
+            <th class="hidden js-error-column">Value 1 error</th>
+            <th>...</th>
+            <th>Value N</th>
+            <th class="hidden js-error-column">Value N error</th>
+            <th>...</th>
+          </tr>
+          <tr class="smaller">
+            <td>...</td>
+            <td>...</td>
+            <td class="hidden js-error-column">...</td>
+            <td>...</td>
+            <td>...</td>
+            <td class="hidden js-error-column">...</td>
+            <td>...</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>
+        <span>Units</span>
+        <input
+            type="text"
+            name="units"
+            value="{{ request.form['units'] or '' }}"
+            class="form-input-blue form-input-full" />
+      </label>
+    </div>
+
+    <div class="form-row">
+      <input type="submit" class="green-button" value="Submit" />
+    </div>
+  </form>
+
+  <hr>
+
+  <div class="help small margin-top-10">
+    Here are a few example data files you can try out, taken from
+    <a target="_blank" href="/study/SMGDB00000007/">SMGDB00000007</a>:
+
+    <ul>
+      <li>
+        Growth data with time and value columns:
+        <a download href="/static/data/s7_bh1_bt_A.csv">FC live of the bh1_A community</a>
+      </li>
+      <li>
+        Growth data with error bars:
+        <a download href="/static/data/s7_bhbtri_bt_average_fc.csv">FC of Bacteroides thetaiotaomicron VPI-5482 in Average(bhbtri)</a>
+      </li>
+      <li>
+        Baranyi-Roberts model of the above:
+        <a download href="/static/data/s7_bhbtri_bt_model.csv">Baranyi-Roberts predictions</a>
+      </li>
+    </ul>
+  </div>
+
+{% endmacro %}

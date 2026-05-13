@@ -1,5 +1,4 @@
-{% from 'pages/workspaces/_chart.html' import render_chart %}
-{% from 'pages/workspaces/_form.html' import render_form %}
+{% from 'pages/workspaces/_upload_form.html' import render_upload_form %}
 
 {% extends '_layout.html' %}
 
@@ -25,7 +24,32 @@
       </p>
 
       {% if g.current_user: %}
+
         {% include 'pages/workspaces/_tabs.html' %}
+
+        <div class="columns flex-row">
+          <div class="column column-entries" style="width: 50%;">
+
+            <h2>Direct upload</h2>
+
+            <p class="help">
+              No data uploaded yet
+            </p>
+
+            <h2>API data</h2>
+
+            <p class="help">
+              You can push data to this page using the
+              {{ "https://mgrowthdb.readthedocs.io/en/latest/api.html"|external_link("API") }},
+              and it will appear here.
+            </p>
+          </div>
+
+          <div class="column column-form" style="width: 50%;">
+            {{ render_upload_form(errors) }}
+          </div>
+        </div>
+
       {% else: %}
         <p class="warning-message">
           In order to upload and visualize data, please

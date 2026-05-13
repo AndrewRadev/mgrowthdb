@@ -1,25 +1,36 @@
 Page('.workspaces-page', function($page) {
-  $page.find('.js-upload-container-left').customFileInput();
-  $page.find('.js-upload-container-right').customFileInput();
+  $page.find('.js-upload-container').customFileInput();
 
-  let $leftFileInput  = $('.js-upload-container-left input[type=file]');
-  let $rightFileInput = $('.js-upload-container-right input[type=file]');
+  let fileInput = $('.js-upload-container input[type=file]');
 
   let $submitButton = $page.find('input[type=submit]');
 
-  $page.on('change', 'input[type=file]', updateSubmitState)
-  $page.on('reset', 'form', function() {
-    setTimeout(updateSubmitState, 1);
-  });
+  // $page.on('change', 'input[type=file]', updateSubmitState)
+  // $page.on('reset', 'form', function() {
+  //   setTimeout(updateSubmitState, 1);
+  // });
+
+  let $includeErrorCheckbox = $page.find('input[name=includeError]');
+  $page.on('change', 'input[name=includeError]', updatePreviewErrorColumns)
 
   updateLogView();
   $page.on('change', '.js-log-left,.js-log-right', updateLogView);
 
-  function updateSubmitState() {
-    if ($leftFileInput[0].files.length + $rightFileInput[0].files.length > 0) {
-      $submitButton.prop('disabled', false);
+  // function updateSubmitState() {
+  //   if (fileInput[0].files.length + $rightFileInput[0].files.length > 0) {
+  //     $submitButton.prop('disabled', false);
+  //   } else {
+  //     $submitButton.prop('disabled', true);
+  //   }
+  // }
+
+  function updatePreviewErrorColumns() {
+    let $errorCols = $page.find('.js-preview .js-error-column');
+
+    if ($includeErrorCheckbox.is(':checked')) {
+      $errorCols.removeClass('hidden');
     } else {
-      $submitButton.prop('disabled', true);
+      $errorCols.addClass('hidden');
     }
   }
 
