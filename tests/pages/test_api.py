@@ -636,12 +636,15 @@ class TestApiPages(PageTest):
 
         payload = {
             "apiKey": "test-api-key",
-            "data": """
-                time,value
-                1,100,
-                2,200,
-                3,400,
-            """,
+            "entries": [{
+                "label": "test entry",
+                "data": """
+                    time,value
+                    1,100,
+                    2,200,
+                    3,400,
+                """,
+            }]
         }
 
         # Dashboard entry does not exist:
@@ -676,13 +679,13 @@ class TestApiPages(PageTest):
         self.assertEqual(response_json["error"], "400 Bad request")
 
         # Wrong api key: Forbidden
-        bad_payload = {"apiKey": "wrong-api-key", "data": "unused"}
+        bad_payload = {"apiKey": "wrong-api-key", "entries": []}
         response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(bad_payload))
         response_json = self._get_json(response)
         self.assertEqual(response_json["error"], "403 Forbidden")
 
         # Missing api key: Forbidden
-        bad_payload = {"data": "unused"}
+        bad_payload = {"entries": []}
         response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(bad_payload))
         response_json = self._get_json(response)
         self.assertEqual(response_json["error"], "403 Forbidden")
