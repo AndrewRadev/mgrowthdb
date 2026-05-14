@@ -1,0 +1,12 @@
+<table class="dataframe-table full">
+  <tr class="smaller">
+    {% for column in df.columns: %}
+      <th>{{ column }}</th>
+    {% endfor %}
+  </tr>
+  <tr class="smaller">
+    <td align="center" colspan="{{ df.columns|length }}">
+      <em>[{{ df.shape[0] }} rows]</em>
+    </td>
+  </tr>
+</table>

@@ -32,7 +32,9 @@
     </div>
 
     <div class="form-row flex-row flex-gap-10">
-      <div class="js-upload-container flex-1">
+      <div
+          class="js-upload-container flex-1"
+          data-preview-url="{{ url_for('workspaces_data_preview_fragment') }}">
         <div class="upload-container js-file-upload">
           <div class="flex-row flex-gap-10">
             <img

@@ -166,6 +166,11 @@ def init_routes(app):
         "/workspaces/<string:orcidId>/visualize/",
         view_func=workspace_pages.workspaces_visualize_page,
     )
+    app.add_url_rule(
+        "/workspaces/preview/",
+        view_func=workspace_pages.workspaces_data_preview_fragment,
+        methods=["POST"],
+    )
 
     if app_env in ('development', 'test'):
         app.add_url_rule("/backdoor/", view_func=user_pages.user_backdoor_page, methods=["GET", "POST"])

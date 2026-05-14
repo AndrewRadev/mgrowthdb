@@ -9,6 +9,7 @@ from flask import (
 from app.model.lib.chart import Chart
 from app.model.lib.errors import LoginRequired
 
+
 def workspaces_index_page(orcidId):
     errors = {}
 
@@ -82,5 +83,19 @@ def workspaces_visualize_page(orcidId):
     return render_template(
         "pages/workspaces/visualize.html",
         chart=chart,
+        errors=errors,
+    )
+
+
+def workspaces_data_preview_fragment():
+    file = request.files['file']
+    df = pd.read_csv(file)
+
+    # TODO (2026-05-14) Error handling
+    errors = []
+
+    return render_template(
+        "pages/workspaces/_data_preview.html",
+        df=df,
         errors=errors,
     )
