@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 
 import sqlalchemy as sql
 
-from app.model.orm import DashboardEntry
+from app.model.orm import WorkspaceEntry
 from tests.page_test import PageTest
 
 
@@ -648,7 +648,7 @@ class TestApiPages(PageTest):
         }
 
         # Dashboard entry does not exist:
-        self.assertEqual(user.dashboardEntries, [])
+        self.assertEqual(user.workspaceEntries, [])
 
         response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(payload))
         self.db_session.commit()
@@ -658,8 +658,8 @@ class TestApiPages(PageTest):
         self.assertTrue(response_json["dashboardUrl"].endswith("/dashboards/test-orcid-id/"))
 
         # Dashboard entry exists:
-        self.assertNotEqual(user.dashboardEntries, [])
-        dashboard_entry = user.dashboardEntries[0]
+        self.assertNotEqual(user.workspaceEntries, [])
+        workspace_entry = user.workspaceEntries[0]
 
         # A new dashboard entry is created after pushing another batch of data:
         response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(payload))
@@ -667,10 +667,10 @@ class TestApiPages(PageTest):
         self.db_session.refresh(user)
         response_json = self._get_json(response)
 
-        self.assertEqual(len(user.dashboardEntries), 1)
+        self.assertEqual(len(user.workspaceEntries), 1)
 
-        new_dashboard_entry = user.dashboardEntries[0]
-        self.assertNotEqual(dashboard_entry, new_dashboard_entry)
+        new_dashboard_entry = user.workspaceEntries[0]
+        self.assertNotEqual(workspace_entry, new_dashboard_entry)
 
         # No data sent: BadRequest
         bad_payload = {"apiKey": "test-api-key"}

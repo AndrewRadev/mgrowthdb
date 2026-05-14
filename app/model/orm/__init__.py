@@ -3,7 +3,6 @@ from .community import Community
 from .community_strain import CommunityStrain
 from .compartment import Compartment
 from .custom_model import CustomModel
-from .dashboard_entry import DashboardEntry
 from .excel_file import ExcelFile
 from .experiment import Experiment
 from .experiment_compartment import ExperimentCompartment
@@ -27,3 +26,4 @@ from .submission import Submission
 from .submission_backup import SubmissionBackup
 from .taxon import Taxon
 from .user import User
+from .workspace_entry import WorkspaceEntry

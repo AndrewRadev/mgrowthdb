@@ -11,7 +11,7 @@ from sqlalchemy.orm import (
 from app.model.orm.orm_base import OrmBase
 
 
-class DashboardEntry(OrmBase):
+class WorkspaceEntry(OrmBase):
     """
     Data uploaded by a user that is not linked to a study.
 
@@ -20,14 +20,14 @@ class DashboardEntry(OrmBase):
     modeling results.
     """
 
-    __tablename__ = 'DashboardEntries'
+    __tablename__ = 'WorkspaceEntries'
 
     id:     Mapped[int] = mapped_column(primary_key=True)
     label:  Mapped[str] = mapped_column(sql.String(255), nullable=False)
     data:   Mapped[str] = mapped_column(sql.String, nullable=False)
     userId: Mapped[int] = mapped_column(sql.ForeignKey('Users.id'), nullable=False)
 
-    user: Mapped['User'] = relationship(back_populates="dashboardEntries")
+    user: Mapped['User'] = relationship(back_populates="workspaceEntries")
 
     def get_df(self):
         return pd.read_csv(BytesIO(self.data.encode('utf-8')))

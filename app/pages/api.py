@@ -17,7 +17,6 @@ from app.model.lib.conversion import (
 )
 from app.model.orm import (
     Bioreplicate,
-    DashboardEntry,
     Experiment,
     Measurement,
     MeasurementContext,
@@ -27,6 +26,7 @@ from app.model.orm import (
     Study,
     StudyStrain,
     User,
+    WorkspaceEntry,
 )
 from app.model.lib.errors import ClientError
 
@@ -337,22 +337,22 @@ def dashboard_json():
     if user is None:
         raise Forbidden
 
-    user.dashboardEntries.clear()
+    user.workspaceEntries.clear()
     g.db_session.add(user)
 
     for entry in request_json['entries']:
-        dashboard_entry = DashboardEntry(
+        workspace_entry = WorkspaceEntry(
             user=user,
             label=entry['label'],
             data=entry['data'],
         )
-        g.db_session.add(dashboard_entry)
+        g.db_session.add(workspace_entry)
 
     g.db_session.commit()
 
     return {
         "dashboardUrl": url_for('user_dashboard_page', orcidId=user.orcidId),
-        "dashboardEntryId": dashboard_entry.id,
+        "dashboardEntryId": workspace_entry.id,
     }
 
 

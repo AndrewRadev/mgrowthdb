@@ -184,8 +184,8 @@ def user_dashboard_page(orcidId):
     chart = Chart(time_units='h')
     errors = {}
 
-    for dashboard_entry in user.dashboardEntries:
-        df = dashboard_entry.get_df()
+    for workspace_entry in user.workspaceEntries:
+        df = workspace_entry.get_df()
 
         if len(df.columns) < 2:
             errors[file.filename] = f"Expected at least 2 columns, found {len(df.columns)}"
@@ -198,7 +198,7 @@ def user_dashboard_page(orcidId):
         else:
             c3 = None
 
-        label = dashboard_entry.label
+        label = workspace_entry.label
         df.rename(columns={c1: "time", c2: "value", c3: "std"}, inplace=True)
 
         if label.endswith('__METABOLITE'):

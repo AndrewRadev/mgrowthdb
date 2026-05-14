@@ -133,25 +133,6 @@ CREATE TABLE CustomModels (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `DashboardEntries`
---
-
-DROP TABLE IF EXISTS DashboardEntries;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE DashboardEntries (
-  id int NOT NULL AUTO_INCREMENT,
-  userId int NOT NULL,
-  label varchar(255) NOT NULL,
-  `data` text,
-  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY DashboardEntries_userId (userId)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `ExcelFiles`
 --
 
@@ -703,6 +684,25 @@ CREATE TABLE Users (
   UNIQUE KEY Users_apiKey (apiKey)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `WorkspaceEntries`
+--
+
+DROP TABLE IF EXISTS WorkspaceEntries;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE WorkspaceEntries (
+  id int NOT NULL AUTO_INCREMENT,
+  userId int NOT NULL,
+  label varchar(255) NOT NULL,
+  `data` text,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY DashboardEntries_userId (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -808,5 +808,6 @@ INSERT INTO MigrationVersions VALUES
 (95,'2026_03_01_175101_add_changelog_text_to_submissions','2026-03-13 14:05:27'),
 (96,'2026_03_31_163435_add_api_key_to_users','2026-05-12 14:53:27'),
 (97,'2026_03_31_181039_create_dashboard_entries','2026-05-12 14:55:20'),
-(98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-05-12 14:55:20');
+(98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-05-12 14:55:20'),
+(100,'2026_05_14_142254_rename_dashboard_entries_to_workspace_entries','2026-05-14 12:23:43');
 
