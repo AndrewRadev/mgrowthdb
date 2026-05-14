@@ -699,6 +699,10 @@ CREATE TABLE WorkspaceEntries (
   `data` text,
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  dataType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  subjectType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  subjectId int DEFAULT NULL,
+  units varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (id),
   KEY DashboardEntries_userId (userId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -809,5 +813,6 @@ INSERT INTO MigrationVersions VALUES
 (96,'2026_03_31_163435_add_api_key_to_users','2026-05-12 14:53:27'),
 (97,'2026_03_31_181039_create_dashboard_entries','2026-05-12 14:55:20'),
 (98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-05-12 14:55:20'),
-(100,'2026_05_14_142254_rename_dashboard_entries_to_workspace_entries','2026-05-14 12:23:43');
+(100,'2026_05_14_142254_rename_dashboard_entries_to_workspace_entries','2026-05-14 12:23:43'),
+(102,'2026_05_14_143040_add_fields_to_workspace_entries','2026-05-14 12:51:05');
 

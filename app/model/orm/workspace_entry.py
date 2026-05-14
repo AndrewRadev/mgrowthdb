@@ -25,8 +25,13 @@ class WorkspaceEntry(OrmBase):
     id:     Mapped[int] = mapped_column(primary_key=True)
     label:  Mapped[str] = mapped_column(sql.String(255), nullable=False)
     data:   Mapped[str] = mapped_column(sql.String, nullable=False)
-    userId: Mapped[int] = mapped_column(sql.ForeignKey('Users.id'), nullable=False)
 
+    dataType:    Mapped[str] = mapped_column(sql.String(100))
+    subjectType: Mapped[str] = mapped_column(sql.String(100))
+    subjectId:   Mapped[int] = mapped_column(sql.Integer)
+    units:       Mapped[str] = mapped_column(sql.String(100))
+
+    userId: Mapped[int] = mapped_column(sql.ForeignKey('Users.id'), nullable=False)
     user: Mapped['User'] = relationship(back_populates="workspaceEntries")
 
     def get_df(self):

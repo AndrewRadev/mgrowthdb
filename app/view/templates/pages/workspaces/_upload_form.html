@@ -1,3 +1,6 @@
+{% from "utils/_growth_unit_options.html" import render_growth_unit_options %}
+{% from "utils/_metabolite_unit_options.html" import render_metabolite_unit_options %}
+
 {% macro render_upload_form(errors) %}
 
   {% if errors: %}
@@ -12,6 +15,15 @@
       enctype="multipart/form-data"
       class="simple-form flex-column flex-gap-10 margin-top-10"
       method="POST">
+    <div class="form-row flex-column">
+      <h3>Upload CSV</h3>
+      <div class="help small">
+        Each row is a single observation per time point, each column name will
+        be used as the label of a data trace or as the error bar of a data
+        trace.
+      </div>
+    </div>
+
     <div class="form-row">
       <label>
         <input type="checkbox" name="includeError" value="True" />
@@ -63,30 +75,62 @@
       </div>
     </div>
 
+    <div class="form-row flex-column">
+      <h3>Metadata</h3>
+      <div class="help small">
+        Optional, can be set later per individual data trace.
+      </div>
+    </div>
+
     <div class="form-row">
+      <label class="full">
+        <span>Data type</span>
+        <select name="dataType" class="form-input-blue form-input-full">
+          <option value=""></option>
+          <option value="measurement">Observational measurements</option>
+          <option value="model">Model predictions</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+
       <label class="full">
         <span>Measurement subject type</span>
-        <input
-            type="text"
-            name="units"
-            value="{{ request.form['units'] or '' }}"
-            class="form-input-blue form-input-full" />
+        <select name="subjectType" class="form-input-blue form-input-full js-subject-type">
+          <option value=""></option>
+          <option value="community">Microbial community</option>
+          <option value="strain">Microbial strain</option>
+          <option value="metabolite">Metabolite</option>
+        </select>
       </label>
     </div>
 
     <div class="form-row">
-      <label class="full">
+      <label class="full js-no-units">
         <span>Units</span>
-        <input
-            type="text"
-            name="units"
-            value="{{ request.form['units'] or '' }}"
-            class="form-input-blue form-input-full" />
+        <select name="noUnits" class="form-input-blue form-input-full">
+          <option value="">N/A</option>
+        </select>
       </label>
-    </div>
 
-    <div class="form-row">
-      <input type="submit" class="green-button" value="Upload" />
+      <label class="full hidden js-growth-units">
+        <span>Growth units</span>
+        <select name="growthUnits" class="form-input-blue form-input-full">
+          {{ render_growth_unit_options(selected_units=request.form.get('units'), include_relative=True) }}
+        </select>
+      </label>
+
+      <label class="full hidden js-metabolite-units">
+        <span>Metabolite units</span>
+        <select name="metaboliteUnits" class="form-input-blue form-input-full">
+          {{ render_metabolite_unit_options(selected_units=request.form.get('units')) }}
+        </select>
+      </label>
+
+      <input
+          type="submit"
+          class="green-button flex-end"
+          style="padding-left: 30px; padding-right: 30px;"
+          value="Upload" />
     </div>
   </form>
 

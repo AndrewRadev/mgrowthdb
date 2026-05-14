@@ -13,6 +13,9 @@ Page('.workspaces-page', function($page) {
   let $includeErrorCheckbox = $page.find('input[name=includeError]');
   $page.on('change', 'input[name=includeError]', updatePreviewErrorColumns)
 
+  updateUnitSelects();
+  $page.on('change', '.js-subject-type', updateUnitSelects);
+
   updateLogView();
   $page.on('change', '.js-log-left,.js-log-right', updateLogView);
 
@@ -23,6 +26,23 @@ Page('.workspaces-page', function($page) {
   //     $submitButton.prop('disabled', true);
   //   }
   // }
+
+  function updateUnitSelects() {
+    let $subjectTypeSelect = $page.find('.js-subject-type');
+    let subjectType = $subjectTypeSelect.val();
+
+    let $noUnits         = $page.find('.js-no-units').addClass('hidden');
+    let $growthUnits     = $page.find('.js-growth-units').addClass('hidden');
+    let $metaboliteUnits = $page.find('.js-metabolite-units').addClass('hidden');
+
+    if (subjectType == 'community' || subjectType == 'strain') {
+      $growthUnits.removeClass('hidden');
+    } else if (subjectType == 'metabolite') {
+      $metaboliteUnits.removeClass('hidden');
+    } else {
+      $noUnits.removeClass('hidden');
+    }
+  }
 
   function updatePreviewErrorColumns() {
     let $errorCols = $page.find('.js-preview .js-error-column');

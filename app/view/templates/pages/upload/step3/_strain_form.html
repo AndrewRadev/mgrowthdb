@@ -1,3 +1,5 @@
+{% from "utils/_growth_unit_options.html" import render_growth_unit_options %}
+
 {% macro render_strain_form(data, visual_index=None, data_index=None) %}
   {% if data_index is none: %}
     {% set prefix = '' %}
@@ -53,42 +55,8 @@
         <span>Units:</span>
         <select
             name="{{ prefix }}units"
-            class="form-input-full form-input-blue js-unit-select" />
-          <optgroup label="Cells per volume">
-            <option value="Cells/mL" {{ "selected" if data['units'] == 'Cells/mL' }}>
-              Cells/mL
-            </option>
-            <option value="Cells/μL" {{ "selected" if data['units'] == 'Cells/μL' }}>
-              Cells/μL
-            </option>
-          </optgroup>
-
-          <optgroup label="CFUs per volume">
-            <option value="CFUs/mL" {{ "selected" if data['units'] == 'CFUs/mL' }}>
-              CFUs/mL
-            </option>
-            <option value="CFUs/μL" {{ "selected" if data['units'] == 'CFUs/μL' }}>
-              CFUs/μL
-            </option>
-          </optgroup>
-
-          <optgroup label="Biomass concentration">
-            <option value="g/L" {{ "selected" if data['units'] == 'g/L' }}>
-              g/L
-            </option>
-          </optgroup>
-
-          <optgroup label="Indirect measurements">
-            <option value="reads" {{ "selected" if data['units'] == 'reads' }}>
-              Reads
-            </option>
-          </optgroup>
-
-          <optgroup label="Unitless/unknown">
-            <option value="" {{ "selected" if data['units'] == '' }}>
-              N/A
-            </option>
-          </optgroup>
+            class="form-input-full form-input-blue js-unit-select">
+          {{ render_growth_unit_options(selected_units=data['units'], include_relative=True) }}
         </select>
       </label>
     </div>
