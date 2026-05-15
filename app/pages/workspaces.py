@@ -8,38 +8,28 @@ from flask import (
 )
 from app.model.lib.chart import Chart
 from app.model.lib.errors import LoginRequired
+from app.model.orm import WorkspaceEntry
 
 
+# TODO (2026-05-15) Error if not logged in
 def workspaces_index_page(orcidId):
     errors = {}
 
-    for file in request.files.get('data', []):
-        if file.filename == '':
-            continue
+    if request.method == 'POST':
+        file = request.files['data']
 
-        try:
-            df = pd.read_csv(file)
-        except pd.errors.EmptyDataError:
-            errors[file.filename] = "No columns found in file"
-            continue
-
-        if len(df.columns) < 2:
-            errors[file.filename] = f"Expected at least 2 columns, found {len(df.columns)}"
-            continue
-
-        c1 = df.columns[0]
-        c2 = df.columns[1]
-        if len(df.columns) > 2:
-            c3 = df.columns[2]
-        else:
-            c3 = None
-
-        label = f"<b>{file.filename}</b>: {c2}"
-        units = request.form.get('units')
-
-        df.rename(columns={c1: "time", c2: "value", c3: "std"}, inplace=True)
-
-        chart.add_df(df, units=units, label=label, axis=axis)
+        new_entries = WorkspaceEntry.from_csv(
+            file,
+            g.current_user,
+            include_error=request.form.get('includeError', False),
+            metadata={
+                'dataType':    request.form.get('dataType'),
+                'subjectType': request.form.get('subjectType'),
+                'units':       request.form.get('units'),
+            }
+        )
+        g.db_session.add_all(new_entries)
+        g.db_session.commit()
 
     return render_template(
         "pages/workspaces/index.html",

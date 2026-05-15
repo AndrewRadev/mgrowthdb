@@ -30,13 +30,23 @@
         <div class="columns flex-row">
           <div class="column column-entries" style="width: 40%;">
 
-            <h2>Direct upload</h2>
+            <h3>Direct upload</h3>
 
-            <p class="help">
-              No data uploaded yet
-            </p>
+            {% if g.current_user.workspaceEntries|length == 0: %}
+              <p class="help">
+                No data uploaded yet
+              </p>
+            {% else: %}
+              <ul>
+                {% for workspace_entry in g.current_user.workspaceEntries: %}
+                  <li>
+                    {{ workspace_entry.label }}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
 
-            <h2>API data</h2>
+            <h3>API data</h3>
 
             <p class="help">
               You can push data to this page using the
