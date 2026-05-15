@@ -9,6 +9,7 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_utc.sqltypes import UtcDateTime
 
 from app.model.orm.orm_base import OrmBase
@@ -37,8 +38,9 @@ class WorkspaceEntry(OrmBase):
     userId: Mapped[int] = mapped_column(sql.ForeignKey('Users.id'), nullable=False)
     user: Mapped['User'] = relationship(back_populates="workspaceEntries")
 
-    createdAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
-    updatedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    createdAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, nullable=True)
 
     @classmethod
     def from_csv(Self, file, user, metadata={}, include_error=False):
@@ -79,6 +81,10 @@ class WorkspaceEntry(OrmBase):
             ))
 
         return entries
+
+    @hybrid_property
+    def isPublished(self):
+        return self.publishedAt != None
 
     def get_df(self):
         return pd.read_csv(BytesIO(self.data.encode('utf-8')))
