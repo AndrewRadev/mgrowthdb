@@ -198,6 +198,9 @@ def init_routes(app):
     app.add_url_rule("/api/v1/model-prediction/<int:id>.json", view_func=api_pages.model_prediction_json)
     app.add_url_rule("/api/v1/model-prediction/<int:id>.csv",  view_func=api_pages.model_prediction_csv)
 
+    # app.add_url_rule("/api/v1/workspace-entry/<int:id>.json", view_func=api_pages.workspace_entry_json)
+    app.add_url_rule("/api/v1/workspace-entry/<int:id>.csv",  view_func=api_pages.workspace_entry_csv)
+
     app.add_url_rule("/api/v1/search.json",  view_func=api_pages.search_json)
 
     app.add_url_rule("/api/v1/dashboard.json", view_func=api_pages.dashboard_json, methods=["POST"])

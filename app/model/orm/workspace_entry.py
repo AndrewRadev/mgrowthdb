@@ -1,5 +1,6 @@
-from io import BytesIO
 import itertools
+from io import BytesIO
+from datetime import datetime, UTC
 
 import pandas as pd
 import sqlalchemy as sql
@@ -8,6 +9,7 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+from sqlalchemy_utc.sqltypes import UtcDateTime
 
 from app.model.orm.orm_base import OrmBase
 
@@ -34,6 +36,9 @@ class WorkspaceEntry(OrmBase):
 
     userId: Mapped[int] = mapped_column(sql.ForeignKey('Users.id'), nullable=False)
     user: Mapped['User'] = relationship(back_populates="workspaceEntries")
+
+    createdAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    updatedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
 
     @classmethod
     def from_csv(Self, file, user, metadata={}, include_error=False):

@@ -1,4 +1,5 @@
 {% from 'pages/workspaces/_upload_form.html' import render_upload_form %}
+{% from 'pages/workspaces/_workspace_entry.html' import render_workspace_entry %}
 
 {% extends '_layout.html' %}
 
@@ -40,7 +41,7 @@
               <ul>
                 {% for workspace_entry in g.current_user.workspaceEntries: %}
                   <li>
-                    {{ workspace_entry.label }}
+                    {{ render_workspace_entry(workspace_entry) }}
                   </li>
                 {% endfor %}
               </ul>

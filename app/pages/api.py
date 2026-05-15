@@ -192,6 +192,29 @@ def measurement_context_csv(id):
     return df.to_csv(index=False)
 
 
+# TODO (2026-05-15) Require user token for non-public workspace entries, use it
+# to fetch current user
+#
+def workspace_entry_csv(id):
+    workspace_entry = g.db_session.get(WorkspaceEntry, id)
+    if not workspace_entry or workspace_entry.user != g.current_user:
+        raise NotFound
+
+    df = workspace_entry.get_df()
+
+    # source_units = workspace_entry.technique.units
+    # metabolite_mass = _get_metabolite_mass(workspace_entry)
+    # _convert_to_requested_units(df, source_units, metabolite_mass)
+
+    if request.args.get('withLabel'):
+        df.rename(columns={
+            'value': workspace_entry.label,
+            'error': workspace_entry.label + ' error',
+        }, inplace=True)
+
+    return df.to_csv(index=False)
+
+
 def model_prediction_json(id):
     modeling_result = g.db_session.get(ModelingResult, id)
     if not modeling_result or not modeling_result.study.isPublished:

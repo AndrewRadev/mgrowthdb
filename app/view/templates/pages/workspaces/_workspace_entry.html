@@ -1,0 +1,47 @@
+{% macro render_workspace_entry(workspace_entry) %}
+
+  <div class="button-group" style="display: inline-block; margin-right: 6px;">
+    {# TODO: data-workspace-entry-ids? #}
+    <span class="js-compare-container" data-context-ids="">
+      <span class="js-compare">
+        <a
+            href="#"
+            class="white-button small-button"
+            style="vertical-align: bottom"
+            data-tooltip="Compare">
+          <span class="flex-row icon icon-arrows-diff"></span>
+        </a>
+      </span>
+
+      <span class="js-uncompare uncompare hidden">
+        <a
+            href="#"
+            class="white-button small-button"
+            style="vertical-align: bottom"
+            data-tooltip="Comparing, click to remove from comparison">
+          <span class="flex-row icon icon-arrows-left-right"></span>
+        </a>
+      </span>
+    </span>
+
+    <a
+        href="{{ url_for('workspaces_visualize_page', orcidId=g.current_user.orcidId, l=workspace_entry.id) }}"
+        class="white-button small-button"
+        style="vertical-align: bottom"
+        data-tooltip="Visualize">
+      <span class="flex-row icon icon-chart"></span>
+    </a>
+
+    <a
+        href="{{ url_for('workspace_entry_csv', id=workspace_entry.id, withLabel=1) }}"
+        class="white-button small-button"
+        style="vertical-align: bottom"
+        download="workspace_entry_{{ workspace_entry.id }}.csv"
+        data-tooltip="Download data">
+      <span class="flex-row icon icon-download-black"></span>
+    </a>
+  </div>
+
+  {{ workspace_entry.label }}
+
+{% endmacro %}
