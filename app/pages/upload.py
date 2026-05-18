@@ -293,10 +293,7 @@ def upload_step7_page(id):
         study = submission_form.submission.study
 
         if study and study.isPublishable:
-            study.publish()
-            g.db_session.add(study)
-            g.db_session.commit()
-
+            study.publish(g.db_session)
             submission_form.submission.export_data(message="Study published")
 
             return redirect(url_for('study_show_page', publicId=study.publicId))

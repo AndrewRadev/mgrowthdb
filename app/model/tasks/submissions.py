@@ -40,7 +40,7 @@ def _publish_eligible_studies(db_session):
     for study in unpublished_studies:
         if study.isPublishable:
             _LOGGER.info(f"Publishing study: {study.publicId}")
-            study.publish()
+            study.publish(db_session)
             db_session.add(study)
 
             if submission := study.lastSubmission:
