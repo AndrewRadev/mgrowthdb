@@ -221,13 +221,18 @@ class Study(OrmBase):
     def managerUuids(self):
         return {su.userUniqueID for su in self.studyUsers}
 
-    def publish(self):
+    def publish(self, db_session):
         if not self.isPublishable:
             return False
         else:
             self.publishedAt = datetime.now(UTC)
+            db_session.add(self)
+            db_session.commit()
+
             if submission := self.lastSubmission:
                 submission.publishedAt = datetime.now(UTC)
+                db_session.add(submission)
+                db_session.commit()
 
             return True
 

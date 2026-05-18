@@ -99,7 +99,7 @@ class TestSubmissionProcess(DatabaseTest):
             # Initial study state: not published, can't be published
             self.assertFalse(study.isPublishable)
             self.assertFalse(study.isPublished)
-            self.assertFalse(study.publish())
+            self.assertFalse(study.publish(self.db_session))
 
             # After 24 hours, it can be published:
             frozen_time.tick(delta=timedelta(hours=24, seconds=1))
@@ -107,7 +107,7 @@ class TestSubmissionProcess(DatabaseTest):
             self.assertFalse(study.isPublished)
 
             # After explicitly publishing, it's published
-            self.assertTrue(study.publish())
+            self.assertTrue(study.publish(self.db_session))
             self.db_session.add(study)
             self.db_session.commit()
 
@@ -141,7 +141,7 @@ class TestSubmissionProcess(DatabaseTest):
             self.assertFalse(study.isPublished)
 
             # After explicitly publishing, it's published
-            self.assertTrue(study.publish())
+            self.assertTrue(study.publish(self.db_session))
             self.db_session.add(study)
             self.db_session.commit()
 

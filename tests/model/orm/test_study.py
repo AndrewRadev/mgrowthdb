@@ -25,7 +25,7 @@ class TestStudy(DatabaseTest):
         self.assertTrue(study.visible_to_user(SimpleNamespace(uuid='user2', isAdmin=False)))
         self.assertTrue(study.visible_to_user(SimpleNamespace(uuid='user3', isAdmin=True)))
 
-        self.assertTrue(study.publish())
+        self.assertTrue(study.publish(self.db_session))
 
         # Published: visible to all users:
         self.assertTrue(study.visible_to_user(None))
