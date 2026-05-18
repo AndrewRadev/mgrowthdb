@@ -6,10 +6,10 @@ from flask import (
     redirect,
     request,
 )
+from app.model.orm import WorkspaceEntry
 from app.model.lib.chart import Chart
 from app.model.lib.errors import LoginRequired
-from app.model.orm import WorkspaceEntry
-
+from app.view.forms.comparative_chart_form import ComparativeChartForm
 
 # TODO (2026-05-15) Error if not logged in
 def workspaces_index_page(orcidId):
@@ -39,39 +39,14 @@ def workspaces_index_page(orcidId):
 
 def workspaces_visualize_page(orcidId):
     chart = Chart(time_units='h')
+    chart_form = ComparativeChartForm(g.db_session)
     errors = {}
 
-    for axis in ('left', 'right'):
-        for file in request.files.getlist(f"data-{axis}"):
-            if file.filename == '':
-                continue
-
-            try:
-                df = pd.read_csv(file)
-            except pd.errors.EmptyDataError:
-                errors[file.filename] = "No columns found in file"
-                continue
-
-            if len(df.columns) < 2:
-                errors[file.filename] = f"Expected at least 2 columns, found {len(df.columns)}"
-                continue
-
-            c1 = df.columns[0]
-            c2 = df.columns[1]
-            if len(df.columns) > 2:
-                c3 = df.columns[2]
-            else:
-                c3 = None
-
-            label = f"<b>{file.filename}</b>: {c2}"
-            units = request.form.get(f"units-{axis}")
-
-            df.rename(columns={c1: "time", c2: "value", c3: "std"}, inplace=True)
-
-            chart.add_df(df, units=units, label=label, axis=axis)
+    # TODO: user found by orcidId, check for public/private
 
     return render_template(
         "pages/workspaces/visualize.html",
+        chart_form=chart_form,
         chart=chart,
         errors=errors,
     )

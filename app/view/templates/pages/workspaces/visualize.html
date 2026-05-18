@@ -1,4 +1,5 @@
 {% from 'pages/workspaces/_chart.html' import render_chart %}
+{% from 'pages/workspaces/_chart_form.html' import render_chart_form %}
 
 {% extends '_layout.html' %}
 
@@ -26,7 +27,78 @@
       {% if g.current_user: %}
         {% include 'pages/workspaces/_tabs.html' %}
 
-        {{ render_chart(chart) }}
+        <form class="simple-form chart-form js-chart-form">
+          <div class="columns">
+            <div class="controls-column">
+              {{ render_chart_form(chart_form) }}
+            </div>
+
+            <div class="chart-column">
+              <div class="box">
+                <div class="chart">
+                  <div class="chart-placeholder">
+                    📊
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row margin-top-10">
+                <label class="full">
+                  <span>Cell count units:</span>
+                  <select name="cellCountUnits" class="form-input-blue full">
+                    <option>Cells/mL</option>
+                    <option>Cells/μL</option>
+                  </select>
+                </label>
+
+                <label class="full">
+                  <span>CFU count units</span>
+                  <select name="cfuCountUnits" class="form-input-blue full">
+                    <option>CFUs/mL</option>
+                    <option>CFUs/μL</option>
+                  </select>
+                </label>
+
+                <label class="full">
+                  <span>Metabolite units:</span>
+                  <select name="metaboliteUnits" class="form-input-blue full">
+                    <optgroup label="Molar concentration">
+                      <option value="mM">Millimolars (mM)</option>
+                      <option value="μM">Micromolars (μM)</option>
+                      <option value="nM">Nanomolars (nM)</option>
+                      <option value="pM">Picomolars (pM)</option>
+                    </optgroup>
+                    <optgroup label="Mass concentration">
+                      <option value="g/L">Grams per Liter (g/L)</option>
+                      <option value="mg/L">Milligrams per Liter (mg/L)</option>
+                    </optgroup>
+                  </select>
+                </label>
+              </div>
+
+              <div class="form-row flex-column flex-gap-6 margin-top-10">
+                <label>
+                  <input type="checkbox" name="showStd" {{ "checked" if chart_form.show_std }}>
+                  Show standard deviation
+                </label>
+                <label>
+                  <input type="checkbox" name="showPerturbations" {{ "checked" if chart_form.show_perturbations }}>
+                  Show perturbations
+                </label>
+              </div>
+
+              <div class="form-row margin-top-10">
+                <p class="help small">
+                  Tick the left or right checkbox to move a data trace to the
+                  left or right axis. Use the checkboxes on group headers to move
+                  entire groups of traces with the same measurement units. If you
+                  <strong>untick</strong> a checkbox, it will be hidden from the
+                  chart.
+                </p>
+              </div>
+            </div>
+          </div>
+        </form>
       {% else: %}
         <p class="warning-message">
           In order to upload and visualize data, please

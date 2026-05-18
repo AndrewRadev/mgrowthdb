@@ -1,0 +1,45 @@
+{% macro render_chart_form(form) %}
+
+  {% set selectedDataSource = request.args.get('selectedDataSource', '') %}
+
+  <div class="form-row">
+    <label>
+      <span>Data source:</span>
+      <select name="dataSource" class="form-input-blue full">
+        {% for data_source, label in [('direct', 'Direct upload'), ('api', 'API'), ('compare', 'Compare')]: %}
+          <option
+              {{ "selected" if data_source == selectedExperimentId }}
+              value="{{ data_source }}">
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  {% for workspace_entry in g.current_user.workspaceEntries: %}
+    {% set key = "workspaceItem|{}".format(workspace_entry.id) %}
+
+    <div class="form-row js-trace-row">
+      <input
+          type="checkbox"
+          name="{{ key }}"
+          id="{{ key }}"
+          {# "checked" if measurement_context.id in form.measurement_context_ids #}
+          {# "data-axis-left" if measurement_context.id in form.left_axis_ids #}
+          {# "data-axis-right" if measurement_context.id in form.right_axis_ids #}
+          class="js-measurement-toggle" />
+      <label for="{{ key }}">
+        {{ workspace_entry.label }}
+      </label>
+    </div>
+
+  {% endfor %}
+
+  <div class="form-row margin-top-10 small">
+    <a href="#" class="white-button small-button flex-right js-clear-chart">
+      🧹 Clear chart
+    </a>
+  </div>
+
+{% endmacro %}

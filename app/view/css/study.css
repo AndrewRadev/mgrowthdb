@@ -61,15 +61,6 @@
     }
   }
 
-  .chart-placeholder {
-    height: 300px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 52px;
-    opacity: 0.5;
-  }
-
   .experiments-toc {
     position: sticky;
     top: 20px;

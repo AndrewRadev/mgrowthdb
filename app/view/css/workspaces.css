@@ -50,4 +50,37 @@
       align-self: flex-start;
     }
   }
+
+  .chart-form {
+    margin-top: 20px;
+
+    label {
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .columns {
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+
+    .controls-column {
+      width: 30%;
+    }
+
+    .chart-column {
+      width: 70%;
+      overflow-x: hidden;
+    }
+  }
+
+  .chart-placeholder {
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 52px;
+    opacity: 0.5;
+  }
 }
