@@ -19,7 +19,7 @@
     <ul>
       <li>ORCID: {{ g.current_user.orcidUrl|external_link() }}</li>
       <li>
-        <a href="{{ url_for('user_dashboard_page', orcidId=g.current_user.orcidId) }}">Data dashboard</a>
+        <a href="{{ url_for('workspaces_index_page', orcidId=g.current_user.orcidId) }}">Workspaces</a>
       </li>
     </ul>
 

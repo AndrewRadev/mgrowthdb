@@ -37,7 +37,7 @@ class WorkspaceEntry(OrmBase):
     units:       Mapped[str] = mapped_column(sql.String(100))
 
     workspaceId: Mapped[int] = mapped_column(sql.ForeignKey('Workspaces.id'), nullable=False)
-    workspace: Mapped['Workspace'] = relationship(back_populates="workspaceEntries")
+    workspace: Mapped['Workspace'] = relationship(back_populates="entries")
 
     user: Mapped['User'] = relationship(secondary='Workspaces', viewonly=True)
 

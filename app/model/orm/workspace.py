@@ -25,12 +25,12 @@ class Workspace(OrmBase):
     __tablename__ = 'Workspaces'
 
     id:   Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(sql.String(255), nullable=False)
+    name: Mapped[str] = mapped_column(sql.String(255), nullable=False, default="default")
 
     userId: Mapped[int] = mapped_column(sql.ForeignKey('Users.id'), nullable=False)
     user: Mapped['User'] = relationship(back_populates="workspaces")
 
-    workspaceEntries: Mapped[List['WorkspaceEntry']] = relationship(back_populates="workspace")
+    entries: Mapped[List['WorkspaceEntry']] = relationship(back_populates="workspace")
 
     createdAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())

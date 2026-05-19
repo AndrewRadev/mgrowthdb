@@ -32,6 +32,7 @@ from app.model.orm import (
     Submission,
     Taxon,
     User,
+    Workspace,
 )
 
 
@@ -367,6 +368,16 @@ class DatabaseTest(unittest.TestCase):
         }
 
         return self._create_orm_record(PageVisit, params)
+
+    def create_workspace(self, **params):
+        user_id = self._get_or_create_dependency(params, 'userId', ('user', 'id'))
+
+        params = {
+            'userId': user_id,
+            **params,
+        }
+
+        return self._create_orm_record(Workspace, params)
 
     def _create_orm_record(self, model_class, params):
         instance = model_class(**params)

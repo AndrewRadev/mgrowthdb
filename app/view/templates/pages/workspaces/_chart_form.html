@@ -19,7 +19,7 @@
 
   <div class="trace-group js-trace-group">
     {% for source_type in ['upload', 'api']: %}
-      {% for workspace_entry in workspace.workspaceEntries if workspace_entry.sourceType == source_type: %}
+      {% for workspace_entry in workspace.entries if workspace_entry.sourceType == source_type: %}
         {% set key = "workspaceEntry|{}".format(workspace_entry.id) %}
 
         <div

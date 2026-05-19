@@ -11,7 +11,7 @@ from tests.database_test import DatabaseTest
 
 class TestWorkspaceEntry(DatabaseTest):
     def test_create_from_csv(self):
-        user = self.create_user()
+        workspace = self.create_workspace()
 
         # Without error columns:
         df = pd.DataFrame.from_dict({
@@ -20,10 +20,10 @@ class TestWorkspaceEntry(DatabaseTest):
             'Blautia': [1e6, 1e7, 1e8],
         })
         csv_file = StringIO(df.to_csv(index=False))
-        entries = WorkspaceEntry.from_csv(csv_file, user)
+        entries = WorkspaceEntry.from_csv(csv_file, workspace)
 
         self.assertEqual([e.label for e in entries], ['Roseburia', 'Blautia'])
-        self.assertEqual(entries[0].user, user)
+        self.assertEqual(entries[0].workspace, workspace)
         self.assertEqual(entries[0].get_df().columns.tolist(), ['time', 'value'])
 
         # With error columns:
@@ -35,10 +35,10 @@ class TestWorkspaceEntry(DatabaseTest):
             'trehalose STD': [0.1, 0.1, 0.1],
         })
         csv_file = StringIO(df.to_csv(index=False))
-        entries = WorkspaceEntry.from_csv(csv_file, user, include_error=True)
+        entries = WorkspaceEntry.from_csv(csv_file, workspace, include_error=True)
 
         self.assertEqual([e.label for e in entries], ['glucose', 'trehalose'])
-        self.assertEqual(entries[0].user, user)
+        self.assertEqual(entries[0].workspace, workspace)
         self.assertEqual(entries[0].get_df().columns.tolist(), ['time', 'value', 'error'])
 
         # With additional metadata
@@ -50,7 +50,7 @@ class TestWorkspaceEntry(DatabaseTest):
         csv_file = StringIO(df.to_csv(index=False))
         entries = WorkspaceEntry.from_csv(
             csv_file,
-            user,
+            workspace,
             metadata={
                 'dataType': 'measurement',
                 'subjectType': 'metabolite',

@@ -31,13 +31,13 @@
 
           <h3>Direct upload</h3>
 
-          {% if workspace.workspaceEntries|length == 0: %}
+          {% if workspace.entries|length == 0: %}
             <p class="help">
               No data uploaded yet
             </p>
           {% else: %}
             <ul>
-              {% for workspace_entry in workspace.workspaceEntries: %}
+              {% for workspace_entry in workspace.entries: %}
                 <li>{{ render_workspace_entry(workspace_entry) }}</li>
               {% endfor %}
             </ul>

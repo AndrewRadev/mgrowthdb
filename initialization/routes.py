@@ -160,7 +160,7 @@ def init_routes(app):
         methods=["GET", "POST"],
     )
     app.add_url_rule(
-        "/workspaces/<string:orcidId>/<string:name>",
+        "/workspaces/<string:orcidId>/<string:name>/",
         view_func=workspace_pages.workspaces_index_page,
         methods=["GET", "POST"],
     )
@@ -169,7 +169,7 @@ def init_routes(app):
         view_func=workspace_pages.workspaces_visualize_page,
     )
     app.add_url_rule(
-        "/workspaces/<string:orcidId>/visualize/<string:name>",
+        "/workspaces/<string:orcidId>/visualize/<string:name>/",
         view_func=workspace_pages.workspaces_visualize_page,
     )
     app.add_url_rule(
@@ -214,6 +214,6 @@ def init_routes(app):
 
     app.add_url_rule("/api/v1/search.json",  view_func=api_pages.search_json)
 
-    app.add_url_rule("/api/v1/dashboard.json", view_func=api_pages.dashboard_json, methods=["POST"])
+    app.add_url_rule("/api/v1/workspaces.json", view_func=api_pages.workspaces_json, methods=["POST"])
 
     return app

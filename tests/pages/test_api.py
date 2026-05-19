@@ -630,8 +630,10 @@ class TestApiPages(PageTest):
         self.assertEqual(mc_json['techniqueOriginalUnits'], 'mM')
         self.assertEqual(mc_json['techniqueUnits'], 'mM')
 
-    def test_dashboard_update(self):
+    def test_workspace_update(self):
         user = self.create_user(orcidId="test-orcid-id", apiKey="test-api-key")
+        workspace = self.create_workspace(userId=user.id)
+
         self.db_session.commit()
 
         payload = {
@@ -647,45 +649,45 @@ class TestApiPages(PageTest):
             }]
         }
 
-        # Dashboard entry does not exist:
-        self.assertEqual(user.workspaceEntries, [])
+        # Workspace entry does not exist:
+        self.assertEqual(workspace.entries, [])
 
-        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(payload))
+        response = self.client.post(f"/api/v1/workspaces.json", data=json.dumps(payload))
         self.db_session.commit()
         self.db_session.refresh(user)
         response_json = self._get_json(response)
 
-        self.assertTrue(response_json["dashboardUrl"].endswith("/dashboards/test-orcid-id/"))
+        self.assertTrue(response_json["workspaceUrl"].endswith("/workspaces/test-orcid-id/default/"))
 
-        # Dashboard entry exists:
-        self.assertNotEqual(user.workspaceEntries, [])
-        workspace_entry = user.workspaceEntries[0]
+        # Workspace entry exists:
+        self.assertNotEqual(workspace.entries, [])
+        workspace_entry = workspace.entries[0]
 
-        # A new dashboard entry is created after pushing another batch of data:
-        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(payload))
+        # A new workspaces entry is created after pushing another batch of data:
+        response = self.client.post(f"/api/v1/workspaces.json", data=json.dumps(payload))
         self.db_session.commit()
-        self.db_session.refresh(user)
+        self.db_session.refresh(workspace)
         response_json = self._get_json(response)
 
-        self.assertEqual(len(user.workspaceEntries), 1)
+        self.assertEqual(len(workspace.entries), 1)
 
-        new_dashboard_entry = user.workspaceEntries[0]
-        self.assertNotEqual(workspace_entry, new_dashboard_entry)
+        new_workspace_entry = workspace.entries[0]
+        self.assertNotEqual(workspace_entry, new_workspace_entry)
 
         # No data sent: BadRequest
         bad_payload = {"apiKey": "test-api-key"}
-        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(bad_payload))
+        response = self.client.post(f"/api/v1/workspaces.json", data=json.dumps(bad_payload))
         response_json = self._get_json(response)
         self.assertEqual(response_json["error"], "400 Bad request")
 
         # Wrong api key: Forbidden
         bad_payload = {"apiKey": "wrong-api-key", "entries": []}
-        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(bad_payload))
+        response = self.client.post(f"/api/v1/workspaces.json", data=json.dumps(bad_payload))
         response_json = self._get_json(response)
         self.assertEqual(response_json["error"], "403 Forbidden")
 
         # Missing api key: Forbidden
         bad_payload = {"entries": []}
-        response = self.client.post(f"/api/v1/dashboard.json", data=json.dumps(bad_payload))
+        response = self.client.post(f"/api/v1/workspaces.json", data=json.dumps(bad_payload))
         response_json = self._get_json(response)
         self.assertEqual(response_json["error"], "403 Forbidden")

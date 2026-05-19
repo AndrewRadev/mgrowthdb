@@ -26,6 +26,7 @@ from app.model.orm import (
     Study,
     StudyStrain,
     User,
+    Workspace,
     WorkspaceEntry,
 )
 from app.model.lib.errors import ClientError
@@ -343,7 +344,7 @@ def search_json():
     }
 
 
-def dashboard_json():
+def workspaces_json():
     request_json = json.loads(request.data)
 
     if 'apiKey' not in request_json:
@@ -351,21 +352,30 @@ def dashboard_json():
     if 'entries' not in request_json:
         raise BadRequest
 
-    user = g.db_session.scalars(
-        sql.select(User)
-        .where(User.apiKey == request_json['apiKey'].strip())
+    workspace = g.db_session.scalars(
+        sql.select(Workspace)
+        .join(User)
+        .where(
+            User.apiKey == request_json['apiKey'].strip(),
+            Workspace.userId == User.id,
+            Workspace.name == request_json.get('name', 'default')
+        )
         .limit(1)
     ).one_or_none()
 
-    if user is None:
+    if workspace is None:
         raise Forbidden
 
-    user.workspaceEntries.clear()
-    g.db_session.add(user)
+    # Clear out existing "api" entries:
+    for entry in workspace.entries:
+        if entry.sourceType == 'api':
+            g.db_session.delete(entry)
 
+    # Recreate "api" entries
     for entry in request_json['entries']:
         workspace_entry = WorkspaceEntry(
-            user=user,
+            workspace=workspace,
+            sourceType="api",
             label=entry['label'],
             data=entry['data'],
         )
@@ -374,8 +384,8 @@ def dashboard_json():
     g.db_session.commit()
 
     return {
-        "dashboardUrl": url_for('user_dashboard_page', orcidId=user.orcidId),
-        "dashboardEntryId": workspace_entry.id,
+        "workspaceUrl": url_for('workspaces_index_page', orcidId=workspace.user.orcidId, name=workspace.name),
+        "workspaceEntryId": workspace_entry.id,
     }
 
 
