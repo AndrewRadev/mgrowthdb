@@ -67,6 +67,7 @@ def workspaces_visualize_page(orcidId, name="default"):
 
 def workspaces_data_preview_fragment():
     file = request.files['file']
+    include_error = request.form.get('includeError', 'false') == 'true'
     df = pd.read_csv(file)
 
     # TODO (2026-05-14) Error handling
@@ -75,6 +76,7 @@ def workspaces_data_preview_fragment():
     return render_template(
         "pages/workspaces/_data_preview.html",
         df=df,
+        include_error=include_error,
         errors=errors,
     )
 

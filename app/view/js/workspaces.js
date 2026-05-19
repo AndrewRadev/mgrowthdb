@@ -8,13 +8,11 @@ Page('.workspaces-page', function($page) {
   $page.on('change', 'input[type=file]', updateDataPreview)
 
   let $includeErrorCheckbox = $page.find('input[name=includeError]');
-  $page.on('change', 'input[name=includeError]', updatePreviewErrorColumns)
+  updatePreviewErrorColumns();
+  $page.on('change', 'input[name=includeError]', updateDataPreview)
 
   updateUnitSelects();
   $page.on('change', '.js-subject-type', updateUnitSelects);
-
-  updateLogView();
-  $page.on('change', '.js-log-left,.js-log-right', updateLogView);
 
   function updateUnitSelects() {
     let $subjectTypeSelect = $page.find('.js-subject-type');
@@ -43,14 +41,20 @@ Page('.workspaces-page', function($page) {
     }
   }
 
-  // TODO reuse inside of customFileInput(), update in step 6
   function updateDataPreview() {
     let previewUrl = $uploadContainer.data('previewUrl')
     let formData   = new FormData();
     let file       = $fileInput[0].files[0];
     let $preview   = $page.find('.js-preview');
 
+    if (!file) {
+      updatePreviewErrorColumns();
+      return;
+    }
+
     formData.append("file", file, file.name);
+    formData.append("includeError", $includeErrorCheckbox.is(':checked'));
+
     $preview.addClass('loading');
 
     $.ajax({

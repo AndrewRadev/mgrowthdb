@@ -1,9 +1,28 @@
 <table class="dataframe-table full">
   <tr class="smaller">
-    {% for column in df.columns: %}
-      <th>{{ column }}</th>
-    {% endfor %}
+    {% if df.columns|length > 0: %}
+      <th><em>[Time]</em> {{ column }}</th>
+    {% endif %}
+
+    {% if include_error: %}
+
+      {% for column in df.columns[1:]: %}
+        {% if loop.index0 is even: %}
+          <th><em>[Value]</em> {{ column }}</th>
+        {% else: %}
+          <th><em>[Error]</em> {{ column }}</th>
+        {% endif %}
+      {% endfor %}
+
+    {% else: %}
+
+      {% for column in df.columns[1:]: %}
+        <th><em>[Value]</em> {{ column }}</th>
+      {% endfor %}
+
+    {% endif %}
   </tr>
+
   <tr class="smaller">
     <td align="center" colspan="{{ df.columns|length }}">
       <em>[{{ df.shape[0] }} rows]</em>
