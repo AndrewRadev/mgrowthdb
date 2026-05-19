@@ -1,15 +1,15 @@
 {% macro render_chart_form(workspace, form) %}
 
-  {% set selectedDataSource = request.args.get('selectedDataSource', '') %}
+  {% set selectedSourceType = request.args.get('selectedSourceType', '') %}
 
   <div class="form-row">
     <label>
       <span>Data source:</span>
-      <select name="dataSource" class="form-input-blue full">
-        {% for data_source, label in [('direct', 'Direct upload'), ('api', 'API'), ('compare', 'Compare')]: %}
+      <select name="sourceType" class="form-input-blue full js-data-source">
+        {% for source_type, label in [('upload', 'Direct upload'), ('api', 'API'), ('compare', 'Compare')]: %}
           <option
-              {{ "selected" if data_source == selectedExperimentId }}
-              value="{{ data_source }}">
+              {{ "selected" if source_type == selectedSourceType }}
+              value="{{ source_type }}">
             {{ label }}
           </option>
         {% endfor %}
@@ -17,19 +17,21 @@
     </label>
   </div>
 
-  <div class="trace-group">
+  <div class="trace-group js-trace-group">
     {% for source_type in ['upload', 'api']: %}
       {% for workspace_entry in workspace.workspaceEntries if workspace_entry.sourceType == source_type: %}
-        {% set key = "workspaceItem|{}".format(workspace_entry.id) %}
+        {% set key = "workspaceEntry|{}".format(workspace_entry.id) %}
 
-        <div class="form-row js-trace-row" data-source-type="{{ source_type }}">
+        <div
+            class="form-row hidden js-trace-row"
+            data-source-type="{{ source_type }}">
           <input
               type="checkbox"
               name="{{ key }}"
               id="{{ key }}"
-              {# "checked" if measurement_context.id in form.measurement_context_ids #}
-              {# "data-axis-left" if measurement_context.id in form.left_axis_ids #}
-              {# "data-axis-right" if measurement_context.id in form.right_axis_ids #}
+              {{ "checked" if workspace_entry.id in form.workspace_entry_ids }}
+              {{ "data-axis-left" if workspace_entry.id in form.left_axis_workspace_ids }}
+              {{ "data-axis-right" if workspace_entry.id in form.right_axis_workspace_ids }}
               class="js-measurement-toggle" />
           <label for="{{ key }}">
             {{ workspace_entry.label }}

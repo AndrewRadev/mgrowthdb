@@ -180,11 +180,11 @@ def study_visualize_page(publicId):
         )
     )
 
-    left_axis_ids  = _parse_comma_separated_request_ids('l')
-    right_axis_ids = _parse_comma_separated_request_ids('r')
+    left_axis_ids  = util.parse_comma_separated_request_ids('l')
+    right_axis_ids = util.parse_comma_separated_request_ids('r')
 
-    left_axis_model_ids  = _parse_comma_separated_request_ids('lm')
-    right_axis_model_ids = _parse_comma_separated_request_ids('rm')
+    left_axis_model_ids  = util.parse_comma_separated_request_ids('lm')
+    right_axis_model_ids = util.parse_comma_separated_request_ids('rm')
 
     chart_form = ComparativeChartForm(
         g.db_session,
@@ -258,7 +258,3 @@ def _fetch_study_for_visitor(publicId, check_user_visibility=True, sql_options=N
         raise Forbidden()
 
     return study
-
-
-def _parse_comma_separated_request_ids(key):
-    return [int(s) for s in request.args.get(key, '').split(',') if s != '']

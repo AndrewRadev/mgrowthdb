@@ -1,6 +1,4 @@
 Page('.study-visualize-page', function($page) {
-  let $compareData = $(document).find('[data-compare-ids]')
-
   let studyId = $page.data('studyId')
   let $form   = $page.find('.js-chart-form');
 

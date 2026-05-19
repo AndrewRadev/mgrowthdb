@@ -12,14 +12,15 @@ import sqlalchemy as sql
 
 from app.model.orm import MeasurementContext, ModelingResult
 from app.view.forms.comparative_chart_form import ComparativeChartForm
+import app.model.lib.util as util
 
 
 def comparison_show_page():
-    left_axis_ids  = _parse_comma_separated_request_ids('l')
-    right_axis_ids = _parse_comma_separated_request_ids('r')
+    left_axis_ids  = util.parse_comma_separated_request_ids('l')
+    right_axis_ids = util.parse_comma_separated_request_ids('r')
 
-    left_axis_model_ids  = _parse_comma_separated_request_ids('lm')
-    right_axis_model_ids = _parse_comma_separated_request_ids('rm')
+    left_axis_model_ids  = util.parse_comma_separated_request_ids('lm')
+    right_axis_model_ids = util.parse_comma_separated_request_ids('rm')
 
     if len(left_axis_ids) + len(right_axis_ids) + len(left_axis_model_ids) + len(right_axis_model_ids) > 0:
         context_ids = left_axis_ids + right_axis_ids
@@ -145,7 +146,3 @@ def _init_compare_data():
         data['models'] = []
 
     return data
-
-
-def _parse_comma_separated_request_ids(key):
-    return [int(s) for s in request.args.get(key, '').split(',') if s != '']

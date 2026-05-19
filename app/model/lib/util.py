@@ -163,6 +163,10 @@ def hex_to_rgba(hex_string, opacity):
     return f"rgba({r},{g},{b},{opacity})"
 
 
+def parse_comma_separated_request_ids(key):
+    return [int(s) for s in request.args.get(key, '').split(',') if s != '']
+
+
 def _one_or_error(key, iterator):
     value = next(iterator)
     try:

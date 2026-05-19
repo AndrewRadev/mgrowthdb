@@ -173,6 +173,11 @@ def init_routes(app):
         view_func=workspace_pages.workspaces_visualize_page,
     )
     app.add_url_rule(
+        "/workspaces/<string:orcidId>/visualize/<string:name>/chart/",
+        view_func=workspace_pages.workspaces_chart_fragment,
+        methods=["POST"],
+    )
+    app.add_url_rule(
         "/workspaces/preview/",
         view_func=workspace_pages.workspaces_data_preview_fragment,
         methods=["POST"],

@@ -16,6 +16,7 @@ from app.model.orm import (
     Workspace,
     WorkspaceEntry,
 )
+import app.model.lib.util as util
 
 
 def workspaces_index_page(orcidId, name="default"):
@@ -46,17 +47,21 @@ def workspaces_index_page(orcidId, name="default"):
 
 
 def workspaces_visualize_page(orcidId, name="default"):
-    chart = Chart(time_units='h')
-    chart_form = ComparativeChartForm(g.db_session)
-    errors = {}
     workspace = _find_workspace(orcidId, name)
+
+    left_axis_workspace_ids  = util.parse_comma_separated_request_ids('l')
+    right_axis_workspace_ids = util.parse_comma_separated_request_ids('r')
+
+    chart_form = ComparativeChartForm(
+        g.db_session,
+        left_axis_workspace_ids=left_axis_workspace_ids,
+        right_axis_workspace_ids=right_axis_workspace_ids,
+    )
 
     return render_template(
         "pages/workspaces/visualize.html",
         workspace=workspace,
         chart_form=chart_form,
-        chart=chart,
-        errors=errors,
     )
 
 
@@ -71,6 +76,25 @@ def workspaces_data_preview_fragment():
         "pages/workspaces/_data_preview.html",
         df=df,
         errors=errors,
+    )
+
+
+def workspaces_chart_fragment(orcidId, name="default"):
+    workspace = _find_workspace(orcidId, name)
+    args = request.form.to_dict()
+
+    width = args.get('width', None)
+
+    chart_form = ComparativeChartForm(
+        g.db_session,
+        show_std=args.get('showStd', None) is not None,
+    )
+    chart = chart_form.build_chart(args, width, user=g.current_user)
+
+    return render_template(
+        'pages/workspaces/_chart.html',
+        chart_form=chart_form,
+        chart=chart,
     )
 
 

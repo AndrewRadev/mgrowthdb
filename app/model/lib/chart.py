@@ -111,7 +111,7 @@ class Chart:
         for (df, label) in converted_data_right:
             scatter_param_list = self._get_scatter_params(df, label, log=self.log_right)
             for scatter_params in scatter_param_list:
-                scatter_params = dict(**scatter_params, line={'dash': 'dot'})
+                scatter_params['line'] = {'dash': 'dot'}
                 fig.add_trace(go.Scatter(**scatter_params), secondary_y=True)
 
         if self.clamp_x_data:
