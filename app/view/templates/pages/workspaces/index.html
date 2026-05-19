@@ -24,51 +24,47 @@
         particular study. Go to the "visualize" page to explore it.
       </p>
 
-      {% if g.current_user: %}
+      {% include 'pages/workspaces/_tabs.html' %}
 
-        {% include 'pages/workspaces/_tabs.html' %}
+      <div class="columns flex-row">
+        <div class="column column-entries" style="width: 50%;">
 
-        <div class="columns flex-row">
-          <div class="column column-entries" style="width: 50%;">
+          <h3>Direct upload</h3>
 
-            <h3>Direct upload</h3>
-
-            {% if g.current_user.workspaceEntries|length == 0: %}
-              <p class="help">
-                No data uploaded yet
-              </p>
-            {% else: %}
-              <ul>
-                {% for workspace_entry in g.current_user.workspaceEntries: %}
-                  <li>
-                    {{ render_workspace_entry(workspace_entry) }}
-                  </li>
-                {% endfor %}
-              </ul>
-            {% endif %}
-
-            <h3>API data</h3>
-
+          {% if workspace.workspaceEntries|length == 0: %}
             <p class="help">
-              You can push data to this page using the
-              {{ "https://mgrowthdb.readthedocs.io/en/latest/api.html"|external_link("API") }},
-              and it will appear here.
+              No data uploaded yet
             </p>
-          </div>
+          {% else: %}
+            <ul>
+              {% for workspace_entry in workspace.workspaceEntries: %}
+                <li>{{ render_workspace_entry(workspace_entry) }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
 
-          <div class="column column-form" style="width: 50%;">
-            {{ render_upload_form(errors) }}
-          </div>
+          <h3>API data</h3>
+
+          <p class="help">
+            You can push data to this page using the
+            {{ "https://mgrowthdb.readthedocs.io/en/latest/api.html"|external_link("API") }},
+            and it will appear here.
+          </p>
         </div>
 
-      {% else: %}
-        <p class="warning-message">
-          In order to upload and visualize data, please
-          <a href="{{ url_for("user_login_page") }}">log in</a>
-          to the application using your
-          {{ "https://orcid.org/"|external_link("ORCID") }}.
-        </p>
-      {% endif %}
+        <div class="column column-form" style="width: 50%;">
+          {% if g.current_user: %}
+            {{ render_upload_form(errors) }}
+          {% else: %}
+            <p class="warning-message">
+              In order to upload and visualize data, please
+              <a href="{{ url_for("user_login_page") }}">log in</a>
+              to the application using your
+              {{ "https://orcid.org/"|external_link("ORCID") }}.
+            </p>
+          {% endif %}
+        </div>
+      </div>
     </article>
   </div>
 {% endblock %}

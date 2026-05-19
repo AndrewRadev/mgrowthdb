@@ -1,19 +1,26 @@
 import pandas as pd
-
+import sqlalchemy as sql
 from flask import (
     g,
     render_template,
     redirect,
     request,
 )
-from app.model.orm import WorkspaceEntry
+from werkzeug.exceptions import Forbidden
+
 from app.model.lib.chart import Chart
 from app.model.lib.errors import LoginRequired
 from app.view.forms.comparative_chart_form import ComparativeChartForm
+from app.model.orm import (
+    User,
+    Workspace,
+    WorkspaceEntry,
+)
 
-# TODO (2026-05-15) Error if not logged in
-def workspaces_index_page(orcidId):
+
+def workspaces_index_page(orcidId, name="default"):
     errors = {}
+    workspace = _find_workspace(orcidId, name)
 
     if request.method == 'POST':
         file = request.files['data']
@@ -33,19 +40,20 @@ def workspaces_index_page(orcidId):
 
     return render_template(
         "pages/workspaces/index.html",
+        workspace=workspace,
         errors=errors,
     )
 
 
-def workspaces_visualize_page(orcidId):
+def workspaces_visualize_page(orcidId, name="default"):
     chart = Chart(time_units='h')
     chart_form = ComparativeChartForm(g.db_session)
     errors = {}
-
-    # TODO: user found by orcidId, check for public/private
+    workspace = _find_workspace(orcidId, name)
 
     return render_template(
         "pages/workspaces/visualize.html",
+        workspace=workspace,
         chart_form=chart_form,
         chart=chart,
         errors=errors,
@@ -64,3 +72,18 @@ def workspaces_data_preview_fragment():
         df=df,
         errors=errors,
     )
+
+
+def _find_workspace(orcidId, name):
+    workspace = g.db_session.scalars(
+        sql.select(Workspace)
+        .join(User)
+        .where(User.orcidId == orcidId)
+        .where(Workspace.name == name)
+        .limit(1)
+    ).one()
+
+    if g.current_user != workspace.user and not workspace.isPublished:
+        raise Forbidden
+
+    return workspace

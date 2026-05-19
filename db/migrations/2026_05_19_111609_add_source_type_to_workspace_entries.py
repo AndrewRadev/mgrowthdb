@@ -4,13 +4,16 @@ import sqlalchemy as sql
 def up(conn):
     query = """
         ALTER TABLE WorkspaceEntries
-        ADD publishedAt datetime DEFAULT NULL
+        ADD sourceType VARCHAR(100) NOT NULL COLLATE utf8mb4_bin DEFAULT "upload";
     """
     conn.execute(sql.text(query))
 
 
 def down(conn):
-    query = "ALTER TABLE WorkspaceEntries DROP publishedAt"
+    query = """
+        ALTER TABLE WorkspaceEntries
+        DROP sourceType;
+    """
     conn.execute(sql.text(query))
 
 

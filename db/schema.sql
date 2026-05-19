@@ -694,7 +694,6 @@ DROP TABLE IF EXISTS WorkspaceEntries;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE WorkspaceEntries (
   id int NOT NULL AUTO_INCREMENT,
-  userId int NOT NULL,
   label varchar(255) NOT NULL,
   `data` text,
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -703,9 +702,32 @@ CREATE TABLE WorkspaceEntries (
   subjectType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   subjectId int DEFAULT NULL,
   units varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  sourceType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT 'upload',
+  workspaceId int NOT NULL,
+  PRIMARY KEY (id),
+  KEY WorkspaceEntries_workspaceId (workspaceId),
+  CONSTRAINT WorkspaceEntries_workspaceId FOREIGN KEY (workspaceId) REFERENCES Workspaces (id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Workspaces`
+--
+
+DROP TABLE IF EXISTS Workspaces;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE Workspaces (
+  id int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL DEFAULT 'default',
+  userId int NOT NULL,
+  size int NOT NULL DEFAULT '0',
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   publishedAt datetime DEFAULT NULL,
   PRIMARY KEY (id),
-  KEY DashboardEntries_userId (userId)
+  UNIQUE KEY Workspaces_userId_and_name (userId,`name`),
+  CONSTRAINT Workspaces_userId FOREIGN KEY (userId) REFERENCES Users (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -811,10 +833,12 @@ INSERT INTO MigrationVersions VALUES
 (93,'2026_02_18_115807_add_api_count_to_page_visit_counter','2026-02-18 11:17:48'),
 (94,'2026_02_16_111742_link_studies_last_submissions','2026-03-13 14:05:27'),
 (95,'2026_03_01_175101_add_changelog_text_to_submissions','2026-03-13 14:05:27'),
-(96,'2026_03_31_163435_add_api_key_to_users','2026-05-12 14:53:27'),
-(97,'2026_03_31_181039_create_dashboard_entries','2026-05-12 14:55:20'),
-(98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-05-12 14:55:20'),
-(100,'2026_05_14_142254_rename_dashboard_entries_to_workspace_entries','2026-05-14 12:23:43'),
-(102,'2026_05_14_143040_add_fields_to_workspace_entries','2026-05-14 12:51:05'),
-(104,'2026_05_15_135735_add_published_state_to_workspace_entries','2026-05-15 11:58:51');
+(96,'2026_03_31_163435_add_api_key_to_users','2026-05-18 10:24:14'),
+(97,'2026_03_31_181039_create_dashboard_entries','2026-05-18 10:24:14'),
+(98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-05-18 10:24:14'),
+(99,'2026_05_14_142254_rename_dashboard_entries_to_workspace_entries','2026-05-18 10:24:32'),
+(100,'2026_05_14_143040_add_fields_to_workspace_entries','2026-05-18 10:24:32'),
+(108,'2026_05_19_111609_add_source_type_to_workspace_entries','2026-05-19 09:36:45'),
+(117,'2026_05_19_112912_create_workspaces','2026-05-19 09:56:39'),
+(125,'2026_05_19_114228_move_workspace_entries_under_workspaces','2026-05-19 10:09:28');
 

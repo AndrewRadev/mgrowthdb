@@ -1,12 +1,12 @@
 <ul class="tabs">
-  <li class="{{ "current" if request.path.endswith(g.current_user.orcidId + '/') }}">
+  <li class="{{ "current" if request.endpoint == 'workspaces_index_page' }}">
     <a
         class="js-tab-index"
         href="{{ url_for('workspaces_index_page', orcidId=g.current_user.orcidId) }}">
       Upload data
     </a>
   </li>
-  <li class="{{ "current" if request.path.endswith('/visualize/') }}">
+  <li class="{{ "current" if request.endpoint == 'workspaces_visualize_page' }}">
     <a
         class="js-tab-visualize"
         href="{{ url_for('workspaces_visualize_page', orcidId=g.current_user.orcidId) }}">

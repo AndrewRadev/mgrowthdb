@@ -30,20 +30,22 @@ class WorkspaceEntry(OrmBase):
     label:  Mapped[str] = mapped_column(sql.String(255), nullable=False)
     data:   Mapped[str] = mapped_column(sql.String, nullable=False)
 
+    sourceType:  Mapped[str] = mapped_column(sql.String(100))
     dataType:    Mapped[str] = mapped_column(sql.String(100))
     subjectType: Mapped[str] = mapped_column(sql.String(100))
     subjectId:   Mapped[int] = mapped_column(sql.Integer)
     units:       Mapped[str] = mapped_column(sql.String(100))
 
-    userId: Mapped[int] = mapped_column(sql.ForeignKey('Users.id'), nullable=False)
-    user: Mapped['User'] = relationship(back_populates="workspaceEntries")
+    workspaceId: Mapped[int] = mapped_column(sql.ForeignKey('Workspaces.id'), nullable=False)
+    workspace: Mapped['Workspace'] = relationship(back_populates="workspaceEntries")
+
+    user: Mapped['User'] = relationship(secondary='Workspaces', viewonly=True)
 
     createdAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
-    publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, nullable=True)
 
     @classmethod
-    def from_csv(Self, file, user, metadata={}, include_error=False):
+    def from_csv(Self, file, workspace, metadata={}, include_error=False):
         """
         Construct workspace entry records from the data in a CSV file.
 
@@ -75,16 +77,12 @@ class WorkspaceEntry(OrmBase):
 
             entries.append(Self(
                 label=value_column,
-                user=user,
+                workspace=workspace,
                 data=csv_data,
                 **metadata,
             ))
 
         return entries
-
-    @hybrid_property
-    def isPublished(self):
-        return self.publishedAt != None
 
     def get_df(self):
         return pd.read_csv(BytesIO(self.data.encode('utf-8')))

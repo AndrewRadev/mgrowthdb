@@ -64,7 +64,7 @@ class User(OrmBase):
         viewonly=True,
     )
 
-    workspaceEntries: Mapped[List['WorkspaceEntry']] = owner_relationship()
+    workspaces: Mapped[List['Workspace']] = owner_relationship()
 
     @property
     def orcidUrl(self):
