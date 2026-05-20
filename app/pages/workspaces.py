@@ -26,18 +26,20 @@ def workspaces_index_page(orcidId, name="default"):
     if request.method == 'POST':
         file = request.files['data']
 
-        new_entries = WorkspaceEntry.from_csv(
-            file,
-            g.current_user,
-            include_error=request.form.get('includeError', False),
-            metadata={
-                'dataType':    request.form.get('dataType'),
-                'subjectType': request.form.get('subjectType'),
-                'units':       request.form.get('units'),
-            }
-        )
-        g.db_session.add_all(new_entries)
-        g.db_session.commit()
+        df, errors = _process_upload(file)
+        if df is not None:
+            new_entries = WorkspaceEntry.from_upload(
+                df,
+                workspace,
+                include_error=request.form.get('includeError', False),
+                metadata={
+                    'dataType':    request.form.get('dataType'),
+                    'subjectType': request.form.get('subjectType'),
+                    'units':       request.form.get('units'),
+                }
+            )
+            g.db_session.add_all(new_entries)
+            g.db_session.commit()
 
     return render_template(
         "pages/workspaces/index.html",
@@ -68,10 +70,8 @@ def workspaces_visualize_page(orcidId, name="default"):
 def workspaces_data_preview_fragment():
     file = request.files['file']
     include_error = request.form.get('includeError', 'false') == 'true'
-    df = pd.read_csv(file)
 
-    # TODO (2026-05-14) Error handling
-    errors = []
+    df, errors = _process_upload(file)
 
     return render_template(
         "pages/workspaces/_data_preview.html",
@@ -113,3 +113,23 @@ def _find_workspace(orcidId, name):
         raise Forbidden
 
     return workspace
+
+
+def _process_upload(file):
+    errors = []
+
+    try:
+        df = pd.read_csv(file)
+    except RuntimeError:
+        errors.append(f"Could not process file {file.filename}")
+        return None, errors
+
+    column_count = len(df.columns)
+    if column_count <= 2:
+        errors.append(f"At least 2 columns are expected, {column_count} were found")
+
+    row_count = df.shape[0]
+    if row_count <= 0:
+        errors.append("No data rows were found")
+
+    return df, errors

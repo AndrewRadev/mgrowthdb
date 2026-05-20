@@ -45,7 +45,7 @@ class WorkspaceEntry(OrmBase):
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
 
     @classmethod
-    def from_csv(Self, file, workspace, metadata={}, include_error=False):
+    def from_upload(Self, df, workspace, metadata={}, include_error=False):
         """
         Construct workspace entry records from the data in a CSV file.
 
@@ -53,7 +53,6 @@ class WorkspaceEntry(OrmBase):
         be considered to represent measurements. If `include_error` is truthy,
         columns will be parsed as pairs of value and error measurements.
         """
-        df = pd.read_csv(file)
         time_col = df.columns[0]
 
         if include_error:
@@ -79,6 +78,7 @@ class WorkspaceEntry(OrmBase):
                 label=value_column,
                 workspace=workspace,
                 data=csv_data,
+                sourceType='upload',
                 **metadata,
             ))
 

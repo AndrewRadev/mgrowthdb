@@ -1,7 +1,6 @@
 import tests.init  # noqa: F401
 
 import unittest
-from io import StringIO
 
 import pandas as pd
 
@@ -19,8 +18,7 @@ class TestWorkspaceEntry(DatabaseTest):
             'Roseburia': [1e6, 1e7, 1e8],
             'Blautia': [1e6, 1e7, 1e8],
         })
-        csv_file = StringIO(df.to_csv(index=False))
-        entries = WorkspaceEntry.from_csv(csv_file, workspace)
+        entries = WorkspaceEntry.from_upload(df, workspace)
 
         self.assertEqual([e.label for e in entries], ['Roseburia', 'Blautia'])
         self.assertEqual(entries[0].workspace, workspace)
@@ -34,8 +32,7 @@ class TestWorkspaceEntry(DatabaseTest):
             'trehalose': [10, 9, 8],
             'trehalose STD': [0.1, 0.1, 0.1],
         })
-        csv_file = StringIO(df.to_csv(index=False))
-        entries = WorkspaceEntry.from_csv(csv_file, workspace, include_error=True)
+        entries = WorkspaceEntry.from_upload(df, workspace, include_error=True)
 
         self.assertEqual([e.label for e in entries], ['glucose', 'trehalose'])
         self.assertEqual(entries[0].workspace, workspace)
@@ -47,9 +44,8 @@ class TestWorkspaceEntry(DatabaseTest):
             'glucose': [10, 9, 8],
             'trehalose': [10, 9, 8],
         })
-        csv_file = StringIO(df.to_csv(index=False))
-        entries = WorkspaceEntry.from_csv(
-            csv_file,
+        entries = WorkspaceEntry.from_upload(
+            df,
             workspace,
             metadata={
                 'dataType': 'measurement',

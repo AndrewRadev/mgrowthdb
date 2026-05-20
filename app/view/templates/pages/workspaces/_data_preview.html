@@ -1,31 +1,37 @@
-<table class="dataframe-table full">
-  <tr class="smaller">
-    {% if df.columns|length > 0: %}
-      <th><em>[Time]</em> {{ column }}</th>
-    {% endif %}
+{% from 'utils/_form_errors.html' import render_form_errors %}
 
-    {% if include_error: %}
+{{ render_form_errors(errors) }}
 
-      {% for column in df.columns[1:]: %}
-        {% if loop.index0 is even: %}
+{% if df is not none: %}
+  <table class="dataframe-table full">
+    <tr class="smaller">
+      {% if df.columns|length > 0: %}
+        <th><em>[Time]</em> {{ column }}</th>
+      {% endif %}
+
+      {% if include_error: %}
+
+        {% for column in df.columns[1:]: %}
+          {% if loop.index0 is even: %}
+            <th><em>[Value]</em> {{ column }}</th>
+          {% else: %}
+            <th><em>[Error]</em> {{ column }}</th>
+          {% endif %}
+        {% endfor %}
+
+      {% else: %}
+
+        {% for column in df.columns[1:]: %}
           <th><em>[Value]</em> {{ column }}</th>
-        {% else: %}
-          <th><em>[Error]</em> {{ column }}</th>
-        {% endif %}
-      {% endfor %}
+        {% endfor %}
 
-    {% else: %}
+      {% endif %}
+    </tr>
 
-      {% for column in df.columns[1:]: %}
-        <th><em>[Value]</em> {{ column }}</th>
-      {% endfor %}
-
-    {% endif %}
-  </tr>
-
-  <tr class="smaller">
-    <td align="center" colspan="{{ df.columns|length }}">
-      <em>[{{ df.shape[0] }} rows]</em>
-    </td>
-  </tr>
-</table>
+    <tr class="smaller">
+      <td align="center" colspan="{{ df.columns|length }}">
+        <em>[{{ df.shape[0] }} rows]</em>
+      </td>
+    </tr>
+  </table>
+{% endif %}

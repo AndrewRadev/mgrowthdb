@@ -1,15 +1,10 @@
 {% from "utils/_growth_unit_options.html" import render_growth_unit_options %}
 {% from "utils/_metabolite_unit_options.html" import render_metabolite_unit_options %}
+{% from "utils/_form_errors.html" import render_form_errors %}
 
 {% macro render_upload_form(errors) %}
 
-  {% if errors: %}
-    <ul class="error-message-list">
-      {% for filename, error in errors.items(): %}
-        <li>{{ filename }}: {{ error }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+  {{ render_form_errors(errors) }}
 
   <form
       enctype="multipart/form-data"
