@@ -104,7 +104,7 @@ def workspaces_chart_fragment(orcidId, name="default"):
     chart = chart_form.build_chart(args, width, user=g.current_user)
 
     return render_template(
-        'pages/workspaces/_chart.html',
+        'pages/workspaces/visualize/_chart.html',
         chart_form=chart_form,
         chart=chart,
     )
