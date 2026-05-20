@@ -14,6 +14,48 @@ Page('.workspaces-page', function($page) {
   updateUnitSelects();
   $page.on('change', '.js-subject-type', updateUnitSelects);
 
+  $page.on('click', '.js-delete', function(e) {
+    e.preventDefault();
+
+    if (!confirm("Are you sure you want to delete this uploaded data?")) {
+      return;
+    }
+
+    let $link = $(e.currentTarget);
+    let $entry = $link.parents('.js-workspace-entry');
+    let entryId = $entry.data('id');
+    let deleteUrl = $link.attr('href');
+
+    $.ajax({
+      type: 'POST',
+      url: deleteUrl,
+      cache: false,
+      success: function(response) {
+        $entry.fadeOut(500);
+      }
+    })
+  });
+
+  $page.on('click', '.js-delete-all', function(e) {
+    e.preventDefault();
+
+    if (!confirm("Are you sure you want to delete all the data in this workspace?")) {
+      return;
+    }
+
+    let $link = $(e.currentTarget);
+    let deleteUrl = $link.attr('href');
+
+    $.ajax({
+      type: 'POST',
+      url: deleteUrl,
+      cache: false,
+      success: function(response) {
+        window.location.reload();
+      }
+    })
+  });
+
   function updateUnitSelects() {
     let $subjectTypeSelect = $page.find('.js-subject-type');
     let subjectType = $subjectTypeSelect.val();

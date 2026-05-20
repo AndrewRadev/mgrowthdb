@@ -50,4 +50,61 @@
       align-self: flex-start;
     }
   }
+
+  .columns {
+    gap: 10px;
+  }
+
+  .workspace-entry-list {
+    padding-left: 0;
+    list-style: none;
+    max-height: 400px;
+
+    > li {
+      position: relative;
+      padding: 6px;
+      border: 2px solid transparent;
+      border-radius: var(--border-radius);
+
+      > .actions {
+        position: absolute;
+        right: 6px;
+        bottom: 6px;
+        display: none;
+
+        button {
+          text-align: left;
+        }
+
+        .icon {
+          height: 14px;
+          width: 14px;
+        }
+      }
+
+      &:hover {
+        border-color: var(--border-color);
+
+        > .actions {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+      }
+    }
+
+    .property-list {
+      padding-left: 20px;
+    }
+  }
+
+  details {
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+
+    summary {
+      cursor: pointer;
+    }
+  }
 }

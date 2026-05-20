@@ -30,7 +30,7 @@ class Workspace(OrmBase):
     userId: Mapped[int] = mapped_column(sql.ForeignKey('Users.id'), nullable=False)
     user: Mapped['User'] = relationship(back_populates="workspaces")
 
-    entries: Mapped[List['WorkspaceEntry']] = relationship(back_populates="workspace")
+    entries: Mapped[List['WorkspaceEntry']] = relationship(back_populates="workspace", cascade='all, delete-orphan')
 
     createdAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())

@@ -2,7 +2,7 @@
 {% from "utils/_metabolite_unit_options.html" import render_metabolite_unit_options %}
 {% from "utils/_form_errors.html" import render_form_errors %}
 
-{% macro render_upload_form(errors) %}
+{% macro render_upload_form(workspace, errors) %}
 
   {{ render_form_errors(errors) }}
 
@@ -133,7 +133,9 @@
 
   <hr>
 
-  <div class="help small margin-top-10">
+  <details class="help small margin-top-10">
+    <summary>Example data</summary>
+
     Here are a few example data files you can try out, taken from
     <a target="_blank" href="/study/SMGDB00000007/">SMGDB00000007</a>:
 
@@ -151,6 +153,14 @@
         <a download href="/static/data/s7_bhbtri_bt_model.csv">Baranyi-Roberts predictions</a>
       </li>
     </ul>
-  </div>
+  </details>
 
+  <div class="flex-row margin-top-10">
+    <a
+        href="{{ url_for('workspaces_delete_all_action', id=workspace.id) }}"
+        class="js-delete-all white-button orange-border flex-right">
+      <span class="icon icon-inline icon-delete"></span>
+      Clear workspace
+    </a>
+  </div>
 {% endmacro %}

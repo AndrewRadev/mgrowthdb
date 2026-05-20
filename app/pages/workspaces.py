@@ -5,6 +5,7 @@ from flask import (
     render_template,
     redirect,
     request,
+    url_for,
 )
 from werkzeug.exceptions import Forbidden
 
@@ -28,14 +29,23 @@ def workspaces_index_page(orcidId, name="default"):
 
         df, errors = _process_upload(file)
         if df is not None:
+            subject_type = request.form.get('subjectType')
+
+            if subject_type in ('community', 'strain'):
+                units = request.form.get('growthUnits')
+            elif subject_type == 'metabolite':
+                units = request.form.get('metaboliteUnits')
+            else:
+                units = None
+
             new_entries = WorkspaceEntry.from_upload(
                 df,
                 workspace,
                 include_error=request.form.get('includeError', False),
                 metadata={
                     'dataType':    request.form.get('dataType'),
-                    'subjectType': request.form.get('subjectType'),
-                    'units':       request.form.get('units'),
+                    'subjectType': subject_type,
+                    'units':       units,
                 }
             )
             g.db_session.add_all(new_entries)
@@ -100,6 +110,36 @@ def workspaces_chart_fragment(orcidId, name="default"):
     )
 
 
+def workspaces_update_entry_action(id):
+    pass
+
+
+def workspaces_delete_entry_action(id):
+    workspace_entry = g.db_session.get(WorkspaceEntry, id)
+    workspace = workspace_entry.workspace
+
+    if workspace.user != g.current_user:
+        raise Forbidden
+
+    g.db_session.delete(workspace_entry)
+    g.db_session.commit()
+
+    return {'status': 'ok'}
+
+
+def workspaces_delete_all_action(id):
+    workspace = g.db_session.get(Workspace, id)
+    if workspace.user != g.current_user:
+        raise Forbidden
+
+    workspace.entries.clear()
+
+    g.db_session.add(workspace)
+    g.db_session.commit()
+
+    return {'status': 'ok'}
+
+
 def _find_workspace(orcidId, name):
     workspace = g.db_session.scalars(
         sql.select(Workspace)
@@ -125,7 +165,7 @@ def _process_upload(file):
         return None, errors
 
     column_count = len(df.columns)
-    if column_count <= 2:
+    if column_count < 2:
         errors.append(f"At least 2 columns are expected, {column_count} were found")
 
     row_count = df.shape[0]

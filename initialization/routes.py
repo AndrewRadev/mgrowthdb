@@ -183,6 +183,22 @@ def init_routes(app):
         methods=["POST"],
     )
 
+    app.add_url_rule(
+        "/workspaces/entry/<int:id>/update/",
+        view_func=workspace_pages.workspaces_update_entry_action,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/workspaces/entry/<int:id>/delete/",
+        view_func=workspace_pages.workspaces_delete_entry_action,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/workspaces/<int:id>/delete/",
+        view_func=workspace_pages.workspaces_delete_all_action,
+        methods=["POST"],
+    )
+
     if app_env in ('development', 'test'):
         app.add_url_rule("/backdoor/", view_func=user_pages.user_backdoor_page, methods=["GET", "POST"])
 
