@@ -1,6 +1,5 @@
 {% from 'pages/workspaces/_upload_form.html' import render_upload_form %}
 {% from 'pages/workspaces/_workspace_entry.html' import render_workspace_entry %}
-{% from 'utils/_time_tag.html' import time_tag %}
 
 {% extends '_layout.html' %}
 
@@ -41,54 +40,6 @@
               {% for workspace_entry in workspace.entries: %}
                 <li class="js-workspace-entry">
                   {{ render_workspace_entry(workspace_entry) }}
-
-                  <div class="actions">
-                    <button
-                        class="js-edit white-button small-button smaller">
-                      <span class="icon icon-inline icon-edit"></span>
-                      Edit
-                    </button>
-                    <a
-                        href="{{ url_for('workspaces_delete_entry_action', id=workspace_entry.id) }}"
-                        class="js-delete white-button small-button orange-border smaller">
-                      <span class="icon icon-inline icon-delete"></span>
-                      Delete
-                    </a>
-                  </div>
-
-                  <ul class="property-list smaller">
-                    <li>
-                      <strong>Data type</strong>:
-                      {% if workspace_entry.dataType: %}
-                        {{ workspace_entry.dataType|title }}
-                      {% else %}
-                        <em>N/A</em>
-                      {% endif  %}
-                    </li>
-
-                    <li>
-                      <strong>Subject</strong>:
-                      {% if workspace_entry.subjectType: %}
-                        {{ workspace_entry.subjectType|title }}
-                      {% else %}
-                        <em>N/A</em>
-                      {% endif %}
-                    </li>
-
-                    <li>
-                      <strong>Units</strong>:
-                      {% if workspace_entry.units: %}
-                        {{ workspace_entry.units }}
-                      {% else %}
-                        <em>N/A</em>
-                      {% endif %}
-                    </li>
-
-                    <li>
-                      <strong>Uploaded:</strong>
-                      {{ time_tag(workspace_entry.createdAt) }}
-                    </li>
-                  </ul>
                 </li>
               {% endfor %}
             </ul>

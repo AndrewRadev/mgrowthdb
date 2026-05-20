@@ -1,47 +1,190 @@
+{% from "utils/_growth_unit_options.html" import render_growth_unit_options %}
+{% from "utils/_metabolite_unit_options.html" import render_metabolite_unit_options %}
+{% from 'utils/_time_tag.html' import time_tag %}
+
 {% macro render_workspace_entry(workspace_entry) %}
 
-  <div class="button-group" style="display: inline-block; margin-right: 6px;">
-    {# TODO: data-workspace-entry-ids? #}
-    <span class="js-compare-container" data-context-ids="">
-      <span class="js-compare">
-        <a
-            href="#"
-            class="white-button small-button"
-            style="vertical-align: bottom"
-            data-tooltip="Compare">
-          <span class="flex-row icon icon-arrows-diff"></span>
-        </a>
+  <div class="view-container js-view-container">
+    <div class="button-group" style="display: inline-block; margin-right: 6px;">
+      {# TODO: data-workspace-entry-ids? #}
+      <span class="js-compare-container" data-context-ids="">
+        <span class="js-compare">
+          <a
+              href="#"
+              class="white-button small-button"
+              style="vertical-align: bottom"
+              data-tooltip="Compare">
+            <span class="flex-row icon icon-arrows-diff"></span>
+          </a>
+        </span>
+
+        <span class="js-uncompare uncompare hidden">
+          <a
+              href="#"
+              class="white-button small-button"
+              style="vertical-align: bottom"
+              data-tooltip="Comparing, click to remove from comparison">
+            <span class="flex-row icon icon-arrows-left-right"></span>
+          </a>
+        </span>
       </span>
 
-      <span class="js-uncompare uncompare hidden">
-        <a
-            href="#"
-            class="white-button small-button"
-            style="vertical-align: bottom"
-            data-tooltip="Comparing, click to remove from comparison">
-          <span class="flex-row icon icon-arrows-left-right"></span>
-        </a>
-      </span>
-    </span>
+      <a
+          href="{{ url_for('workspaces_visualize_page', orcidId=g.current_user.orcidId, l=workspace_entry.id) }}"
+          class="white-button small-button"
+          style="vertical-align: bottom"
+          data-tooltip="Visualize">
+        <span class="flex-row icon icon-chart"></span>
+      </a>
 
-    <a
-        href="{{ url_for('workspaces_visualize_page', orcidId=g.current_user.orcidId, l=workspace_entry.id) }}"
-        class="white-button small-button"
-        style="vertical-align: bottom"
-        data-tooltip="Visualize">
-      <span class="flex-row icon icon-chart"></span>
-    </a>
+      <a
+          href="{{ url_for('workspace_entry_csv', id=workspace_entry.id, withLabel=1) }}"
+          class="white-button small-button"
+          style="vertical-align: bottom"
+          download="workspace_entry_{{ workspace_entry.id }}.csv"
+          data-tooltip="Download data">
+        <span class="flex-row icon icon-download-black"></span>
+      </a>
+    </div>
 
-    <a
-        href="{{ url_for('workspace_entry_csv', id=workspace_entry.id, withLabel=1) }}"
-        class="white-button small-button"
-        style="vertical-align: bottom"
-        download="workspace_entry_{{ workspace_entry.id }}.csv"
-        data-tooltip="Download data">
-      <span class="flex-row icon icon-download-black"></span>
-    </a>
+    {{ workspace_entry.label }}
+
+    <div class="actions">
+      <button
+          class="js-edit white-button small-button smaller">
+        <span class="icon icon-inline icon-edit"></span>
+        Edit
+      </button>
+      <a
+          href="{{ url_for('workspaces_delete_entry_action', id=workspace_entry.id) }}"
+          class="js-delete white-button small-button orange-border smaller">
+        <span class="icon icon-inline icon-delete"></span>
+        Delete
+      </a>
+    </div>
+
+    <ul class="property-list smaller">
+      <li>
+        <strong>Data type</strong>:
+        {% if workspace_entry.dataType: %}
+          {{ workspace_entry.dataType|title }}
+        {% else %}
+          <em>N/A</em>
+        {% endif  %}
+      </li>
+
+      <li>
+        <strong>Subject</strong>:
+        {% if workspace_entry.subjectType: %}
+          {{ workspace_entry.subjectType|title }}
+        {% else %}
+          <em>N/A</em>
+        {% endif %}
+      </li>
+
+      <li>
+        <strong>Units</strong>:
+        {% if workspace_entry.units: %}
+          {{ workspace_entry.units }}
+        {% else %}
+          <em>N/A</em>
+        {% endif %}
+      </li>
+
+      <li>
+        <strong>Uploaded:</strong>
+        {{ time_tag(workspace_entry.createdAt) }}
+      </li>
+    </ul>
   </div>
 
-  {{ workspace_entry.label }}
+  <div class="form-container js-form-container hidden">
+    <form
+        class="simple-form smaller js-edit-form"
+        action="{{ url_for('workspaces_update_entry_action', id=workspace_entry.id) }}"
+        method="POST">
+
+      <div class="form-row">
+        <label class="full">
+          <span>Label</span>
+          <input
+              type="text"
+              name="label"
+              class="form-input-blue form-input-full form-input-small"
+              value="{{ workspace_entry.label }}" />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="full">
+          <span>Data type</span>
+          <select name="dataType" class="form-input-blue form-input-full form-input-small">
+            <option value=""></option>
+            <option {{ "selected" if workspace_entry.dataType == "measurement" }} value="measurement">
+              Observational measurements
+            </option>
+            <option {{ "selected" if workspace_entry.dataType == "model" }} value="model">
+              Model predictions
+            </option>
+            <option {{ "selected" if workspace_entry.dataType == "other" }} value="other">
+              Other
+            </option>
+          </select>
+        </label>
+
+        <label class="full">
+          <span>Measurement subject type</span>
+          <select name="subjectType" class="form-input-blue form-input-full form-input-small js-subject-type">
+            <option value="">
+            </option>
+            <option {{ "selected" if workspace_entry.subjectType == "community" }} value="community">
+              Microbial community
+            </option>
+            <option {{ "selected" if workspace_entry.subjectType == "strain" }} value="strain">
+              Microbial strain
+            </option>
+            <option {{ "selected" if workspace_entry.subjectType == "metabolite" }} value="metabolite">
+              Metabolite
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="full {{ "hidden" if workspace_entry.subjectType is not none }} js-no-units">
+          <span>Units</span>
+          <select name="noUnits" class="form-input-blue form-input-full form-input-small">
+            <option value="">N/A</option>
+          </select>
+        </label>
+
+        <label class="full {{ "hidden" if workspace_entry.subjectType not in ('community', 'strain') }} js-growth-units">
+          <span>Growth units</span>
+          <select name="growthUnits" class="form-input-blue form-input-full form-input-small">
+            {{ render_growth_unit_options(selected_units=workspace_entry.units, include_relative=True) }}
+          </select>
+        </label>
+
+        <label class="full {{ "hidden" if workspace_entry.subjectType != "metabolite" }} js-metabolite-units">
+          <span>Metabolite units</span>
+          <select name="metaboliteUnits" class="form-input-blue form-input-full form-input-small">
+            {{ render_metabolite_unit_options(selected_units=workspace_entry.units) }}
+          </select>
+        </label>
+
+        <button
+            type="submit"
+            class="js-edit green-button small-button smaller flex-end">
+          Save
+        </button>
+
+        <button
+            type="button"
+            class="js-edit white-button small-button smaller flex-end">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
 
 {% endmacro %}

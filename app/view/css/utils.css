@@ -362,6 +362,10 @@ form.simple-form {
   border-radius: var(--border-radius);
   padding: 0.7rem;
 
+  &.form-input-small {
+    padding: 0.5rem;
+  }
+
   transition: color var(--transition-length) ease;
   transition: background-color var(--transition-length) ease;
 

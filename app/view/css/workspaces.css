@@ -61,15 +61,18 @@
     max-height: 400px;
 
     > li {
-      position: relative;
       padding: 6px;
       border: 2px solid transparent;
       border-radius: var(--border-radius);
 
-      > .actions {
+      .view-container {
+        position: relative;
+      }
+
+      .actions {
         position: absolute;
-        right: 6px;
-        bottom: 6px;
+        right: 0;
+        bottom: 0;
         display: none;
 
         button {
@@ -85,7 +88,7 @@
       &:hover {
         border-color: var(--border-color);
 
-        > .actions {
+        .actions {
           display: flex;
           flex-direction: column;
           gap: 4px;

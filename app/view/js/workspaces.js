@@ -11,8 +11,37 @@ Page('.workspaces-page', function($page) {
   updatePreviewErrorColumns();
   $page.on('change', 'input[name=includeError]', updateDataPreview)
 
-  updateUnitSelects();
-  $page.on('change', '.js-subject-type', updateUnitSelects);
+  updateUnitSelects($uploadContainer.parents('form'));
+  $page.on('change', '.js-subject-type', (e) => updateUnitSelects($(e.currentTarget).parents('form')));
+
+  $page.on('click', '.js-edit', function(e) {
+    let $link = $(e.currentTarget);
+    let $entry = $link.parents('.js-workspace-entry');
+
+    let $viewContainer = $entry.find('.js-view-container');
+    let $formContainer = $entry.find('.js-form-container');
+
+    if ($viewContainer.is(':visible')) {
+      $viewContainer.addClass('hidden');
+      $formContainer.removeClass('hidden');
+    } else {
+      $viewContainer.removeClass('hidden');
+      $formContainer.addClass('hidden');
+    }
+  });
+
+  $page.on('submit', '.js-edit-form', function(e) {
+    e.preventDefault();
+
+    let $form = $(this);
+    let $entry = $form.parents('.js-workspace-entry');
+
+    $form.ajaxSubmit({
+      success: function(response) {
+        $entry.html(response);
+      }
+    });
+  });
 
   $page.on('click', '.js-delete', function(e) {
     e.preventDefault();
@@ -56,13 +85,13 @@ Page('.workspaces-page', function($page) {
     })
   });
 
-  function updateUnitSelects() {
-    let $subjectTypeSelect = $page.find('.js-subject-type');
+  function updateUnitSelects($form) {
+    let $subjectTypeSelect = $form.find('.js-subject-type');
     let subjectType = $subjectTypeSelect.val();
 
-    let $noUnits         = $page.find('.js-no-units').addClass('hidden');
-    let $growthUnits     = $page.find('.js-growth-units').addClass('hidden');
-    let $metaboliteUnits = $page.find('.js-metabolite-units').addClass('hidden');
+    let $noUnits         = $form.find('.js-no-units').addClass('hidden');
+    let $growthUnits     = $form.find('.js-growth-units').addClass('hidden');
+    let $metaboliteUnits = $form.find('.js-metabolite-units').addClass('hidden');
 
     if (subjectType == 'community' || subjectType == 'strain') {
       $growthUnits.removeClass('hidden');

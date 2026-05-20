@@ -29,24 +29,13 @@ def workspaces_index_page(orcidId, name="default"):
 
         df, errors = _process_upload(file)
         if df is not None:
-            subject_type = request.form.get('subjectType')
-
-            if subject_type in ('community', 'strain'):
-                units = request.form.get('growthUnits')
-            elif subject_type == 'metabolite':
-                units = request.form.get('metaboliteUnits')
-            else:
-                units = None
+            metadata = _extract_entry_metadata()
 
             new_entries = WorkspaceEntry.from_upload(
                 df,
                 workspace,
                 include_error=request.form.get('includeError', False),
-                metadata={
-                    'dataType':    request.form.get('dataType'),
-                    'subjectType': subject_type,
-                    'units':       units,
-                }
+                metadata=metadata,
             )
             g.db_session.add_all(new_entries)
             g.db_session.commit()
@@ -111,7 +100,19 @@ def workspaces_chart_fragment(orcidId, name="default"):
 
 
 def workspaces_update_entry_action(id):
-    pass
+    workspace_entry = g.db_session.get(WorkspaceEntry, id)
+    workspace = workspace_entry.workspace
+
+    if workspace.user != g.current_user:
+        raise Forbidden
+
+    metadata = _extract_entry_metadata()
+    workspace_entry.update(**metadata)
+
+    g.db_session.add(workspace_entry)
+    g.db_session.commit()
+
+    return render_template('pages/workspaces/update.html', workspace_entry=workspace_entry)
 
 
 def workspaces_delete_entry_action(id):
@@ -173,3 +174,24 @@ def _process_upload(file):
         errors.append("No data rows were found")
 
     return df, errors
+
+def _extract_entry_metadata():
+    subject_type = request.form.get('subjectType')
+
+    if subject_type in ('community', 'strain'):
+        units = request.form.get('growthUnits')
+    elif subject_type == 'metabolite':
+        units = request.form.get('metaboliteUnits')
+    else:
+        units = None
+
+    metadata = {
+        'dataType':    request.form.get('dataType'),
+        'subjectType': subject_type,
+        'units':       units,
+    }
+
+    if label := request.form.get('label'):
+        metadata['label'] = label
+
+    return metadata
