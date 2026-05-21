@@ -283,6 +283,24 @@ class ComparativeChartForm:
         else:
             return [("__ungrouped__", records)]
 
+    def get_measurements_df(self, measurement_context_ids):
+        query = (
+            sql.select(
+                Measurement.contextId,
+                Measurement.timeInHours.label("time"),
+                Measurement.value,
+                Measurement.std,
+            )
+            .select_from(Measurement)
+            .where(
+                Measurement.contextId.in_(measurement_context_ids),
+                Measurement.value.is_not(None),
+            )
+            .order_by(Measurement.contextId, Measurement.timeInSeconds)
+        )
+
+        return execute_into_df(self.db_session, query)
+
     def _converted_units(self, record):
         units = record.units
 
@@ -389,21 +407,3 @@ class ComparativeChartForm:
                 self.cfu_count_units = value
             elif arg == 'metaboliteUnits':
                 self.metabolite_units = value
-
-    def get_measurements_df(self, measurement_context_ids):
-        query = (
-            sql.select(
-                Measurement.contextId,
-                Measurement.timeInHours.label("time"),
-                Measurement.value,
-                Measurement.std,
-            )
-            .select_from(Measurement)
-            .where(
-                Measurement.contextId.in_(measurement_context_ids),
-                Measurement.value.is_not(None),
-            )
-            .order_by(Measurement.contextId, Measurement.timeInSeconds)
-        )
-
-        return execute_into_df(self.db_session, query)
