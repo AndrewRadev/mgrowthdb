@@ -1,3 +1,5 @@
+{% from 'shared/charts/_axis_checkboxes.html' import render_axis_checkboxes %}
+
 <div class="chart-container">
   {{ chart.to_html()|safe }}
 
@@ -28,78 +30,6 @@
   </div>
 
   <div class="contexts-list js-traces-list">
-    {% for units, workspace_entries in chart_form.group_by_units(chart_form.workspace_entries): %}
-      {% if units != '__ungrouped__': %}
-        <div class="flex-row group-row js-row js-group-row">
-          <div class="left flex-row" data-tooltip="Move data trace to the left axis">
-            <span class="icon icon-left"></span>
-            <input
-                type="checkbox"
-                class="js-axis-group js-axis-left"
-                value="left" />
-          </div>
-
-          <div class="middle {{ "align-right" if right_axis }}">
-            <strong>
-              {% if units == '': %}
-                Unitless measurements
-              {% else: %}
-                Measurements in {{ units }}
-              {% endif %}
-            </strong>
-          </div>
-
-          <div class="flex-row right" data-tooltip="Move data trace to the right axis">
-            <input
-                type="checkbox"
-                class="js-axis-group js-axis-right"
-                value="right" />
-            <span class="icon icon-right"></span>
-          </div>
-        </div>
-      {% endif %}
-
-      {% for workspace_entry in workspace_entries: %}
-        <div
-            class="flex-row context-row js-row {{ "blank" if workspace_entry.id in chart_form.no_axis_workspace_ids }}"
-            data-workspace-entry-id="{{ workspace_entry.id }}">
-          <div class="left flex-row" data-tooltip="Move data trace to the left axis">
-            <span class="icon icon-left"></span>
-            <input
-                type="checkbox"
-                class="js-axis js-axis-left"
-                name="axis|workspaceEntry|{{ workspace_entry.id }}"
-                {{ "checked" if workspace_entry.id in chart_form.left_axis_workspace_ids }}
-                value="left" />
-          </div>
-
-          {% set right_axis = True if workspace_entry.id in chart_form.right_axis_workspace_ids else False %}
-          {% set left_axis = not right_axis %}
-
-          <div class="middle {{ "align-right" if right_axis }}">
-            {{ workspace_entry.label }}
-          </div>
-
-          <div class="flex-row right" data-tooltip="Move data trace to the right axis">
-            <input
-                type="checkbox"
-                class="js-axis js-axis-right"
-                name="axis|workspaceEntry|{{ workspace_entry.id }}"
-                {{ "checked" if workspace_entry.id in chart_form.right_axis_workspace_ids }}
-                value="right" />
-            <span class="icon icon-right"></span>
-          </div>
-
-          <div class="hidden">
-            <input
-                type="checkbox"
-                class="js-axis js-axis-blank"
-                {{ "checked" if workspace_entry.id in chart_form.no_axis_workspace_ids }}
-                name="axis|workspaceEntry|{{ workspace_entry.id }}"
-                value="blank" />
-          </div>
-        </div>
-      {% endfor %}
-    {% endfor %}
+    {{ render_axis_checkboxes(chart_form) }}
   </div>
 </div>

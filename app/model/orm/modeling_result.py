@@ -211,6 +211,10 @@ class ModelingResult(OrmBase):
             'fit':          [FIT_PARAMETERS[f] for f in fit_names],
         }
 
+    @property
+    def units(self):
+        return self.measurementContext.units
+
     def get_chart_label(self):
         model_name = self.short_model_name or self.model_name
 

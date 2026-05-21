@@ -6,6 +6,7 @@ from flask import (
     redirect,
     request,
     url_for,
+    session,
 )
 from werkzeug.exceptions import Forbidden
 
@@ -13,10 +14,13 @@ from app.model.lib.chart import Chart
 from app.model.lib.errors import LoginRequired
 from app.view.forms.comparative_chart_form import ComparativeChartForm
 from app.model.orm import (
+    MeasurementContext,
+    ModelingResult,
     User,
     Workspace,
     WorkspaceEntry,
 )
+from app.model.lib.compare import init_compare_data
 import app.model.lib.util as util
 
 
@@ -50,8 +54,20 @@ def workspaces_index_page(orcidId, name="default"):
 def workspaces_visualize_page(orcidId, name="default"):
     workspace = _find_workspace(orcidId, name)
 
-    left_axis_workspace_ids  = util.parse_comma_separated_request_ids('l')
-    right_axis_workspace_ids = util.parse_comma_separated_request_ids('r')
+    compare_data = init_compare_data(session)
+
+    comparable_measurement_contexts = g.db_session.scalars(
+        sql.select(MeasurementContext)
+        .where(MeasurementContext.id.in_(compare_data['contexts']))
+    ).all()
+
+    comparable_modeling_results = g.db_session.scalars(
+        sql.select(ModelingResult)
+        .where(ModelingResult.id.in_(compare_data['models']))
+    ).all()
+
+    left_axis_workspace_ids  = util.parse_comma_separated_request_ids('lw')
+    right_axis_workspace_ids = util.parse_comma_separated_request_ids('rw')
 
     chart_form = ComparativeChartForm(
         g.db_session,
@@ -63,6 +79,8 @@ def workspaces_visualize_page(orcidId, name="default"):
         "pages/workspaces/visualize.html",
         workspace=workspace,
         chart_form=chart_form,
+        comparable_measurement_contexts=comparable_measurement_contexts,
+        comparable_modeling_results=comparable_modeling_results,
     )
 
 

@@ -253,7 +253,13 @@ class ComparativeChartForm:
 
         return '&'.join([f"{k}={v}" for k, v in parts.items() if v != ''])
 
-    def group_by_units(self, records):
+    def group_records_by_units(self):
+        records = [
+            *self.measurement_contexts,
+            *self.modeling_results,
+            *self.workspace_entries,
+        ]
+
         sorted_contexts = sorted(records, key=self._converted_unit_sort)
 
         groups = [

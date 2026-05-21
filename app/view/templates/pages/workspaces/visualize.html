@@ -34,7 +34,12 @@
       <form class="simple-form chart-form js-chart-form">
         <div class="columns">
           <div class="controls-column">
-            {{ render_chart_form(workspace, chart_form) }}
+            {{ render_chart_form(
+              workspace,
+              chart_form,
+              comparable_measurement_contexts,
+              comparable_modeling_results
+            ) }}
           </div>
 
           <div class="chart-column">
