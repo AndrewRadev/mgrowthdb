@@ -58,7 +58,7 @@ class ComparativeChartForm:
         self.modeling_result_ids = list(self.left_axis_model_ids) + list(self.right_axis_model_ids)
         self.modeling_results = []
 
-        self.workspace_entry_ids = list(self.left_axis_model_ids) + list(self.right_axis_model_ids)
+        self.workspace_entry_ids = list(self.left_axis_workspace_ids) + list(self.right_axis_workspace_ids)
         self.workspace_entries  = []
 
         self.cell_count_units = 'Cells/mL'
