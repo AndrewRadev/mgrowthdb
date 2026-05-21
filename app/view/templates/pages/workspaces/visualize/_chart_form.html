@@ -1,4 +1,4 @@
-{% macro render_chart_form(workspace, form, comparable_measurement_contexts, comparable_modeling_results) %}
+{% macro render_chart_form(workspace, form, comparable_records_by_study) %}
 
   {% set selectedSourceType = request.args.get('selectedSourceType', '') %}
 
@@ -42,44 +42,58 @@
   </div>
 
   <div class="trace-group js-trace-group">
-    {% for measurement_context in comparable_measurement_contexts: %}
-      {% set key = "measurementContext|{}".format(measurement_context.id) %}
-
+    {% for (study, records) in comparable_records_by_study.items(): %}
       <div
-          class="form-row hidden js-trace-row"
+          class="form-row hidden js-trace-row js-header-row"
           data-source-type="compare">
-        <input
-            type="checkbox"
-            name="{{ key }}"
-            id="{{ key }}"
-            {{ "checked" if measurement_context.id in form.measurement_context_ids }}
-            {{ "data-axis-left" if measurement_context.id in form.left_axis_ids }}
-            {{ "data-axis-right" if measurement_context.id in form.right_axis_ids }}
-            class="js-measurement-toggle" />
-        <label for="{{ key }}">
-          {{ measurement_context.get_chart_label() }}
-        </label>
+        <span>
+          [<a href="{{ url_for('study_show_page', publicId=study.publicId) }}">{{ study.publicId }}</a>]
+          {{ study.name|truncate(50) }}
+        </span>
       </div>
-    {% endfor %}
 
-    {% for modeling_result in comparable_modeling_results: %}
-      {% set key = "modelingResult|{}".format(modeling_result.id) %}
+      {% set measurement_contexts = records['measurement_contexts'] %}
+      {% set modeling_results     = records['modeling_results'] %}
 
-      <div
-          class="form-row hidden js-trace-row"
-          data-source-type="compare">
-        <input
-            type="checkbox"
-            name="{{ key }}"
-            id="{{ key }}"
-            {{ "checked" if modeling_result.id in form.modeling_result_ids }}
-            {{ "data-axis-left" if modeling_result.id in form.left_axis_model_ids }}
-            {{ "data-axis-right" if modeling_result.id in form.right_axis_model_ids }}
-            class="js-measurement-toggle" />
-        <label for="{{ key }}">
-          {{ modeling_result.get_chart_label() }}
-        </label>
-      </div>
+      {% for measurement_context in measurement_contexts: %}
+        {% set key = "measurementContext|{}".format(measurement_context.id) %}
+
+        <div
+            class="form-row hidden js-trace-row"
+            data-source-type="compare">
+          <input
+              type="checkbox"
+              name="{{ key }}"
+              id="{{ key }}"
+              {{ "checked" if measurement_context.id in form.measurement_context_ids }}
+              {{ "data-axis-left" if measurement_context.id in form.left_axis_ids }}
+              {{ "data-axis-right" if measurement_context.id in form.right_axis_ids }}
+              class="js-measurement-toggle" />
+          <label for="{{ key }}">
+            {{ measurement_context.get_chart_label() }}
+          </label>
+        </div>
+      {% endfor %}
+
+      {% for modeling_result in modeling_results: %}
+        {% set key = "modelingResult|{}".format(modeling_result.id) %}
+
+        <div
+            class="form-row hidden js-trace-row"
+            data-source-type="compare">
+          <input
+              type="checkbox"
+              name="{{ key }}"
+              id="{{ key }}"
+              {{ "checked" if modeling_result.id in form.modeling_result_ids }}
+              {{ "data-axis-left" if modeling_result.id in form.left_axis_model_ids }}
+              {{ "data-axis-right" if modeling_result.id in form.right_axis_model_ids }}
+              class="js-measurement-toggle" />
+          <label for="{{ key }}">
+            {{ modeling_result.get_chart_label() }}
+          </label>
+        </div>
+      {% endfor %}
     {% endfor %}
   </div>
 

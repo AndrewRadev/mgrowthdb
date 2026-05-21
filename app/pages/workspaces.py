@@ -1,3 +1,5 @@
+import itertools
+
 import pandas as pd
 import sqlalchemy as sql
 from flask import (
@@ -66,6 +68,18 @@ def workspaces_visualize_page(orcidId, name="default"):
         .where(ModelingResult.id.in_(compare_data['models']))
     ).all()
 
+    comparable_records_by_study = {}
+
+    for study, measurement_context_group in itertools.groupby(comparable_measurement_contexts, lambda mc: mc.study):
+        if study not in comparable_records_by_study:
+            comparable_records_by_study[study] = {'measurement_contexts': [], 'modeling_results': []}
+        comparable_records_by_study[study]['measurement_contexts'] = list(measurement_context_group)
+
+    for study, modeling_result_group in itertools.groupby(comparable_modeling_results, lambda mc: mc.study):
+        if study not in comparable_records_by_study:
+            comparable_records_by_study[study] = {'measurement_contexts': [], 'modeling_results': []}
+        comparable_records_by_study[study]['modeling_results'] = list(modeling_result_group)
+
     left_axis_workspace_ids  = util.parse_comma_separated_request_ids('lw')
     right_axis_workspace_ids = util.parse_comma_separated_request_ids('rw')
 
@@ -79,8 +93,7 @@ def workspaces_visualize_page(orcidId, name="default"):
         "pages/workspaces/visualize.html",
         workspace=workspace,
         chart_form=chart_form,
-        comparable_measurement_contexts=comparable_measurement_contexts,
-        comparable_modeling_results=comparable_modeling_results,
+        comparable_records_by_study=comparable_records_by_study,
     )
 
 
