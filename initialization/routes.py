@@ -182,6 +182,15 @@ def init_routes(app):
         view_func=workspace_pages.workspaces_data_preview_fragment,
         methods=["POST"],
     )
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/modeling/",
+        view_func=workspace_pages.workspaces_modeling_page,
+        methods=["GET", "POST"],
+    )
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/modeling/<string:name>/chart/",
+        view_func=workspace_pages.workspaces_modeling_chart_fragment,
+    )
 
     app.add_url_rule(
         "/workspaces/entry/<int:id>/update/",

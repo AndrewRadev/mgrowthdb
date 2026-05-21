@@ -53,6 +53,20 @@ def workspaces_index_page(orcidId, name="default"):
     )
 
 
+def workspaces_data_preview_fragment():
+    file = request.files['file']
+    include_error = request.form.get('includeError', 'false') == 'true'
+
+    df, errors = _process_upload(file)
+
+    return render_template(
+        "pages/workspaces/_data_preview.html",
+        df=df,
+        include_error=include_error,
+        errors=errors,
+    )
+
+
 def workspaces_visualize_page(orcidId, name="default"):
     workspace = _find_workspace(orcidId, name)
 
@@ -97,20 +111,6 @@ def workspaces_visualize_page(orcidId, name="default"):
     )
 
 
-def workspaces_data_preview_fragment():
-    file = request.files['file']
-    include_error = request.form.get('includeError', 'false') == 'true'
-
-    df, errors = _process_upload(file)
-
-    return render_template(
-        "pages/workspaces/_data_preview.html",
-        df=df,
-        include_error=include_error,
-        errors=errors,
-    )
-
-
 def workspaces_chart_fragment(orcidId, name="default"):
     workspace = _find_workspace(orcidId, name)
     args = request.form.to_dict()
@@ -128,6 +128,22 @@ def workspaces_chart_fragment(orcidId, name="default"):
         chart_form=chart_form,
         chart=chart,
     )
+
+
+def workspaces_modeling_page(orcidId, name="default"):
+    workspace = _find_workspace(orcidId, name)
+
+    return render_template(
+        "pages/workspaces/modeling.html",
+        workspace=workspace,
+    )
+
+
+def workspaces_modeling_chart_fragment(orcidId, name="default"):
+    workspace = _find_workspace(orcidId, name)
+    args = request.form.to_dict()
+
+    return 'TODO'
 
 
 def workspaces_update_entry_action(id):

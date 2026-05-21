@@ -1,6 +1,6 @@
 import itertools
 from io import BytesIO
-from datetime import datetime, UTC
+from datetime import datetime
 
 import pandas as pd
 import sqlalchemy as sql
@@ -9,7 +9,6 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_utc.sqltypes import UtcDateTime
 
 from app.model.orm.orm_base import OrmBase
@@ -83,6 +82,10 @@ class WorkspaceEntry(OrmBase):
             ))
 
         return entries
+
+    @property
+    def isGrowth(self):
+        return self.subjectType in ('community', 'strain')
 
     def get_df(self):
         return pd.read_csv(BytesIO(self.data.encode('utf-8')))

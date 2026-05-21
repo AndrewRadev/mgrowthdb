@@ -1,0 +1,59 @@
+.workspaces-modeling-page {
+  .chart-form {
+    margin-top: 20px;
+
+    label {
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .columns {
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+
+    .controls-column {
+      width: 30%;
+    }
+
+    .chart-column {
+      width: 70%;
+      overflow-x: hidden;
+    }
+  }
+
+  .trace-group {
+    display: flex;
+    flex-direction: column;
+    row-gap: 6px;
+    margin-top: 10px;
+  }
+
+  .chart-placeholder {
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 52px;
+    opacity: 0.5;
+  }
+
+  .data-controls {
+    border-bottom: 2px solid var(--border-color);
+    padding: 4px 0;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .column {
+      display: flex;
+      flex-direction: row;
+    }
+
+    input[type="checkbox"] {
+      margin: 0;
+    }
+  }
+}

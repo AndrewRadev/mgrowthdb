@@ -1,0 +1,103 @@
+{% macro render_workspace_form(workspace) %}
+
+  {% set selectedWorkspaceEntryId = request.args.get('selectedWorkspaceEntryId', '0')|int %}
+
+  <div class="trace-group js-trace-group">
+    {% for workspace_entry in workspace.entries if workspace_entry.sourceType == 'upload' and workspace_entry.isGrowth: %}
+      {% set key = "workspaceEntry|{}".format(workspace_entry.id) %}
+
+      <div class="form-row js-trace-row">
+        <input
+            type="radio"
+            name="selectedContext"
+            data-measurement-label="{{ workspace_entry.label }}"
+            data-units-label="{{ workspace_entry.units }}"
+            {{ "checked" if selectedWorkspaceEntryId == workspace_entry.id else "" }}
+            value="{{ key }}"
+            id="{{ key }}"
+            class="js-measurement-toggle" />
+        <label class="full" for="{{ key }}">
+          {{ workspace_entry.label }}
+        </label>
+
+        <div class="js-modeling-result-state">
+          {% for modeling_result in workspace_entry.modelingResults: %}
+            <div
+                data-modeling-result-id="{{ modeling_result.id }}"
+                data-modeling-type="{{ modeling_result.type }}"
+                data-modeling-state="{{ modeling_result.state }}"
+                class="hidden">
+              {% if modeling_result.state == 'ready': %}
+                <span data-tooltip="Ready">✅</span>
+              {% elif modeling_result.state == 'error': %}
+                <span data-tooltip="Error">❌</span>
+              {% elif modeling_result.state == 'pending': %}
+                <span data-tooltip="Pending">⏳</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="modeling-fields">
+      <div class="form-row">
+        <label class="full">
+          <span>Modeling type</span>
+          <select name="modelingType" class="form-input-blue form-input-full">
+            <option value="easy_linear">"Easy linear" method</option>
+            <option value="logistic">Logistic model</option>
+            <option value="baranyi_roberts">Baranyi-Roberts model</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row hidden" data-modeling-input data-modeling-input-easy_linear>
+        <label
+            class="full"
+            data-tooltip="Set to limit the number of points to use to determine the slope">
+          <span>Point count:</span>
+          <input
+              type="number"
+              name="pointCount"
+              min="2"
+              class="form-input-blue form-input-full"
+              value="{{ request.form['pointCount'] or 5 }}" />
+        </label>
+      </div>
+
+      <div
+          class="form-row full hidden"
+          data-modeling-input
+          data-modeling-input-logistic
+          data-modeling-input-baranyi_roberts>
+        <label
+            class="full"
+            data-tooltip="Set to limit the end value on the x-axis to pick for the calculation">
+          <span>End time:</span>
+          <input
+              type="number"
+              name="endTime"
+              min="0"
+              class="form-input-blue form-input-full"
+              value="{{ request.form['endTime'] or '' }}" />
+        </label>
+      </div>
+
+      <div class="js-calculation-status">
+        <h3>Calculation status</h3>
+
+        <div class="help">
+          <div class="js-calculation-result">
+            Pending, submit the form to start calculation process.
+          </div>
+        </div>
+
+        <div class="flex-column flex-gap-10">
+          <input type="submit" class="flex-end" value="Calculate" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endmacro %}
