@@ -286,6 +286,14 @@ class ModelingResult(OrmBase):
 
         flag_modified(self, 'params')
 
+    def visible_to_user(self, user):
+        if self.measurementContextId is not None:
+            return self.study.visible_to_user(user)
+        elif self.workspaceEntryId is not None:
+            return self.workspaceEntry.workspace.visible_to_user(user)
+        else:
+            raise ValueError("None of measurementContextId or workspaceEntryId are present")
+
     def _predict(self, timepoints):
         if self.type == 'easy_linear':
             return self._predict_easy_linear(timepoints)

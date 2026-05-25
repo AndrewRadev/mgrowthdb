@@ -97,6 +97,10 @@ class WorkspaceEntry(OrmBase):
     def canBeModeled(self):
         return self.sourceType == 'upload' and self.dataType == 'measurement' and self.isGrowth
 
+    @property
+    def readyModelingResults(self):
+        return [mr for mr in self.modelingResults if mr.state == 'ready']
+
     def get_df(self, db_session=None):
         # The `db_session` parameter is provided for compatibility with other
         # types of records

@@ -72,6 +72,37 @@
         <strong>Uploaded:</strong>
         {{ time_tag(workspace_entry.createdAt) }}
       </li>
+
+      {% if workspace_entry.modelingResults: %}
+        <li>
+          <strong>Model fits:</strong>
+          <ul class="model-list">
+            {% for modeling_result in workspace_entry.readyModelingResults: %}
+              <li>
+                <div class="button-group" style="display: inline-block; margin-right: 6px;">
+                  <a
+                      href="{{ url_for('workspaces_visualize_page', orcidId=g.current_user.orcidId, lw=workspace_entry.id, lm=modeling_result.id) }}"
+                      class="white-button small-button"
+                      style="vertical-align: bottom"
+                      data-tooltip="Visualize">
+                    <span class="flex-row icon icon-chart"></span>
+                  </a>
+
+                  <a
+                      href="{{ url_for('model_prediction_csv', id=modeling_result.id, withLabel=1) }}"
+                      class="white-button small-button"
+                      style="vertical-align: bottom"
+                      download="model_prediction_{{ workspace_entry.id }}.csv"
+                      data-tooltip="Download data">
+                    <span class="flex-row icon icon-download-black"></span>
+                  </a>
+                </div>
+                {{ modeling_result.get_chart_label() }}
+              </li>
+            {% endfor %}
+          </ul>
+        </li>
+      {% endif %}
     </ul>
   </div>
 

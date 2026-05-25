@@ -37,6 +37,31 @@
             {{ workspace_entry.label }}
           </label>
         </div>
+
+        {% for modeling_result in workspace_entry.readyModelingResults: %}
+          {% set key = "modelingResult|{}".format(modeling_result.id) %}
+
+          <div
+              class="form-row small model-row hidden js-trace-row"
+              data-source-type="{{ source_type }}">
+            <span class="icon icon-arrow-down-right"></span>
+            <input
+                type="checkbox"
+                name="{{ key }}"
+                id="{{ key }}"
+                {{ "checked" if modeling_result.id in form.modeling_result_ids }}
+                {{ "data-axis-left" if modeling_result.id in form.left_axis_model_ids }}
+                {{ "data-axis-right" if modeling_result.id in form.right_axis_model_ids }}
+                class="js-measurement-toggle" />
+            <label for="{{ key }}">
+              {{ modeling_result.model_name }}
+
+              {% if modeling_result.short_model_name: %}
+                ({{ modeling_result.short_model_name }})
+              {% endif %}
+            </label>
+          </div>
+        {% endfor %}
       {% endfor %}
     {% endfor %}
   </div>

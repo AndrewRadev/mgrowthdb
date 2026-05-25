@@ -46,3 +46,6 @@ class Workspace(OrmBase):
     @hybrid_property
     def isPublished(self):
         return self.publishedAt != None
+
+    def visible_to_user(self, user):
+        return self.isPublished or self.user == user

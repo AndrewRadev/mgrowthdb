@@ -97,11 +97,15 @@ def workspaces_visualize_page(orcidId, name="default"):
 
     left_axis_workspace_ids  = util.parse_comma_separated_request_ids('lw')
     right_axis_workspace_ids = util.parse_comma_separated_request_ids('rw')
+    left_axis_model_ids  = util.parse_comma_separated_request_ids('lm')
+    right_axis_model_ids = util.parse_comma_separated_request_ids('rm')
 
     chart_form = ComparativeChartForm(
         g.db_session,
         left_axis_workspace_ids=left_axis_workspace_ids,
         right_axis_workspace_ids=right_axis_workspace_ids,
+        left_axis_model_ids=left_axis_model_ids,
+        right_axis_model_ids=right_axis_model_ids,
     )
 
     return render_template(

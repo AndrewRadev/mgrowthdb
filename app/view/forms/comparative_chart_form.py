@@ -149,39 +149,6 @@ class ComparativeChartForm:
                 metabolite_mass=metabolite_mass,
             )
 
-        for modeling_result in self.modeling_results:
-            measurement_context = modeling_result.measurementContext
-            technique = measurement_context.technique
-
-            if modeling_result.id in self.left_axis_model_ids:
-                axis = 'left'
-                log_transform = self.log_left
-            elif modeling_result.id in self.right_axis_model_ids:
-                axis = 'right'
-                log_transform = self.log_right
-            else:
-                continue
-
-            measurement_df = measurements_df[measurements_df['contextId'] == measurement_context.id]
-            if measurement_df.empty:
-                # Could happen if we're just rendering the model without the parent measurement:
-                measurement_df = measurement_context.get_df(self.db_session)
-
-            model_df = modeling_result.generate_chart_df(measurement_df)
-            label    = modeling_result.get_chart_label()
-
-            if technique.units == '':
-                units = technique.short_name
-            else:
-                units = technique.units
-
-            chart.add_model_df(
-                model_df,
-                units=units,
-                label=label,
-                axis=axis,
-            )
-
         for workspace_entry in self.workspace_entries:
             if workspace_entry.id in self.left_axis_workspace_ids:
                 axis = 'left'
@@ -207,6 +174,41 @@ class ComparativeChartForm:
                 chart.add_model_df(df, **metadata)
             else:
                 chart.add_df(df, **metadata)
+
+        for modeling_result in self.modeling_results:
+            target = modeling_result.target
+
+            if modeling_result.id in self.left_axis_model_ids:
+                axis = 'left'
+                log_transform = self.log_left
+            elif modeling_result.id in self.right_axis_model_ids:
+                axis = 'right'
+                log_transform = self.log_right
+            else:
+                continue
+
+            if target.class_name == 'MeasurementContext':
+                measurement_df = measurements_df[measurements_df['contextId'] == target.id]
+                if measurement_df.empty:
+                    # Could happen if we're just rendering the model without the parent measurement:
+                    measurement_df = measurement_context.get_df(self.db_session)
+            elif target.class_name == 'WorkspaceEntry':
+                measurement_df = target.get_df()
+
+            model_df = modeling_result.generate_chart_df(measurement_df)
+            label    = modeling_result.get_chart_label()
+
+            if target.units == '' and target.class_name == 'MeasurementContext':
+                units = target.technique.short_name
+            else:
+                units = target.units
+
+            chart.add_model_df(
+                model_df,
+                units=units,
+                label=label,
+                axis=axis,
+            )
 
         if self.show_perturbations:
             perturbations = self.db_session.scalars(
@@ -256,8 +258,8 @@ class ComparativeChartForm:
     def group_records_by_units(self):
         records = [
             *self.measurement_contexts,
-            *self.modeling_results,
             *self.workspace_entries,
+            *self.modeling_results,
         ]
 
         sorted_contexts = sorted(records, key=self._converted_unit_sort)

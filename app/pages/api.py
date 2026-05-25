@@ -233,13 +233,25 @@ def model_prediction_json(id):
 
 def model_prediction_csv(id):
     modeling_result = g.db_session.get(ModelingResult, id)
-    if not modeling_result or not modeling_result.study.isPublished:
+    if not modeling_result:
+        raise NotFound
+
+    if api_key := request.args.get('apiKey'):
+        current_user = g.db_session.scalars(
+            sql.select(User)
+            .where(User.apiKey == api_key)
+            .limit(1)
+        ).one()
+    else:
+        current_user = g.current_user
+
+    if not modeling_result.visible_to_user(current_user):
         raise NotFound
 
     if modeling_result.measurementContext:
         measurements_df = modeling_result.measurementContext.get_df(g.db_session)
     else:
-        measurements_df = None
+        measurements_df = modeling_result.workspaceEntry.get_df()
 
     df = modeling_result.generate_chart_df(measurements_df)
 

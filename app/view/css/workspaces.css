@@ -65,6 +65,16 @@
       border: 2px solid transparent;
       border-radius: var(--border-radius);
 
+      .model-list {
+        padding-left: 6px;
+        list-style-type: none;
+
+        .icon {
+          width: 14px;
+          height: 14px;
+        }
+      }
+
       .view-container {
         position: relative;
       }
