@@ -1,6 +1,7 @@
 import itertools
 from io import BytesIO
 from datetime import datetime
+from typing import List
 
 import pandas as pd
 import sqlalchemy as sql
@@ -42,6 +43,11 @@ class WorkspaceEntry(OrmBase):
 
     createdAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+
+    modelingResults: Mapped[List['ModelingResult']] = relationship(
+        back_populates='workspaceEntry',
+        cascade='all, delete-orphan',
+    )
 
     @classmethod
     def from_upload(Self, df, workspace, metadata={}, include_error=False):
@@ -89,3 +95,11 @@ class WorkspaceEntry(OrmBase):
 
     def get_df(self):
         return pd.read_csv(BytesIO(self.data.encode('utf-8')))
+
+    def get_chart_label(self, model_name=None):
+        from markupsafe import escape
+
+        if model_name:
+            return f"{self.label} ({escape(model_name)} fit)"
+        else:
+            return self.label

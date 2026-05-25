@@ -69,16 +69,25 @@ class ModelingResult(OrmBase):
     id:   Mapped[int] = mapped_column(primary_key=True)
     type: Mapped[str] = mapped_column(sql.String(100), nullable=False)
 
+    # A modeling result should either have a target MeasurementContext or
+    # WorkspaceEntry. Both are marked as nullable, but at least one should be
+    # present:
+    #
     measurementContextId: Mapped[int] = mapped_column(
         sql.ForeignKey('MeasurementContexts.id'),
-        nullable=False,
+        nullable=True,
     )
     measurementContext: Mapped['MeasurementContext'] = relationship(back_populates='modelingResults')
-
     study: Mapped['Study'] = relationship(
         secondary='MeasurementContexts',
         viewonly=True
     )
+
+    workspaceEntryId: Mapped[int] = mapped_column(
+        sql.ForeignKey('WorkspaceEntries.id'),
+        nullable=True,
+    )
+    workspaceEntry: Mapped['WorkspaceEntry'] = relationship(back_populates='modelingResults')
 
     customModelId: Mapped[int] = mapped_column(sql.ForeignKey('CustomModels.id'))
     customModel: Mapped['CustomModel'] = relationship()
@@ -212,13 +221,22 @@ class ModelingResult(OrmBase):
         }
 
     @property
+    def target(self):
+        if self.measurementContextId:
+            return self.measurementContext
+        elif self.workspaceEntryId:
+            return self.workspaceEntry
+        else:
+            raise ValueError("None of measurementContextId or workspaceEntryId are present")
+
+    @property
     def units(self):
-        return self.measurementContext.units
+        return self.target.units
 
     def get_chart_label(self):
         model_name = self.short_model_name or self.model_name
 
-        return self.measurementContext.get_chart_label(model_name=model_name)
+        return self.target.get_chart_label(model_name=model_name)
 
     def generate_chart_df(self, measurements_df=None):
         if self.type.startswith('custom_'):

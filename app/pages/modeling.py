@@ -112,7 +112,12 @@ def modeling_submit_action(publicId):
     g.db_session.add(modeling_result)
     g.db_session.commit()
 
-    process_modeling_request.delay(modeling_result.id, measurement_context_id, args)
+    process_modeling_request.delay(
+        modeling_result.id,
+        'MeasurementContext',
+        measurement_context_id,
+        args,
+    )
 
     return {'modelingResultId': modeling_result.id}
 

@@ -341,7 +341,7 @@ CREATE TABLE ModelingResults (
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   calculatedAt datetime DEFAULT NULL,
-  measurementContextId int NOT NULL,
+  measurementContextId int DEFAULT NULL,
   rSummary text,
   params json DEFAULT (json_object()),
   xValues json DEFAULT (json_array()),
@@ -349,11 +349,14 @@ CREATE TABLE ModelingResults (
   yErrors json DEFAULT (json_array()),
   customModelId int DEFAULT NULL,
   publishedAt datetime DEFAULT NULL,
+  workspaceEntryId int DEFAULT NULL,
   PRIMARY KEY (id),
   KEY Calculations_calculationTechniqueId (requestId),
   KEY ModelingResults_customModelId (customModelId),
+  KEY ModelingResults_workspaceEntryId (workspaceEntryId),
   CONSTRAINT Calculations_calculationTechniqueId FOREIGN KEY (requestId) REFERENCES ModelingRequests (id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT ModelingResults_customModelId FOREIGN KEY (customModelId) REFERENCES CustomModels (id) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT ModelingResults_customModelId FOREIGN KEY (customModelId) REFERENCES CustomModels (id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT ModelingResults_workspaceEntryId FOREIGN KEY (workspaceEntryId) REFERENCES WorkspaceEntries (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -840,5 +843,6 @@ INSERT INTO MigrationVersions VALUES
 (100,'2026_05_14_143040_add_fields_to_workspace_entries','2026-05-18 10:24:32'),
 (108,'2026_05_19_111609_add_source_type_to_workspace_entries','2026-05-19 09:36:45'),
 (117,'2026_05_19_112912_create_workspaces','2026-05-19 09:56:39'),
-(125,'2026_05_19_114228_move_workspace_entries_under_workspaces','2026-05-19 10:09:28');
+(125,'2026_05_19_114228_move_workspace_entries_under_workspaces','2026-05-19 10:09:28'),
+(128,'2026_05_25_111809_add_workspace_entry_id_to_modeling_result','2026-05-25 09:22:50');
 
