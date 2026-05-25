@@ -50,9 +50,8 @@ def _process_modeling_request(db_session, modeling_result_id, target_type, targe
         if modeling_type in ('logistic', 'baranyi_roberts') and end_time != '':
             data = data[data['time'] <= float(end_time)]
 
-        # We don't need standard deviation for modeling:
-        if 'std' in data.columns:
-            data = data.drop(columns=['std'])
+        # We don't need error columns for modeling:
+        data = data[["time", "value"]]
 
         # Remove rows with NA values, if any
         data = data.dropna()

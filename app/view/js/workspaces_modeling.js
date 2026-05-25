@@ -1,14 +1,13 @@
 Page('.workspaces-modeling-page', function($page) {
   let chartUrl = $page.data('chartUrl')
-  let $form   = $page.find('.js-chart-form');
+  let $form    = $page.find('.js-modeling-form');
 
   let orcidId       = $page.data('orcidId');
   let workspaceName = $page.data('workspaceName');
 
-  // TODO: Adapt to workspaces:
-
   let $activeRadio = $('.js-trace-row:visible input[type=radio]:checked');
 
+  updateModelFieldVisibility($form);
   if ($activeRadio.length > 0) {
     updateChart($activeRadio.first());
     updateSelectedWorkspaceEntry($activeRadio.first());
@@ -32,20 +31,12 @@ Page('.workspaces-modeling-page', function($page) {
     $select.trigger('change');
   });
 
-  $page.find('.js-experiment-container').each(function(e) {
-    let $container = $(this);
-
-    if ($container.find('input[type=checkbox]:checked').length > 0) {
-      $container.removeClass('hidden');
-      return;
-    }
-  });
-
   $page.on('change', 'form.js-modeling-form', function(e) {
     let $form = $(e.currentTarget);
 
     let $activeRadio = $page.find('.js-trace-row:visible input[type=radio]:checked');
 
+    updateModelFieldVisibility($form);
     if ($activeRadio.length > 0) {
       updateChart($activeRadio.first());
       updateSelectedWorkspaceEntry($activeRadio.first());
@@ -75,65 +66,15 @@ Page('.workspaces-modeling-page', function($page) {
     })
   });
 
-  $page.on('click', '.js-toggle-published', function(e) {
-    e.preventDefault();
+  function updateModelFieldVisibility($form) {
+    let $modelingType = $form.find('select[name=modelingType]');
+    let modelingType = $modelingType.val();
 
-    let $button = $(e.currentTarget);
-    let url     = $button.data('url');
+    $form.find('[data-modeling-type]').addClass('hidden');
+    $form.find(`[data-modeling-type="${modelingType}"]`).removeClass('hidden');
 
-    $form.find('input').prop('disabled', true);
-
-    $.ajax({
-      url: url,
-      dataType: 'json',
-      method: 'POST',
-      success: function(response) {
-        $form.find('input').prop('disabled', false);
-        let $activeRadio = $('.js-trace-row:visible input[type=radio]:checked');
-        updateChart($activeRadio.first());
-      },
-      error: function() {
-        $form.find('input').prop('disabled', false);
-      }
-    })
-  });
-
-  $page.on('click', '.js-edit-model', function(e) {
-    let $parentContainer = $(this).parents('.js-preview');
-    let $form = $parentContainer.next('form[data-custom-model-id]');
-
-    $parentContainer.addClass('hidden');
-    $form.removeClass('hidden');
-  });
-
-  $page.on('click', '.js-cancel-edit-model', function(e) {
-    let $form = $(this).parents('form[data-custom-model-id]');
-    let $preview = $form.prev('.js-preview');
-
-    $form.addClass('hidden');
-    $preview.removeClass('hidden');
-  });
-
-  $page.on('click', '.js-delete-model', function(e) {
-    let $button = $(this);
-
-    if (confirm($button.data('confirm'))) {
-      $.ajax({
-        url: $button.data('url'),
-        method: 'POST',
-        success: function() {
-          window.location.reload();
-        }
-      });
-    }
-  });
-
-  function updateMeasurementSubjects($form) {
-    let $techniqueSelect = $form.find('.js-technique-type');
-    let techniqueId = $techniqueSelect.val();
-
-    $form.find('[data-technique-id]').addClass('hidden')
-    $form.find(`[data-technique-id=${techniqueId}]`).removeClass('hidden')
+    $form.find('[data-modeling-input]').addClass('hidden');
+    $form.find(`[data-modeling-input-${modelingType}]`).removeClass('hidden');
   }
 
   function updateChart($radio) {

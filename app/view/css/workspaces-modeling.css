@@ -23,6 +23,11 @@
     }
   }
 
+  .r-summary pre {
+    padding: 10px;
+    background-color: #eee;
+  }
+
   .trace-group {
     display: flex;
     flex-direction: column;

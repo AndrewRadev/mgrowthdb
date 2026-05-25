@@ -39,7 +39,7 @@
 
       <form
           action="{{ url_for('workspaces_modeling_submit_action', orcidId=workspace.user.orcidId, name=workspace.name) }}"
-          class="simple-form modeling-form js-modeling-form">
+          class="simple-form modeling-form margin-top-10 js-modeling-form">
         <div class="columns">
           <div class="controls-column">
             {{ render_modeling_form(workspace) }}
