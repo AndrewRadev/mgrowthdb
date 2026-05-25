@@ -123,14 +123,5 @@
       border: 2px solid var(--border-color);
       border-radius: var(--border-radius);
     }
-
-    .chart-placeholder {
-      height: 300px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 52px;
-      opacity: 0.5;
-    }
   }
 }

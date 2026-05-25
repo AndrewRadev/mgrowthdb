@@ -30,15 +30,6 @@
     margin-top: 10px;
   }
 
-  .chart-placeholder {
-    height: 300px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 52px;
-    opacity: 0.5;
-  }
-
   .data-controls {
     border-bottom: 2px solid var(--border-color);
     padding: 4px 0;

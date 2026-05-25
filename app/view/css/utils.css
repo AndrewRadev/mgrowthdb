@@ -152,6 +152,15 @@ hr {
   border-color: var(--light-border-color);
 }
 
+.chart-placeholder {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 52px;
+  opacity: 0.5;
+}
+
 .error-message,
 .flash-error {
   display: block;
