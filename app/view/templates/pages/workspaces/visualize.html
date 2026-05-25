@@ -24,12 +24,12 @@
     </h1>
 
     <article>
-      <p class="help">
+      {% include 'pages/workspaces/_tabs.html' %}
+
+      <p class="help small">
         Explore data you've uploaded directly, pushed through the API, or
         collected across studies via the "Compare" button.
       </p>
-
-      {% include 'pages/workspaces/_tabs.html' %}
 
       <form class="simple-form chart-form js-chart-form">
         <div class="columns">
