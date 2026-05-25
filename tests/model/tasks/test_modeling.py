@@ -40,8 +40,8 @@ class TestModeling(DatabaseTest):
 
         modeling_result = _process_modeling_request(
             self.db_session,
-            'MeasurementContext',
             modeling_result.id,
+            'MeasurementContext',
             measurement_context.id,
         )
 
