@@ -18,13 +18,13 @@ _LOGGER = get_task_logger(__name__)
 
 
 @shared_task
-def process_modeling_request(modeling_result_id, target_type, target_id, args):
+def process_modeling_request(modeling_result_id, *, target_type, target_id, args):
     db_session = FLASK_DB.session
 
     _process_modeling_request(db_session, modeling_result_id, target_type, target_id, args)
 
 
-def _process_modeling_request(db_session, target_type, modeling_result_id, target_id, args={}):
+def _process_modeling_request(db_session, modeling_result_id, target_type, target_id, args={}):
     modeling_result = db_session.get(ModelingResult, modeling_result_id)
 
     if target_type == 'MeasurementContext':
@@ -51,7 +51,8 @@ def _process_modeling_request(db_session, target_type, modeling_result_id, targe
             data = data[data['time'] <= float(end_time)]
 
         # We don't need standard deviation for modeling:
-        data = data.drop(columns=['std'])
+        if 'std' in data.columns:
+            data = data.drop(columns=['std'])
 
         # Remove rows with NA values, if any
         data = data.dropna()

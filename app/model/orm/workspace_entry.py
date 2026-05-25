@@ -93,7 +93,13 @@ class WorkspaceEntry(OrmBase):
     def isGrowth(self):
         return self.subjectType in ('community', 'strain')
 
-    def get_df(self):
+    @property
+    def canBeModeled(self):
+        return self.sourceType == 'upload' and self.dataType == 'measurement' and self.isGrowth
+
+    def get_df(self, db_session=None):
+        # The `db_session` parameter is provided for compatibility with other
+        # types of records
         return pd.read_csv(BytesIO(self.data.encode('utf-8')))
 
     def get_chart_label(self, model_name=None):

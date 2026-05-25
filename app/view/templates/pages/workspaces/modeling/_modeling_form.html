@@ -1,15 +1,15 @@
-{% macro render_workspace_form(workspace) %}
+{% macro render_modeling_form(workspace) %}
 
   {% set selectedWorkspaceEntryId = request.args.get('selectedWorkspaceEntryId', '0')|int %}
 
   <div class="trace-group js-trace-group">
-    {% for workspace_entry in workspace.entries if workspace_entry.sourceType == 'upload' and workspace_entry.isGrowth: %}
+    {% for workspace_entry in workspace.entries if workspace_entry.canBeModeled: %}
       {% set key = "workspaceEntry|{}".format(workspace_entry.id) %}
 
       <div class="form-row js-trace-row">
         <input
             type="radio"
-            name="selectedContext"
+            name="selectedEntry"
             data-measurement-label="{{ workspace_entry.label }}"
             data-units-label="{{ workspace_entry.units }}"
             {{ "checked" if selectedWorkspaceEntryId == workspace_entry.id else "" }}

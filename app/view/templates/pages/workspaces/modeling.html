@@ -1,4 +1,4 @@
-{% from 'pages/modeling/_workspace_form.html' import render_workspace_form %}
+{% from 'pages/workspaces/modeling/_modeling_form.html' import render_modeling_form %}
 
 {% extends '_layout.html' %}
 
@@ -17,7 +17,11 @@
 ) %}
 
 {% block content %}
-  <div data-chart-url="{{ chart_url }}" class="container workspaces-modeling-page">
+  <div
+    data-chart-url="{{ chart_url }}"
+    data-orcid-id="{{ workspace.user.orcidId }}"
+    data-workspace-name="{{ workspace.name }}"
+    class="container workspaces-modeling-page">
     <h1>
       <span class="icon icon-emoji">🖥️</span>
       Workspaces
@@ -34,10 +38,11 @@
       {# TODO: "Download model parameters" csv link? #}
 
       <form
+          action="{{ url_for('workspaces_modeling_submit_action', orcidId=workspace.user.orcidId, name=workspace.name) }}"
           class="simple-form modeling-form js-modeling-form">
         <div class="columns">
           <div class="controls-column">
-            {{ render_workspace_form(workspace) }}
+            {{ render_modeling_form(workspace) }}
           </div>
 
           <div class="chart-column">

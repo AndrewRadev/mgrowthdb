@@ -2,6 +2,9 @@ Page('.workspaces-modeling-page', function($page) {
   let chartUrl = $page.data('chartUrl')
   let $form   = $page.find('.js-chart-form');
 
+  let orcidId       = $page.data('orcidId');
+  let workspaceName = $page.data('workspaceName');
+
   // TODO: Adapt to workspaces:
 
   let $activeRadio = $('.js-trace-row:visible input[type=radio]:checked');
@@ -145,15 +148,16 @@ Page('.workspaces-modeling-page', function($page) {
     $page.find('.js-trace-row').removeClass('highlight');
     $radio.parents('.js-trace-row').addClass('highlight');
 
-    let measurementContextId = $radio.val().replaceAll('workspaceEntry|', '');
+    let workspaceEntryId = $radio.val().replaceAll('workspaceEntry|', '');
 
     $.ajax({
       url: chartUrl,
       dataType: 'html',
       data: {
-        'modelingType': modelingType,
-        'logTransform': logTransform,
-        'isPublished':  isPublished,
+        modelingType:     modelingType,
+        logTransform:     logTransform,
+        isPublished:      isPublished,
+        workspaceEntryId: workspaceEntryId,
       },
       success: function(response) {
         $chart.html(response)
@@ -179,7 +183,7 @@ Page('.workspaces-modeling-page', function($page) {
 
   function checkForUpdates() {
     $.ajax({
-      url: `/modeling/${studyId}/check.json`,
+      url: `/workspaces/${orcidId}/modeling/${workspaceName}/check.json`,
       dataType: 'json',
       success: function(response) {
         let $calculationResult = $page.find('.js-calculation-result');

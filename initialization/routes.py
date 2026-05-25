@@ -191,6 +191,15 @@ def init_routes(app):
         "/workspaces/<string:orcidId>/modeling/<string:name>/chart/",
         view_func=workspace_pages.workspaces_modeling_chart_fragment,
     )
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/modeling/<string:name>/submit/",
+        view_func=workspace_pages.workspaces_modeling_submit_action,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/modeling/<string:name>/check.json",
+        view_func=workspace_pages.workspaces_modeling_check_json,
+    )
 
     app.add_url_rule(
         "/workspaces/entry/<int:id>/update/",

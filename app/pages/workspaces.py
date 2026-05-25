@@ -12,9 +12,12 @@ from flask import (
 )
 from werkzeug.exceptions import Forbidden
 
+from app.view.forms.comparative_chart_form import ComparativeChartForm
 from app.model.lib.chart import Chart
 from app.model.lib.errors import LoginRequired
-from app.view.forms.comparative_chart_form import ComparativeChartForm
+from app.model.lib.compare import init_compare_data
+import app.model.lib.util as util
+from app.model.tasks.modeling import process_modeling_request
 from app.model.orm import (
     MeasurementContext,
     ModelingResult,
@@ -22,8 +25,6 @@ from app.model.orm import (
     Workspace,
     WorkspaceEntry,
 )
-from app.model.lib.compare import init_compare_data
-import app.model.lib.util as util
 
 
 def workspaces_index_page(orcidId, name="default"):
@@ -130,22 +131,6 @@ def workspaces_chart_fragment(orcidId, name="default"):
     )
 
 
-def workspaces_modeling_page(orcidId, name="default"):
-    workspace = _find_workspace(orcidId, name)
-
-    return render_template(
-        "pages/workspaces/modeling.html",
-        workspace=workspace,
-    )
-
-
-def workspaces_modeling_chart_fragment(orcidId, name="default"):
-    workspace = _find_workspace(orcidId, name)
-    args = request.form.to_dict()
-
-    return 'TODO'
-
-
 def workspaces_update_entry_action(id):
     workspace_entry = g.db_session.get(WorkspaceEntry, id)
     workspace = workspace_entry.workspace
@@ -188,7 +173,118 @@ def workspaces_delete_all_action(id):
     return {'status': 'ok'}
 
 
-def _find_workspace(orcidId, name):
+def workspaces_modeling_page(orcidId, name="default"):
+    workspace = _find_workspace(orcidId, name, public=False)
+
+    return render_template(
+        "pages/workspaces/modeling.html",
+        workspace=workspace,
+    )
+
+
+def workspaces_modeling_chart_fragment(orcidId, name):
+    workspace = _find_workspace(orcidId, name, public=False)
+    args = request.args.to_dict()
+
+    modeling_type = args.pop('modelingType')
+    log_transform = args.pop('logTransform', 'false') == 'true'
+
+    workspace_entry = g.db_session.get(WorkspaceEntry, args['workspaceEntryId'])
+    measurement_df  = workspace_entry.get_df(g.db_session)
+
+    chart = Chart(
+        time_units='h',
+        log_left=log_transform,
+    )
+
+    units = workspace_entry.units
+
+    chart.add_df(
+        measurement_df,
+        units=units,
+        label=workspace_entry.label,
+    )
+
+    modeling_record = g.db_session.scalars(
+        sql.select(ModelingResult)
+        .where(
+            ModelingResult.type == modeling_type,
+            ModelingResult.workspaceEntryId == workspace_entry.id,
+            ModelingResult.state == 'ready',
+        )
+    ).one_or_none()
+
+    if modeling_record:
+        df = modeling_record.generate_chart_df(measurement_df)
+
+        label = modeling_record.model_name
+        chart.add_model_df(df, units=units, label=label)
+
+        model_params = modeling_record.params
+        r_summary    = modeling_record.rSummary
+    else:
+        model_params = ModelingResult.empty_params(modeling_type)
+        r_summary    = None
+
+    return render_template(
+        'pages/workspaces/modeling/_chart.html',
+        workspace=workspace,
+        chart=chart,
+        modeling_record=modeling_record,
+        model_params=model_params,
+        r_summary=r_summary,
+        units=units,
+        log_transform=log_transform,
+    )
+
+
+def workspaces_modeling_submit_action(orcidId, name="default"):
+    workspace = _find_workspace(orcidId, name, public=False)
+    args = request.form.to_dict()
+
+    modeling_type = args.pop('modelingType')
+    workspace_entry_id = int(args.pop('selectedEntry').removeprefix('workspaceEntry|'))
+
+    modeling_result = g.db_session.scalars(
+        sql.select(ModelingResult)
+        .where(
+            ModelingResult.type == modeling_type,
+            ModelingResult.workspaceEntryId == workspace_entry_id,
+        )
+    ).one_or_none()
+
+    if modeling_result is None:
+        modeling_result = ModelingResult(
+            type=modeling_type,
+            workspaceEntryId=workspace_entry_id,
+        )
+
+    modeling_result.state = 'pending'
+    g.db_session.add(modeling_result)
+    g.db_session.commit()
+
+    process_modeling_request.delay(
+        modeling_result.id,
+        target_type='WorkspaceEntry',
+        target_id=workspace_entry_id,
+        args=args,
+    )
+
+    return {'modelingResultId': modeling_result.id}
+
+
+def workspaces_modeling_check_json(orcidId, name):
+    workspace = _find_workspace(orcidId, name, public=False)
+
+    result_states = {}
+
+    for modeling_result in workspace.modelingResults:
+        result_states[modeling_result.id] = modeling_result.state
+
+    return result_states
+
+
+def _find_workspace(orcidId, name, public=True):
     workspace = g.db_session.scalars(
         sql.select(Workspace)
         .join(User)
@@ -197,8 +293,12 @@ def _find_workspace(orcidId, name):
         .limit(1)
     ).one()
 
-    if g.current_user != workspace.user and not workspace.isPublished:
-        raise Forbidden
+    if public:
+        if g.current_user != workspace.user and not workspace.isPublished:
+            raise Forbidden
+    else:
+        if g.current_user != workspace.user:
+            raise Forbidden
 
     return workspace
 
