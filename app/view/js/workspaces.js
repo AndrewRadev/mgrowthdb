@@ -14,6 +14,12 @@ Page('.workspaces-page', function($page) {
   updateUnitSelects($uploadContainer.parents('form'));
   $page.on('change', '.js-subject-type', (e) => updateUnitSelects($(e.currentTarget).parents('form')));
 
+  $page.on('change', '.js-workspace-select', function(e) {
+    let $option = $(e.currentTarget).find('option:selected');
+    let url = $option.data('url');
+    if (url) window.location = url;
+  });
+
   $page.on('click', '.js-edit', function(e) {
     let $link = $(e.currentTarget);
     let $entry = $link.parents('.js-workspace-entry');
@@ -81,6 +87,27 @@ Page('.workspaces-page', function($page) {
       cache: false,
       success: function(response) {
         window.location.reload();
+      }
+    })
+  });
+
+  $page.on('click', '.js-delete-workspace', function(e) {
+    e.preventDefault();
+
+    if (!confirm("Are you sure you want to delete this workspace and all the uploaded data in it?")) {
+      return;
+    }
+
+    let $link = $(e.currentTarget);
+    let deleteUrl = $link.attr('href');
+
+    $.ajax({
+      type: 'POST',
+      url: deleteUrl,
+      cache: false,
+      dataType: 'html',
+      success: function(response) {
+        window.location = response.url;
       }
     })
   });

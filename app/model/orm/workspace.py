@@ -33,6 +33,7 @@ class Workspace(OrmBase):
     entries: Mapped[List['WorkspaceEntry']] = relationship(
         back_populates="workspace",
         cascade='all, delete-orphan',
+        order_by='WorkspaceEntry.id',
     )
     modelingResults: Mapped[List['ModelingResult']] = relationship(
         secondary='WorkspaceEntries',

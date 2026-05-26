@@ -1,0 +1,15 @@
+{% if g.current_user and workspace.user == g.current_user: %}
+  {% set orcidId = g.current_user.orcidId %}
+
+  <div class="flex-right flex-end">
+    <select class="form-input-blue js-workspace-select">
+      {% for other_workspace in g.current_user.workspaces: %}
+        <option
+            {{ "selected" if workspace.name == other_workspace.name }}
+            data-url="{{ url_for(request.endpoint, orcidId=orcidId, name=other_workspace.name) }}">
+          {{ other_workspace.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+{% endif %}

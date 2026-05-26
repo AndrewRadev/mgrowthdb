@@ -155,27 +155,9 @@ def init_routes(app):
     app.add_url_rule("/logout/",  view_func=user_pages.user_logout_action, methods=["POST"])
 
     app.add_url_rule(
-        "/workspaces/<string:orcidId>/",
-        view_func=workspace_pages.workspaces_index_page,
-        methods=["GET", "POST"],
-    )
-    app.add_url_rule(
         "/workspaces/<string:orcidId>/<string:name>/",
         view_func=workspace_pages.workspaces_index_page,
         methods=["GET", "POST"],
-    )
-    app.add_url_rule(
-        "/workspaces/<string:orcidId>/visualize/",
-        view_func=workspace_pages.workspaces_visualize_page,
-    )
-    app.add_url_rule(
-        "/workspaces/<string:orcidId>/visualize/<string:name>/",
-        view_func=workspace_pages.workspaces_visualize_page,
-    )
-    app.add_url_rule(
-        "/workspaces/<string:orcidId>/visualize/<string:name>/chart/",
-        view_func=workspace_pages.workspaces_chart_fragment,
-        methods=["POST"],
     )
     app.add_url_rule(
         "/workspaces/preview/",
@@ -183,21 +165,42 @@ def init_routes(app):
         methods=["POST"],
     )
     app.add_url_rule(
-        "/workspaces/<string:orcidId>/modeling/",
+        "/workspaces/create/",
+        view_func=workspace_pages.workspaces_create_action,
+        methods=["POST"],
+    )
+    app.add_url_rule(
+        "/workspaces/delete/<int:id>",
+        view_func=workspace_pages.workspaces_delete_action,
+        methods=["POST"],
+    )
+
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/<string:name>/visualize/",
+        view_func=workspace_pages.workspaces_visualize_page,
+    )
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/<string:name>/visualize/chart/",
+        view_func=workspace_pages.workspaces_chart_fragment,
+        methods=["POST"],
+    )
+
+    app.add_url_rule(
+        "/workspaces/<string:orcidId>/<string:name>/modeling/",
         view_func=workspace_pages.workspaces_modeling_page,
         methods=["GET", "POST"],
     )
     app.add_url_rule(
-        "/workspaces/<string:orcidId>/modeling/<string:name>/chart/",
+        "/workspaces/<string:orcidId>/<string:name>/modeling/chart/",
         view_func=workspace_pages.workspaces_modeling_chart_fragment,
     )
     app.add_url_rule(
-        "/workspaces/<string:orcidId>/modeling/<string:name>/submit/",
+        "/workspaces/<string:orcidId>/<string:name>/modeling/submit/",
         view_func=workspace_pages.workspaces_modeling_submit_action,
         methods=["POST"],
     )
     app.add_url_rule(
-        "/workspaces/<string:orcidId>/modeling/<string:name>/check.json",
+        "/workspaces/<string:orcidId>/<string:name>/modeling/check.json",
         view_func=workspace_pages.workspaces_modeling_check_json,
     )
 

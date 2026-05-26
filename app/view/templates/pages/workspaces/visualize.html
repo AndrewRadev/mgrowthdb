@@ -18,10 +18,14 @@
 
 {% block content %}
   <div data-chart-url="{{ chart_url }}" class="container workspaces-visualize-page">
-    <h1>
-      <span class="icon icon-emoji">🖥️</span>
-      Workspaces
-    </h1>
+    <div class="flex-row">
+      <h1>
+        <span class="icon icon-emoji">🖥️</span>
+        Workspaces
+      </h1>
+
+      {% include 'pages/workspaces/_selector.html' %}
+    </div>
 
     <article>
       {% include 'pages/workspaces/_tabs.html' %}

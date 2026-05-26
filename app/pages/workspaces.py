@@ -68,6 +68,36 @@ def workspaces_data_preview_fragment():
     )
 
 
+def workspaces_create_action():
+    if g.current_user is None:
+        raise Forbidden
+
+    name = request.form["name"]
+    existing_workspace = g.db_session.scalars(
+        sql.select(Workspace)
+        .where(Workspace.userId == g.current_user.id, Workspace.name == name)
+        .limit(1)
+    ).one_or_none()
+
+    if existing_workspace is None:
+        g.db_session.add(Workspace(userId=g.current_user.id, name=name))
+        g.db_session.commit()
+
+    return redirect(url_for('workspaces_index_page', orcidId=g.current_user.orcidId, name=name))
+
+def workspaces_delete_action(id):
+    workspace = g.db_session.get(Workspace, id)
+    if g.current_user is None or g.current_user.user != workspace.user:
+        raise Forbidden
+
+    g.db_session.delete(workspace)
+    g.db_session.commit()
+
+    return {
+        'url': url_for('workspaces_index_page', orcidId=g.current_user.orcidId, name="default"),
+    }
+
+
 def workspaces_visualize_page(orcidId, name="default"):
     workspace = _find_workspace(orcidId, name)
 

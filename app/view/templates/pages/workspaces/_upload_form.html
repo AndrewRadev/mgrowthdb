@@ -8,7 +8,7 @@
 
   <form
       enctype="multipart/form-data"
-      class="simple-form flex-column flex-gap-10 margin-top-10"
+      class="simple-form flex-column flex-gap-10"
       method="POST">
     <div class="form-row flex-column">
       <h3>Upload CSV</h3>
@@ -155,13 +155,44 @@
     </ul>
   </details>
 
-  <div class="flex-row margin-top-10">
+  <hr>
+
+  <h3>Create new workspace</h3>
+
+  <form
+      method="POST"
+      class="simple-form margin-top-10"
+      action="{{ url_for('workspaces_create_action') }}">
+    <div class="form-row">
+      <label>
+        <span>Workspace name</span>
+        <input required type="text" name="name" class="form-input-blue form-input-full" />
+      </label>
+
+      <input maxlength="100" class="flex-end" type="submit" value="Create" />
+    </div>
+  </form>
+
+  <hr>
+
+  <h3>Clear data</h3>
+
+  <div class="flex-row margin-top-10 flex-gap-10">
     <a
         href="{{ url_for('workspaces_delete_all_action', id=workspace.id) }}"
-        class="js-delete-all white-button orange-border flex-right">
+        class="js-delete-all white-button orange-border flex-1 small">
       <span class="icon icon-inline icon-delete"></span>
-      Clear workspace
+      Clear workspace uploads
     </a>
+
+    {% if workspace.name != 'default': %}
+      <a
+          href="{{ url_for('workspaces_delete_action', id=workspace.id) }}"
+          class="js-delete white-button orange-border flex-1 small">
+        <span class="icon icon-inline icon-delete"></span>
+        Delete entire workspace
+      </a>
+    {% endif %}
   </div>
 
 {% endmacro %}
