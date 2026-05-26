@@ -193,29 +193,6 @@ def measurement_context_csv(id):
     return df.to_csv(index=False)
 
 
-# TODO (2026-05-15) Require user token for non-public workspace entries, use it
-# to fetch current user
-#
-def workspace_entry_csv(id):
-    workspace_entry = g.db_session.get(WorkspaceEntry, id)
-    if not workspace_entry or workspace_entry.user != g.current_user:
-        raise NotFound
-
-    df = workspace_entry.get_df()
-
-    # source_units = workspace_entry.technique.units
-    # metabolite_mass = _get_metabolite_mass(workspace_entry)
-    # _convert_to_requested_units(df, source_units, metabolite_mass)
-
-    if request.args.get('withLabel'):
-        df.rename(columns={
-            'value': workspace_entry.label,
-            'error': workspace_entry.label + ' error',
-        }, inplace=True)
-
-    return df.to_csv(index=False)
-
-
 def model_prediction_json(id):
     modeling_result = g.db_session.get(ModelingResult, id)
     if not modeling_result or not modeling_result.study.isPublished:
@@ -236,15 +213,7 @@ def model_prediction_csv(id):
     if not modeling_result:
         raise NotFound
 
-    if api_key := request.args.get('apiKey'):
-        current_user = g.db_session.scalars(
-            sql.select(User)
-            .where(User.apiKey == api_key)
-            .limit(1)
-        ).one()
-    else:
-        current_user = g.current_user
-
+    current_user = _get_current_user()
     if not modeling_result.visible_to_user(current_user):
         raise NotFound
 
@@ -356,7 +325,20 @@ def search_json():
     }
 
 
-def workspaces_json():
+def workspace_json(orcidId, name="default"):
+    current_user = _get_current_user()
+    workspace = _get_workspace(orcidId, name, current_user)
+
+    return {
+        "name": workspace.name,
+        "entries": [{
+            "id": entry.id,
+            "label": entry.label,
+        } for entry in workspace.entries],
+    }
+
+
+def workspace_update_json(orcidId, name="default"):
     request_json = json.loads(request.data)
 
     if 'apiKey' not in request_json:
@@ -364,19 +346,8 @@ def workspaces_json():
     if 'entries' not in request_json:
         raise BadRequest
 
-    workspace = g.db_session.scalars(
-        sql.select(Workspace)
-        .join(User)
-        .where(
-            User.apiKey == request_json['apiKey'].strip(),
-            Workspace.userId == User.id,
-            Workspace.name == request_json.get('name', 'default')
-        )
-        .limit(1)
-    ).one_or_none()
-
-    if workspace is None:
-        raise Forbidden
+    current_user = _get_current_user(request_json['apiKey'])
+    workspace = _get_workspace(orcidId, name, current_user)
 
     # Clear out existing "api" entries:
     for entry in workspace.entries:
@@ -395,10 +366,94 @@ def workspaces_json():
 
     g.db_session.commit()
 
+    workspace_url = url_for('workspaces_index_page', orcidId=workspace.user.orcidId, name=workspace.name)
+
     return {
-        "workspaceUrl": url_for('workspaces_index_page', orcidId=workspace.user.orcidId, name=workspace.name),
-        "workspaceEntryId": workspace_entry.id,
+        'workspaceUrl': workspace_url,
+        'workspaceEntryId': workspace_entry.id,
     }
+
+
+def workspace_entry_json(id):
+    workspace_entry = g.db_session.get(WorkspaceEntry, id)
+    current_user = _get_current_user()
+
+    if not workspace_entry:
+        raise NotFound
+    if not workspace_entry.workspace.isPublished and workspace_entry.user != current_user:
+        raise NotFound
+
+    return {
+        "id":          workspace_entry.id,
+        "label":       workspace_entry.label,
+        "units":       workspace_entry.units,
+        "sourceType":  workspace_entry.sourceType,
+        "dataType":    workspace_entry.dataType,
+        "subjectType": workspace_entry.subjectType,
+        "subjectId":   workspace_entry.subjectId,
+    }
+
+
+def workspace_entry_csv(id):
+    workspace_entry = g.db_session.get(WorkspaceEntry, id)
+    current_user = _get_current_user()
+
+    if not workspace_entry:
+        raise NotFound
+    if not workspace_entry.workspace.isPublished and workspace_entry.user != current_user:
+        raise NotFound
+
+    df = workspace_entry.get_df()
+
+    source_units = workspace_entry.units
+    # TODO (2026-05-25) Allow assigning subjects to workspace entries
+    # metabolite_mass = _get_metabolite_mass(workspace_entry)
+    _convert_to_requested_units(df, source_units)
+
+    if request.args.get('withLabel'):
+        df.rename(columns={
+            'value': workspace_entry.label,
+            'error': workspace_entry.label + ' error',
+        }, inplace=True)
+
+    return df.to_csv(index=False)
+
+
+def _get_current_user(api_key=None):
+    if api_key is None:
+        api_key = request.args.get('apiKey')
+
+    if api_key is None:
+        return g.current_user
+
+    user = g.db_session.scalars(
+        sql.select(User)
+        .where(User.apiKey == api_key)
+        .limit(1)
+    ).one_or_none()
+
+    if user is None:
+        raise ClientError("Given API key did not correspond to an active user")
+
+    return user
+
+
+def _get_workspace(orcidId, name, current_user):
+    workspace = g.db_session.scalars(
+        sql.select(Workspace)
+        .join(User)
+        .where(
+            User.orcidId == orcidId,
+            Workspace.userId == User.id,
+            Workspace.name == name,
+        )
+        .limit(1)
+    ).one()
+
+    if not workspace.isPublished and workspace.user != current_user:
+        raise Forbidden
+
+    return workspace
 
 
 def _measurement_technique_fields(measurement_context):

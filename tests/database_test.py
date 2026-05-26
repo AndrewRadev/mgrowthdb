@@ -33,6 +33,7 @@ from app.model.orm import (
     Taxon,
     User,
     Workspace,
+    WorkspaceEntry,
 )
 
 
@@ -378,6 +379,18 @@ class DatabaseTest(unittest.TestCase):
         }
 
         return self._create_orm_record(Workspace, params)
+
+    def create_workspace_entry(self, **params):
+        workspace_id = self._get_or_create_dependency(params, 'workspaceId', ('workspace', 'id'))
+
+        params = {
+            'workspaceId': workspace_id,
+            'label': 'test entry',
+            'sourceType': 'upload',
+            **params,
+        }
+
+        return self._create_orm_record(WorkspaceEntry, params)
 
     def _create_orm_record(self, model_class, params):
         instance = model_class(**params)

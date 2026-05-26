@@ -243,11 +243,11 @@ def init_routes(app):
     app.add_url_rule("/api/v1/model-prediction/<int:id>.json", view_func=api_pages.model_prediction_json)
     app.add_url_rule("/api/v1/model-prediction/<int:id>.csv",  view_func=api_pages.model_prediction_csv)
 
-    # app.add_url_rule("/api/v1/workspace-entry/<int:id>.json", view_func=api_pages.workspace_entry_json)
-    app.add_url_rule("/api/v1/workspace-entry/<int:id>.csv",  view_func=api_pages.workspace_entry_csv)
-
     app.add_url_rule("/api/v1/search.json",  view_func=api_pages.search_json)
 
-    app.add_url_rule("/api/v1/workspaces.json", view_func=api_pages.workspaces_json, methods=["POST"])
+    app.add_url_rule("/api/v1/workspace/<string:orcidId>/<string:name>.json", view_func=api_pages.workspace_json, methods=["GET"])
+    app.add_url_rule("/api/v1/workspace/<string:orcidId>/<string:name>.json", view_func=api_pages.workspace_update_json, methods=["POST"])
+    app.add_url_rule("/api/v1/workspace-entry/<int:id>.json", view_func=api_pages.workspace_entry_json)
+    app.add_url_rule("/api/v1/workspace-entry/<int:id>.csv",  view_func=api_pages.workspace_entry_csv)
 
     return app
