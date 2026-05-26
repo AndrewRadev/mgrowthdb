@@ -1,0 +1,34 @@
+<div
+    style="padding: 6px;"
+    class="box publish-box flex-end {{ "is-published" if workspace.isPublished }}">
+  {% set toggle_publish_url = url_for(
+    'workspaces_toggle_published_action',
+    id=workspace.id
+  ) %}
+
+  {% if workspace.isPublished: %}
+    <span class="help smaller message">
+      <span class="icon icon-inline icon-visible"></span>
+      This page is visible to anyone with the link
+    </span>
+
+    <button
+        data-url="{{ toggle_publish_url }}"
+        type="button"
+        class="white-button smaller small-button orange-border flex-right js-toggle-published">
+      Unpublish
+    </button>
+  {% else: %}
+    <button
+        data-url="{{ toggle_publish_url }}"
+        type="button"
+        class="green-button smaller small-button js-toggle-published">
+      Publish
+    </button>
+
+    <span class="flex-right help smaller message">
+      <span class="icon icon-inline icon-invisible"></span>
+      This page is private to you
+    </span>
+  {% endif %}
+</div>

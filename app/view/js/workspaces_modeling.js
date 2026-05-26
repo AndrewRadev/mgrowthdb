@@ -7,12 +7,6 @@ Page('.workspaces-modeling-page', function($page) {
 
   let $activeRadio = $('.js-trace-row:visible input[type=radio]:checked');
 
-  $page.on('change', '.js-workspace-select', function(e) {
-    let $option = $(e.currentTarget).find('option:selected');
-    let url = $option.data('url');
-    if (url) window.location = url;
-  });
-
   updateModelFieldVisibility($form);
   if ($activeRadio.length > 0) {
     updateChart($activeRadio.first());

@@ -2,12 +2,6 @@ Page('.workspaces-visualize-page', function($page) {
   let chartUrl = $page.data('chartUrl')
   let $form   = $page.find('.js-chart-form');
 
-  $page.on('change', '.js-workspace-select', function(e) {
-    let $option = $(e.currentTarget).find('option:selected');
-    let url = $option.data('url');
-    if (url) window.location = url;
-  });
-
   updateChart($form).then(function() {
     let checkboxesChanged = false;
 

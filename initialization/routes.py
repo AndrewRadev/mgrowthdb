@@ -215,6 +215,11 @@ def init_routes(app):
         methods=["POST"],
     )
     app.add_url_rule(
+        "/workspaces/<int:id>/toggle-publish/",
+        view_func=workspace_pages.workspaces_toggle_published_action,
+        methods=["POST"],
+    )
+    app.add_url_rule(
         "/workspaces/<int:id>/delete/",
         view_func=workspace_pages.workspaces_delete_all_action,
         methods=["POST"],
