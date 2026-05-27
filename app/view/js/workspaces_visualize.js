@@ -100,7 +100,7 @@ Page('.workspaces-visualize-page', function($page) {
 
   function toggleCheckboxes($button, value) {
     let $group = $button.parents('.js-trace-group');
-    let $targetRows = $row.find('.js-trace-row');
+    let $targetRows = $group.find('.js-trace-row');
     $targetRows.find('input[type=checkbox]:visible').prop('checked', value);
   }
 
