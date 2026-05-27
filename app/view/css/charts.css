@@ -11,6 +11,25 @@
     flex-direction: column;
     row-gap: 6px;
   }
+
+  .model-row {
+    padding-left: 6px;
+    margin-top: -4px;
+
+    &.blank {
+      opacity: 0.6;
+    }
+
+    input[type="checkbox"] {
+      margin-left: -4px;
+      margin-right: -2px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
 }
 
 .chart-container {
@@ -72,25 +91,6 @@
     .middle {
       flex-grow: 1;
       text-align: center;
-    }
-  }
-
-  .model-row {
-    padding-left: 6px;
-    margin-top: -4px;
-
-    &.blank {
-      opacity: 0.6;
-    }
-
-    input[type="checkbox"] {
-      margin-left: -4px;
-      margin-right: -2px;
-    }
-
-    .icon {
-      width: 16px;
-      height: 16px;
     }
   }
 

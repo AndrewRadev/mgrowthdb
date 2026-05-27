@@ -99,7 +99,7 @@ Page('.workspaces-page', function($page) {
       type: 'POST',
       url: deleteUrl,
       cache: false,
-      dataType: 'html',
+      dataType: 'json',
       success: function(response) {
         window.location = response.url;
       }

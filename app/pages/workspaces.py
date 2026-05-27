@@ -94,8 +94,8 @@ def workspaces_create_action():
 
 
 def workspaces_delete_action(id):
-    workspace = g.db_session.get(Workspace, id)
-    if g.current_user is None or g.current_user.user != workspace.user:
+    workspace = g.db_session.get_one(Workspace, id)
+    if g.current_user is None or g.current_user != workspace.user:
         raise Forbidden
 
     g.db_session.delete(workspace)
@@ -176,7 +176,7 @@ def workspaces_chart_fragment(orcidId, name="default"):
 
 
 def workspaces_update_entry_action(id):
-    workspace_entry = g.db_session.get(WorkspaceEntry, id)
+    workspace_entry = g.db_session.get_one(WorkspaceEntry, id)
     workspace = workspace_entry.workspace
 
     if workspace.user != g.current_user:
@@ -192,7 +192,7 @@ def workspaces_update_entry_action(id):
 
 
 def workspaces_toggle_published_action(id):
-    workspace = g.db_session.get(Workspace, id)
+    workspace = g.db_session.get_one(Workspace, id)
     if workspace.user != g.current_user:
         raise Forbidden
 
@@ -208,7 +208,7 @@ def workspaces_toggle_published_action(id):
 
 
 def workspaces_delete_entry_action(id):
-    workspace_entry = g.db_session.get(WorkspaceEntry, id)
+    workspace_entry = g.db_session.get_one(WorkspaceEntry, id)
     workspace = workspace_entry.workspace
 
     if workspace.user != g.current_user:
@@ -221,7 +221,7 @@ def workspaces_delete_entry_action(id):
 
 
 def workspaces_delete_all_action(id):
-    workspace = g.db_session.get(Workspace, id)
+    workspace = g.db_session.get_one(Workspace, id)
     if workspace.user != g.current_user:
         raise Forbidden
 
@@ -249,7 +249,7 @@ def workspaces_modeling_chart_fragment(orcidId, name):
     modeling_type = args.pop('modelingType')
     log_transform = args.pop('logTransform', 'false') == 'true'
 
-    workspace_entry = g.db_session.get(WorkspaceEntry, args['workspaceEntryId'])
+    workspace_entry = g.db_session.get_one(WorkspaceEntry, args['workspaceEntryId'])
     measurement_df  = workspace_entry.get_df(g.db_session)
 
     chart = Chart(
