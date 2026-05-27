@@ -7,7 +7,7 @@ Page('.study-visualize-page', function($page) {
 
     // For each row in the preview form, check if it should be initialized on
     // the left or right:
-    $form.find('.js-contexts-list .js-row').each(function() {
+    $form.find('.js-traces-list .js-row').each(function() {
       let $chartRow = $(this);
       let contextId = $chartRow.data('contextId');
       let $formRow = $form.find(`input[name="measurementContext|${contextId}"]`);
@@ -111,7 +111,7 @@ Page('.study-visualize-page', function($page) {
     e.preventDefault();
 
     let contextIds = [];
-    $('.js-contexts-list [data-context-id]').each(function() {
+    $('.js-traces-list [data-context-id]').each(function() {
       contextIds.push($(this).data('contextId'));
     });
 

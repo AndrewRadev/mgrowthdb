@@ -8,7 +8,7 @@ Page('.comparison-page', function($page) {
 
     // For each row in the preview form, check if it should be initialized on
     // the left or right:
-    $form.find('.js-contexts-list .js-row').each(function() {
+    $form.find('.js-traces-list .js-row').each(function() {
       let $chartRow = $(this);
 
       let contextId = $chartRow.data('contextId');
