@@ -29,7 +29,7 @@
 
     {{ workspace_entry.label }}
 
-    {% if g.current_user == workspace.user: %}
+    {% if workspace.manageable_by_user(g.current_user): %}
       <div class="actions">
         <button
             class="js-edit white-button small-button smaller">
@@ -111,7 +111,7 @@
     </ul>
   </div>
 
-  {% if g.current_user == workspace.user: %}
+  {% if workspace.manageable_by_user(g.current_user): %}
     {{ render_workspace_entry_form(workspace_entry) }}
   {% endif %}
 

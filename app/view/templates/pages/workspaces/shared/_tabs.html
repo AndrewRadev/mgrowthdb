@@ -16,7 +16,7 @@
     </a>
   </li>
 
-  {% if g.current_user == workspace.user: %}
+  {% if workspace.manageable_by_user(g.current_user): %}
     <li class="{{ "current" if request.endpoint == 'workspaces_modeling_page' }}">
       <a
           class="js-tab-modeling"

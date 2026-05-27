@@ -58,3 +58,6 @@ class Workspace(OrmBase):
 
     def visible_to_user(self, user):
         return self.isPublished or self.user == user
+
+    def manageable_by_user(self, user):
+        return self.user == user

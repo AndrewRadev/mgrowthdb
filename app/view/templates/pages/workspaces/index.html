@@ -14,7 +14,7 @@
     <article>
       {% include 'pages/workspaces/shared/_tabs.html' %}
 
-      {% if g.current_user == workspace.user: %}
+      {% if workspace.manageable_by_user(g.current_user): %}
         <p class="help small">
           Upload your growth or modeling data without attaching it to a
           particular study. Go to the "visualize" page to explore it.
@@ -23,7 +23,7 @@
 
       <div class="columns flex-row">
         <div
-            {% if g.current_user == workspace.user: %}
+            {% if workspace.manageable_by_user(g.current_user): %}
               style="width: 50%;"
             {% endif %}
             class="column column-entries">
@@ -44,7 +44,7 @@
             </ul>
           {% endif %}
 
-          {% if g.current_user == workspace.user or workspace.apiEntries|length > 0: %}
+          {% if workspace.manageable_by_user(g.current_user) or workspace.apiEntries|length > 0: %}
             <h3>API data</h3>
 
             <p class="help">
@@ -55,7 +55,7 @@
           {% endif %}
         </div>
 
-        {% if g.current_user == workspace.user: %}
+        {% if workspace.manageable_by_user(g.current_user): %}
           <div class="column column-form" style="width: 50%;">
             {{ render_upload_form(workspace, errors) }}
           </div>
