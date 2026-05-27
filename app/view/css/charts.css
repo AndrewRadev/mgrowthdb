@@ -5,6 +5,12 @@
     word-break: normal;
     overflow-wrap: anywhere;
   }
+
+  .trace-group {
+    display: flex;
+    flex-direction: column;
+    row-gap: 6px;
+  }
 }
 
 .chart-container {
@@ -104,11 +110,5 @@
     input[type="checkbox"] {
       margin: 0;
     }
-  }
-
-  .experiment {
-    display: flex;
-    flex-direction: column;
-    row-gap: 6px;
   }
 }

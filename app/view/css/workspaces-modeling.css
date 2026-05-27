@@ -28,13 +28,6 @@
     background-color: #eee;
   }
 
-  .trace-group {
-    display: flex;
-    flex-direction: column;
-    row-gap: 6px;
-    margin-top: 10px;
-  }
-
   .data-controls {
     border-bottom: 2px solid var(--border-color);
     padding: 4px 0;

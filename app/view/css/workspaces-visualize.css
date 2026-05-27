@@ -13,11 +13,4 @@
       overflow-x: hidden;
     }
   }
-
-  .trace-group {
-    display: flex;
-    flex-direction: column;
-    row-gap: 6px;
-    margin-top: 10px;
-  }
 }
