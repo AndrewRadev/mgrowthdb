@@ -33,15 +33,20 @@ class WorkspaceEntry(OrmBase):
     sourceType: Mapped[Literal[
         'upload',
         'api',
-    ]] = mapped_column(sql.String(100), nullable=True)
+    ]] = mapped_column(sql.String(100))
 
-    dataType:   Mapped[Literal[
+    dataType: Mapped[Literal[
         'measurement',
         'model',
         'other',
-    ]] = mapped_column(sql.String(100), nullable=True)
+    ]] = mapped_column(sql.String(100))
 
-    subjectType: Mapped[str] = mapped_column(sql.String(100))
+    subjectType: Mapped[Literal[
+        'community',
+        'strain',
+        'metabolite',
+    ]] = mapped_column(sql.String(100))
+
     subjectId:   Mapped[int] = mapped_column(sql.Integer)
     units:       Mapped[str] = mapped_column(sql.String(100))
 

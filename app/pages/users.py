@@ -174,49 +174,6 @@ def _user_login_show():
     )
 
 
-def user_dashboard_page(orcidId):
-    user = g.db_session.scalars(
-        sql.select(User)
-        .where(User.orcidId == orcidId)
-        .limit(1)
-    ).one()
-
-    chart = Chart(time_units='h')
-    errors = {}
-
-    for workspace_entry in user.workspaceEntries:
-        df = workspace_entry.get_df()
-
-        if len(df.columns) < 2:
-            errors[file.filename] = f"Expected at least 2 columns, found {len(df.columns)}"
-            continue
-
-        c1 = df.columns[0]
-        c2 = df.columns[1]
-        if len(df.columns) > 2:
-            c3 = df.columns[2]
-        else:
-            c3 = None
-
-        label = workspace_entry.label
-        df.rename(columns={c1: "time", c2: "value", c3: "std"}, inplace=True)
-
-        if label.endswith('__METABOLITE'):
-            axis = "right"
-            units = "[Metabolite units]"
-        else:
-            axis = "left"
-            units = "[Growth units]"
-
-        chart.add_df(df, units=units, label=label, axis=axis)
-
-    return render_template(
-        'pages/users/dashboard.html',
-        chart=chart,
-        errors=errors,
-    )
-
-
 def _user_login_submit(orcid_code):
     orcid_client_id = current_app.config["ORCID_CLIENT_ID"]
     orcid_secret    = current_app.config["ORCID_SECRET"]
