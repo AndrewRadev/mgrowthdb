@@ -66,9 +66,7 @@
       </a>
     </li>
     <li>
-      {% set userOrcidId = g.current_user.orcidId if g.current_user else "guest" %}
-
-      <a href="{{ url_for('workspaces_index_page', orcidId=userOrcidId, name="default") }}">
+      <a href="{{ url_for('workspaces_root_page') }}">
         <div class="emoji-icon">🖥️</div>
         Workspaces
       </a>

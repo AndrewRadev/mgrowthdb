@@ -5,74 +5,61 @@
 
 {% block title %}: Workspaces{% endblock %}
 
-{% block head %}
-  {% assets "plotly_js" %}
-  <script src="{{ ASSET_URL }}" type="text/javascript"></script>
-  {% endassets %}
-{% endblock %}
-
 {% block content %}
   <div class="container workspaces-page">
-    <div class="flex-row">
-      <h1>
-        <span class="icon icon-emoji">🖥️</span>
-        Workspaces
-      </h1>
-
-      <div class="flex-right flex-row flex-gap-10">
-        {% include 'pages/workspaces/shared/_publish_box.html' %}
-        {% include 'pages/workspaces/shared/_selector.html' %}
-      </div>
+    <div class="workspaces-header-component flex-row">
+      {% include 'pages/workspaces/shared/_header.html' %}
     </div>
 
     <article>
       {% include 'pages/workspaces/shared/_tabs.html' %}
 
-      <p class="help small">
-        Upload your growth or modeling data without attaching it to a
-        particular study. Go to the "visualize" page to explore it.
-      </p>
+      {% if g.current_user == workspace.user: %}
+        <p class="help small">
+          Upload your growth or modeling data without attaching it to a
+          particular study. Go to the "visualize" page to explore it.
+        </p>
+      {% endif %}
 
       <div class="columns flex-row">
-        <div class="column column-entries" style="width: 50%;">
+        <div
+            {% if g.current_user == workspace.user: %}
+              style="width: 50%;"
+            {% endif %}
+            class="column column-entries">
 
           <h3>Direct upload</h3>
 
-          {% if workspace.entries|length == 0: %}
+          {% if workspace.uploadedEntries|length == 0: %}
             <p class="help">
               No data uploaded yet
             </p>
           {% else: %}
             <ul class="workspace-entry-list scroll-shadows">
-              {% for workspace_entry in workspace.entries: %}
-                <li class="js-workspace-entry">
+              {% for workspace_entry in workspace.uploadedEntries: %}
+                <li class="workspace-entry js-workspace-entry">
                   {{ render_workspace_entry(workspace_entry) }}
                 </li>
               {% endfor %}
             </ul>
           {% endif %}
 
-          <h3>API data</h3>
+          {% if g.current_user == workspace.user or workspace.apiEntries|length > 0: %}
+            <h3>API data</h3>
 
-          <p class="help">
-            You can push data to this page using the
-            {{ "https://mgrowthdb.readthedocs.io/en/latest/api.html"|external_link("API") }},
-            and it will appear here.
-          </p>
-        </div>
-
-        <div class="column column-form" style="width: 50%;">
-          {% if g.current_user: %}
-            {{ render_upload_form(workspace, errors) }}
-          {% else: %}
-            <p class="warning-message">
-              In order to upload and visualize data, please
-              <a href="{{ url_for("user_login_page") }}">log in</a>
-              to the application using your
-              {{ "https://orcid.org/"|external_link("ORCID") }}.
+            <p class="help">
+              You can push data to this page using the
+              {{ "https://mgrowthdb.readthedocs.io/en/latest/api.html"|external_link("API") }},
+              and it will appear here.
             </p>
           {% endif %}
         </div>
+
+        {% if g.current_user == workspace.user: %}
+          <div class="column column-form" style="width: 50%;">
+            {{ render_upload_form(workspace, errors) }}
+          </div>
+        {% endif %}
       </div>
     </article>
   </div>

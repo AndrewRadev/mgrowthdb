@@ -23,24 +23,18 @@
     data-workspace-name="{{ workspace.name }}"
     class="container workspaces-modeling-page">
     <div class="flex-row">
-      <h1>
-        <span class="icon icon-emoji">🖥️</span>
-        Workspaces
-      </h1>
-
-      <div class="flex-right flex-row flex-gap-10">
-        {% include 'pages/workspaces/shared/_publish_box.html' %}
-        {% include 'pages/workspaces/shared/_selector.html' %}
-      </div>
+      {% include 'pages/workspaces/shared/_header.html' %}
     </div>
 
     <article>
       {% include 'pages/workspaces/shared/_tabs.html' %}
 
-      <p class="help small">
-        Select a type of model to fit to your growth data. The results will be
-        available for visualization once the calculation is finished.
-      </p>
+      {% if g.current_user == workspace.user: %}
+        <p class="help small">
+          Select a type of model to fit to your growth data. The results will be
+          available for visualization once the calculation is finished.
+        </p>
+      {% endif %}
 
       {# TODO: "Download model parameters" csv link? #}
 

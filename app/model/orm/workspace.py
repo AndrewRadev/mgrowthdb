@@ -44,6 +44,14 @@ class Workspace(OrmBase):
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, nullable=True)
 
+    @property
+    def uploadedEntries(self):
+        return [e for e in self.entries if e.sourceType == 'upload']
+
+    @property
+    def apiEntries(self):
+        return [e for e in self.entries if e.sourceType == 'api']
+
     @hybrid_property
     def isPublished(self):
         return self.publishedAt != None

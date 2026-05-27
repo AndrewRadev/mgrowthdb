@@ -60,7 +60,7 @@
     list-style: none;
     max-height: 400px;
 
-    > li {
+    .workspace-entry {
       padding: 6px;
       border: 2px solid transparent;
       border-radius: var(--border-radius);

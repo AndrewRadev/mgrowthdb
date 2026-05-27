@@ -1,7 +1,7 @@
 import itertools
 from io import BytesIO
 from datetime import datetime
-from typing import List
+from typing import List, Literal
 
 import pandas as pd
 import sqlalchemy as sql
@@ -30,8 +30,17 @@ class WorkspaceEntry(OrmBase):
     label:  Mapped[str] = mapped_column(sql.String(255), nullable=False)
     data:   Mapped[str] = mapped_column(sql.String, nullable=False)
 
-    sourceType:  Mapped[str] = mapped_column(sql.String(100))
-    dataType:    Mapped[str] = mapped_column(sql.String(100))
+    sourceType: Mapped[Literal[
+        'upload',
+        'api',
+    ]] = mapped_column(sql.String(100), nullable=True)
+
+    dataType:   Mapped[Literal[
+        'measurement',
+        'model',
+        'other',
+    ]] = mapped_column(sql.String(100), nullable=True)
+
     subjectType: Mapped[str] = mapped_column(sql.String(100))
     subjectId:   Mapped[int] = mapped_column(sql.Integer)
     units:       Mapped[str] = mapped_column(sql.String(100))
@@ -41,8 +50,8 @@ class WorkspaceEntry(OrmBase):
 
     user: Mapped['User'] = relationship(secondary='Workspaces', viewonly=True)
 
-    createdAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
-    updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    createdAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    updatedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
 
     modelingResults: Mapped[List['ModelingResult']] = relationship(
         back_populates='workspaceEntry',

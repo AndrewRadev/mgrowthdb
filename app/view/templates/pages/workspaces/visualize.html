@@ -19,24 +19,18 @@
 {% block content %}
   <div data-chart-url="{{ chart_url }}" class="container workspaces-visualize-page">
     <div class="flex-row">
-      <h1>
-        <span class="icon icon-emoji">🖥️</span>
-        Workspaces
-      </h1>
-
-      <div class="flex-right flex-row flex-gap-10">
-        {% include 'pages/workspaces/shared/_publish_box.html' %}
-        {% include 'pages/workspaces/shared/_selector.html' %}
-      </div>
+      {% include 'pages/workspaces/shared/_header.html' %}
     </div>
 
     <article>
       {% include 'pages/workspaces/shared/_tabs.html' %}
 
-      <p class="help small">
-        Explore data you've uploaded directly, pushed through the API, or
-        collected across studies via the "Compare" button.
-      </p>
+      {% if g.current_user == workspace.user: %}
+        <p class="help small">
+          Explore data you've uploaded directly, pushed through the API, or
+          collected across studies via the "Compare" button.
+        </p>
+      {% endif %}
 
       <form class="simple-form chart-form js-chart-form">
         <div class="columns">

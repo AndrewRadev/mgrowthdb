@@ -15,11 +15,14 @@
       Visualize
     </a>
   </li>
-  <li class="{{ "current" if request.endpoint == 'workspaces_modeling_page' }}">
-    <a
-        class="js-tab-modeling"
-        href="{{ url_for('workspaces_modeling_page', orcidId=orcidId, name=workspace.name) }}">
-      Fit models
-    </a>
-  </li>
+
+  {% if g.current_user == workspace.user: %}
+    <li class="{{ "current" if request.endpoint == 'workspaces_modeling_page' }}">
+      <a
+          class="js-tab-modeling"
+          href="{{ url_for('workspaces_modeling_page', orcidId=orcidId, name=workspace.name) }}">
+        Fit models
+      </a>
+    </li>
+  {% endif %}
 </ul>

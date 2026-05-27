@@ -27,6 +27,13 @@ from app.model.orm import (
 )
 
 
+def workspaces_root_page():
+    if g.current_user:
+        return redirect(url_for('workspaces_index_page', orcidId=g.current_user.orcidId, name="default"))
+    else:
+        return render_template('pages/workspaces/no_user.html')
+
+
 def workspaces_index_page(orcidId, name="default"):
     errors = {}
     workspace = _find_workspace(orcidId, name)
