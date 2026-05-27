@@ -40,9 +40,6 @@ def up(conn):
     conn.execute(sql.text(query))
 
     # Remove now-useless user ids:
-    query = "ALTER TABLE WorkspaceEntries DROP CONSTRAINT DashboardEntries_userId"
-    conn.execute(sql.text(query))
-
     query = "ALTER TABLE WorkspaceEntries DROP userId"
     conn.execute(sql.text(query))
 
@@ -51,11 +48,7 @@ def down(conn):
     # Add nullable userId column first
     query = """
         ALTER TABLE WorkspaceEntries
-        ADD userId int DEFAULT NULL,
-        ADD CONSTRAINT DashboardEntries_userId FOREIGN KEY (userId)
-            REFERENCES Users (id)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
+        ADD userId int DEFAULT NULL
     """
     conn.execute(sql.text(query))
 
