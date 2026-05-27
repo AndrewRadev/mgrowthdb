@@ -23,6 +23,7 @@
     }
   }
 
+  /* TODO: Unify chart CSS */
   .group-row {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -35,7 +36,7 @@
     }
 
     .left, .right, .middle {
-      border: none;
+      border: none !important;
     }
 
     .middle {

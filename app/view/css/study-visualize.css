@@ -89,7 +89,7 @@
     }
 
     .left, .right, .middle {
-      border: none;
+      border: none !important;
     }
 
     .middle {
