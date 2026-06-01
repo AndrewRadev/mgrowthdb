@@ -33,10 +33,15 @@
     {{ render_axis_checkboxes(chart_form, show_experiment_label=True) }}
   </div>
 
-  <div class="permalink-container flex-row">
-    <a
-        href="{{ url_for('comparison_show_page') }}?{{ chart_form.permalink_query }}"
-        class="js-permalink">
+  <div class="permalink-container flex-row margin-top-10 copy-button-wrapper">
+    {% set url = request.root_url.removesuffix('/') %}
+    {% set url = url + url_for('comparison_show_page') %}
+    {% set url = url + '?' + chart_form.permalink_query(in_study=False) %}
+
+    <button type="button" class="js-copy-button copy-button green-button small-button small">
+      Copy 📋
+    </button>
+    <a href="{{ url }}" class="js-permalink url-box">
       Link to this page
     </a>
   </div>

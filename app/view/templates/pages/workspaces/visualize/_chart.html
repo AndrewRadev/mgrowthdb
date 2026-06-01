@@ -32,4 +32,19 @@
   <div class="traces-list js-traces-list">
     {{ render_axis_checkboxes(chart_form) }}
   </div>
+
+  <div class="permalink-container flex-row margin-top-10 copy-button-wrapper">
+    {% set base_url = request.root_url.removesuffix('/') %}
+    {% set base_url = base_url + url_for('workspaces_visualize_page', orcidId=workspace.user.orcidId, name=workspace.name) %}
+
+    <button type="button" class="js-copy-button copy-button green-button small-button small">
+      Copy 📋
+    </button>
+
+    <a
+        href="{{ base_url }}?{{ chart_form.permalink_query(in_study=False) }}"
+        class="js-permalink url-box">
+      Link to this page
+    </a>
+  </div>
 </div>

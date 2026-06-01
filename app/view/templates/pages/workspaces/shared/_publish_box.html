@@ -6,7 +6,12 @@
     id=workspace.id
   ) %}
 
-  {% if workspace.isPublished: %}
+  {% if request.endpoint == 'workspaces_modeling_page': %}
+    <span class="flex-right help smaller message">
+      <span class="icon icon-inline icon-invisible"></span>
+      Only you can fit models on your data
+    </span>
+  {% elif workspace.isPublished: %}
     <span class="help smaller message">
       <span class="icon icon-inline icon-visible"></span>
       This page is visible to anyone with the link

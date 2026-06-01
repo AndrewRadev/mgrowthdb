@@ -2,14 +2,19 @@
   {% set orcidId = g.current_user.orcidId %}
 
   <div class="flex-end">
-    <select class="form-input-blue small js-workspace-select">
-      {% for other_workspace in g.current_user.workspaces: %}
-        <option
-            {{ "selected" if workspace.name == other_workspace.name }}
-            data-url="{{ url_for(request.endpoint, orcidId=orcidId, name=other_workspace.name) }}">
+    <label class="flex-column flex-gap-6">
+      <span class="small">
+        Current workspace:
+      </span>
+      <select class="form-input-blue small js-workspace-select">
+        {% for other_workspace in g.current_user.workspaces: %}
+          <option
+              {{ "selected" if workspace.name == other_workspace.name }}
+              data-url="{{ url_for(request.endpoint, orcidId=orcidId, name=other_workspace.name) }}">
           {{ other_workspace.name }}
-        </option>
-      {% endfor %}
-    </select>
+          </option>
+        {% endfor %}
+      </select>
+    </label>
   </div>
 {% endif %}

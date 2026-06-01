@@ -526,6 +526,13 @@ form.simple-form {
     border-radius: 0;
   }
 
+  .url-box {
+    padding: 0.3rem 10px;
+    border: 1px solid var(--dark-blue);
+    border-left: none;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  }
+
   .show-button {
     white-space: nowrap;
     border-radius: 0 var(--border-radius) var(--border-radius) 0;

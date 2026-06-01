@@ -33,16 +33,21 @@
     {{ render_axis_checkboxes(chart_form) }}
   </div>
 
-  <br>
-
   <div class="flex-row margin-top-10">
-    <a
-        href="{{ url_for('study_visualize_page', publicId=study.publicId) }}?{{ chart_form.permalink_query }}"
-        class="js-permalink">
-      Link to this page
-    </a>
+    <div class="permalink-container flex-row margin-top-10 copy-button-wrapper">
+      {% set url = request.root_url.removesuffix('/') %}
+      {% set url = url + url_for('comparison_show_page') %}
+      {% set url = url + '?' + chart_form.permalink_query(in_study=False) %}
 
-    <a href="#" class="green-button flex-right js-compare">
+      <button type="button" class="js-copy-button copy-button green-button small-button small">
+        Copy 📋
+      </button>
+      <a href="{{ url }}" class="js-permalink url-box">
+        Link to this page
+      </a>
+    </div>
+
+    <a href="#" class="green-button flex-right flex-end js-compare">
       Compare across studies
     </a>
   </div>

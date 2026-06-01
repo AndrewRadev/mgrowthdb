@@ -109,37 +109,51 @@ def workspaces_delete_action(id):
 def workspaces_visualize_page(orcidId, name="default"):
     workspace = _find_workspace(orcidId, name)
 
+    # TODO (2026-06-01) Extract logic, maybe inside of ComparativeChartForm?
+
+    left_axis_ids            = util.parse_comma_separated_request_ids('l')
+    right_axis_ids           = util.parse_comma_separated_request_ids('r')
+    left_axis_workspace_ids  = util.parse_comma_separated_request_ids('lw')
+    right_axis_workspace_ids = util.parse_comma_separated_request_ids('rw')
+    left_axis_model_ids      = util.parse_comma_separated_request_ids('lm')
+    right_axis_model_ids     = util.parse_comma_separated_request_ids('rm')
+
     compare_data = init_compare_data(session)
 
+    context_ids = compare_data['contexts'] + left_axis_ids + right_axis_ids
     comparable_measurement_contexts = g.db_session.scalars(
         sql.select(MeasurementContext)
-        .where(MeasurementContext.id.in_(compare_data['contexts']))
+        .where(MeasurementContext.id.in_(context_ids))
     ).all()
 
+    model_ids = compare_data['models'] + left_axis_model_ids + right_axis_model_ids
     comparable_modeling_results = g.db_session.scalars(
         sql.select(ModelingResult)
-        .where(ModelingResult.id.in_(compare_data['models']))
+        .where(ModelingResult.id.in_(model_ids))
     ).all()
 
     comparable_records_by_study = {}
 
-    for study, measurement_context_group in itertools.groupby(comparable_measurement_contexts, lambda mc: mc.study):
+    mcs_by_study = itertools.groupby(comparable_measurement_contexts, lambda mc: mc.study)
+    for study, measurement_context_group in mcs_by_study:
+        if not study.visible_to_user(g.current_user):
+            continue
         if study not in comparable_records_by_study:
             comparable_records_by_study[study] = {'measurement_contexts': [], 'modeling_results': []}
         comparable_records_by_study[study]['measurement_contexts'] = list(measurement_context_group)
 
-    for study, modeling_result_group in itertools.groupby(comparable_modeling_results, lambda mc: mc.study):
+    mrs_by_study = itertools.groupby(comparable_modeling_results, lambda mr: mr.study)
+    for study, modeling_result_group in mrs_by_study:
+        if not study or not study.visible_to_user(g.current_user):
+            continue
         if study not in comparable_records_by_study:
             comparable_records_by_study[study] = {'measurement_contexts': [], 'modeling_results': []}
         comparable_records_by_study[study]['modeling_results'] = list(modeling_result_group)
 
-    left_axis_workspace_ids  = util.parse_comma_separated_request_ids('lw')
-    right_axis_workspace_ids = util.parse_comma_separated_request_ids('rw')
-    left_axis_model_ids  = util.parse_comma_separated_request_ids('lm')
-    right_axis_model_ids = util.parse_comma_separated_request_ids('rm')
-
     chart_form = ComparativeChartForm(
         g.db_session,
+        left_axis_ids=left_axis_ids,
+        right_axis_ids=right_axis_ids,
         left_axis_workspace_ids=left_axis_workspace_ids,
         right_axis_workspace_ids=right_axis_workspace_ids,
         left_axis_model_ids=left_axis_model_ids,
@@ -155,11 +169,9 @@ def workspaces_visualize_page(orcidId, name="default"):
 
 
 def workspaces_chart_fragment(orcidId, name="default"):
-    # Invoked in order to check permissions:
-    _workspace = _find_workspace(orcidId, name)
+    workspace = _find_workspace(orcidId, name)
 
     args = request.form.to_dict()
-
     width = args.get('width', None)
 
     chart_form = ComparativeChartForm(
@@ -170,6 +182,7 @@ def workspaces_chart_fragment(orcidId, name="default"):
 
     return render_template(
         'pages/workspaces/visualize/_chart.html',
+        workspace=workspace,
         chart_form=chart_form,
         chart=chart,
     )

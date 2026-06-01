@@ -231,23 +231,25 @@ class ComparativeChartForm:
 
         return chart
 
-    @property
-    def permalink_query(self):
-        if len(self.measurement_contexts):
-            experiment_id = self.measurement_contexts[0].bioreplicate.experimentId
-            technique_id  = self.measurement_contexts[0].techniqueId
-        elif len(self.modeling_results):
-            experiment_id = self.modeling_results[0].measurementContext.bioreplicate.experimentId
-            technique_id  = self.modeling_results[0].measurementContext.techniqueId
-        else:
-            experiment_id = ''
-            technique_id = ''
+    def permalink_query(self, in_study=True):
+        experiment_id = ''
+        technique_id = ''
+
+        if in_study:
+            if len(self.measurement_contexts):
+                experiment_id = self.measurement_contexts[0].bioreplicate.experimentId
+                technique_id  = self.measurement_contexts[0].techniqueId
+            elif len(self.modeling_results) and self.modeling_results[0].measurementContextId is not None:
+                experiment_id = self.modeling_results[0].measurementContext.bioreplicate.experimentId
+                technique_id  = self.modeling_results[0].measurementContext.techniqueId
 
         parts = {
             'l':  ','.join([str(i) for i in sorted(self.left_axis_ids)]),
             'r':  ','.join([str(i) for i in sorted(self.right_axis_ids)]),
             'lm': ','.join([str(i) for i in sorted(self.left_axis_model_ids)]),
             'rm': ','.join([str(i) for i in sorted(self.right_axis_model_ids)]),
+            'lw': ','.join([str(i) for i in sorted(self.left_axis_workspace_ids)]),
+            'rw': ','.join([str(i) for i in sorted(self.right_axis_workspace_ids)]),
 
             'selectedExperimentId': str(experiment_id),
             'selectedTechniqueId':  str(technique_id),

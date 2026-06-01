@@ -76,14 +76,20 @@ $(document).ready(function() {
     e.preventDefault();
 
     let $button = $(this);
-    let $input = $button.next('input');
-
+    let $wrapper = $button.parents('.copy-button-wrapper');
+    let $input = $wrapper.find('input[type=text]');
+    let $link = $wrapper.find('.url-box');
     let value;
-    if ($input.data('realValue')) {
-      // Then the value property is censored
-      value = $input.data('realValue');
-    } else {
-      value = $input.val();
+
+    if ($input.length > 0) {
+      if ($input.data('realValue')) {
+        // Then the value property is censored
+        value = $input.data('realValue');
+      } else {
+        value = $input.val();
+      }
+    } else if ($link.length > 0) {
+      value = $link.attr('href');
     }
 
     navigator.clipboard.writeText(value);
