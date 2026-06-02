@@ -58,7 +58,7 @@ class Submission(OrmBase):
 
     createdAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     updatedAt:   Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
-    publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    publishedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue(), nullable=True)
 
     changelogText: Mapped[sql.String] = mapped_column(sql.String, nullable=True)
 

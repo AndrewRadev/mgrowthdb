@@ -31,9 +31,6 @@ class UploadStep5Form(BaseForm):
             position     = StringField('position', validators=[Length(max=100)])
             biosampleUrl = URLField('biosampleUrl')
 
-            isControl = BooleanField('isControl')
-            isBlank   = BooleanField('isBlank')
-
         class PerturbationForm(BaseForm):
             class Meta:
                 csrf = False

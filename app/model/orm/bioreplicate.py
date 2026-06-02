@@ -29,9 +29,6 @@ class Bioreplicate(OrmBase):
     position:     Mapped[str] = mapped_column(sql.String(100))
     biosampleUrl: Mapped[str] = mapped_column(sql.String)
 
-    isControl: Mapped[bool] = mapped_column(sql.Boolean, nullable=False, default=False)
-    isBlank:   Mapped[bool] = mapped_column(sql.Boolean, nullable=False, default=False)
-
     # Only set if the bioreplicate was generated and not uploaded
     calculationType: Mapped[str] = mapped_column(sql.String(50))
 
