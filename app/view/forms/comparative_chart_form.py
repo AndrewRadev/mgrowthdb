@@ -191,7 +191,7 @@ class ComparativeChartForm:
                 measurement_df = measurements_df[measurements_df['contextId'] == target.id]
                 if measurement_df.empty:
                     # Could happen if we're just rendering the model without the parent measurement:
-                    measurement_df = measurement_context.get_df(self.db_session)
+                    measurement_df = target.get_df(self.db_session)
             elif target.class_name == 'WorkspaceEntry':
                 measurement_df = target.get_df()
 
