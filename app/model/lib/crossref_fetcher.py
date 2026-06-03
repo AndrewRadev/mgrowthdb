@@ -12,6 +12,9 @@ class CrossrefFetcher:
 
         self.authors      = []
         self.author_cache = ''
+        self.license_url  = None
+
+        self._response_json = None
 
     def make_request(self):
         # Author records for linking and searching:
@@ -23,12 +26,12 @@ class CrossrefFetcher:
         if response.status_code != 200:
             raise ValueError(f"Couldn't reach Crossref API (Status {response.status_code})")
 
-        response_json = response.json()
+        self._response_json = response.json()
 
-        if response_json["status"] != "ok":
+        if self._response_json["status"] != "ok":
             raise ValueError("The Crossref API didn't return a successful result")
 
-        message_field = response_json.get("message", {})
+        message_field = self._response_json.get("message", {})
         title_field   = message_field.get("title", [])
 
         if canonical_doi := message_field.get("DOI"):
@@ -37,3 +40,7 @@ class CrossrefFetcher:
         self.title        = title_field[0] if len(title_field) else ''
         self.authors      = message_field.get("author", [])
         self.author_cache = ', '.join([a['family'].lower() for a in self.authors])
+
+        licenses = message_field.get("license", [])
+        if len(licenses):
+            self.license_url = licenses[0].get("URL")

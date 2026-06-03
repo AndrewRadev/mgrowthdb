@@ -30,15 +30,18 @@ with app.app_context():
 
         study.authors = fetcher.authors
         study.authorCache = fetcher.author_cache
+        study.licenseUrl = fetcher.license_url
 
         if submission := study.lastSubmission:
             submission.studyDesign['study']['authors']     = study.authors
             submission.studyDesign['study']['authorCache'] = study.authorCache
+            submission.studyDesign['study']['licenseUrl']  = study.licenseUrl
 
             flag_modified(submission, 'studyDesign')
             db_session.add(submission)
 
         print(f" > Author cache: {study.authorCache}")
+        print(f" > License URL:  {study.licenseUrl}")
 
         db_session.add(study)
 

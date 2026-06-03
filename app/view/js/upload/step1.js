@@ -7,9 +7,11 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
 
   $step1.on('click', '.js-fetch-authors', function() {
     let $button = $(this);
+
     let $url = $step1.find('input[name=study_url]');
     let doi = ($url.val() || '').trim();
 
+    let $licenseUrl        = $step1.find('input[name=license_url]');
     let $authorsInput      = $step1.find('input[name=authors]');
     let $authorsCacheInput = $step1.find('input[name=authorsCache]');
 
@@ -32,6 +34,10 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
 
         if (response.doi && response.doi != doi) {
           $url.animateVal(response.doi);
+        }
+
+        if (response.licenseUrl) {
+          $licenseUrl.animateVal(response.licenseUrl);
         }
 
         if (response.authors) {

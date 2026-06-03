@@ -73,14 +73,29 @@
 
       <h2>Basic information</h2>
 
-      {% if study.url: %}
+      {% if study.url or study.licenseUrl: %}
         <p class="small">
-          <strong>Publication</strong>: {{ study.url|external_link }}
+          {% if study.url: %}
+            <strong>Publication</strong>: {{ study.url|external_link }}
 
-          {% if study.authors: %}
-            by {{ study.authors|author_link_list(limit=10) }}
+            {% if study.authors: %}
+              by {{ study.authors|author_link_list(limit=10) }}
+            {% endif %}
+            <br>
           {% endif %}
 
+          {% if study.licenseUrl: %}
+            <strong>Data license</strong>: {{ study.licenseUrl|external_link }}
+
+            {% set cc_code = study.get_cc_code() %}
+            {% if cc_code: %}
+              <img
+                  style="display: inline-block; vertical-align: text-bottom;"
+                  src="https://mirrors.creativecommons.org/presskit/buttons/80x15/svg/{{ cc_code }}.svg"
+                  width="80"
+                  height="15" />
+            {% endif %}
+          {% endif %}
         </p>
       {% endif %}
 

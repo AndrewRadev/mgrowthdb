@@ -45,6 +45,7 @@ class Study(OrmBase):
     name:        Mapped[str] = mapped_column(sql.String(255))
     description: Mapped[str] = mapped_column(sql.String, nullable=True)
     url:         Mapped[str] = mapped_column(sql.String, nullable=True)
+    licenseUrl:  Mapped[str] = mapped_column(sql.String, nullable=True)
     timeUnits:   Mapped[str] = mapped_column(sql.String(100))
 
     authors:     Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
@@ -122,6 +123,10 @@ class Study(OrmBase):
             return self.publishableAt <= now
         else:
             return False
+
+    @property
+    def managerUuids(self):
+        return {su.userUniqueID for su in self.studyUsers}
 
     def visible_to_user(self, user):
         if self.isPublished:
@@ -217,10 +222,6 @@ class Study(OrmBase):
 
         return grouped_records
 
-    @property
-    def managerUuids(self):
-        return {su.userUniqueID for su in self.studyUsers}
-
     def publish(self, db_session):
         if not self.isPublishable:
             return False
@@ -235,6 +236,24 @@ class Study(OrmBase):
                 db_session.commit()
 
             return True
+
+    def get_cc_code(self):
+        """
+        If the license URL is to a Creative Commons license, get the
+        corresponding code to render the appropriate image.
+        """
+        from urllib.parse import urlsplit
+
+        if self.licenseUrl is None:
+            return None
+
+        parts = urlsplit(self.licenseUrl)
+        if parts.netloc != 'creativecommons.org':
+            return None
+
+        for code in ('by', 'by-sa', 'by-nd', 'by-nc', 'by-nc-sa', 'by-nc-nd', 'cc-zero'):
+            if parts.path.startswith(f'/licenses/{code}/'):
+                return code
 
     @staticmethod
     def generate_public_id(db_session):

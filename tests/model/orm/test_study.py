@@ -128,6 +128,18 @@ class TestStudy(DatabaseTest):
             ('strain', 5): [e2.publicId],
         })
 
+    def test_get_cc_code(self):
+        study = self.create_study()
+
+        study.licenseUrl = 'https://creativecommons.org/licenses/by/4.0/'
+        self.assertEqual(study.get_cc_code(), 'by')
+
+        study.licenseUrl = 'https://creativecommons.org/licenses/by-nc/4.0/legalcode.en'
+        self.assertEqual(study.get_cc_code(), 'by-nc')
+
+        study.licenseUrl = 'https://creativecommons.org/licenses/by-nc-nd/3.0/am/deed.en'
+        self.assertEqual(study.get_cc_code(), 'by-nc-nd')
+
 
 if __name__ == '__main__':
     unittest.main()

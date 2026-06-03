@@ -133,6 +133,25 @@ CREATE TABLE CustomModels (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `DashboardEntries`
+--
+
+DROP TABLE IF EXISTS DashboardEntries;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE DashboardEntries (
+  id int NOT NULL AUTO_INCREMENT,
+  userId int NOT NULL,
+  label varchar(255) NOT NULL,
+  `data` text,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY DashboardEntries_userId (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `ExcelFiles`
 --
 
@@ -514,6 +533,7 @@ CREATE TABLE Studies (
   authors json NOT NULL DEFAULT (json_array()),
   authorCache text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
   lastSubmissionId int DEFAULT NULL,
+  licenseUrl varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (publicId),
   UNIQUE KEY studyUniqueID (uuid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -836,13 +856,14 @@ INSERT INTO MigrationVersions VALUES
 (93,'2026_02_18_115807_add_api_count_to_page_visit_counter','2026-02-18 11:17:48'),
 (94,'2026_02_16_111742_link_studies_last_submissions','2026-03-13 14:05:27'),
 (95,'2026_03_01_175101_add_changelog_text_to_submissions','2026-03-13 14:05:27'),
-(96,'2026_03_31_163435_add_api_key_to_users','2026-05-18 10:24:14'),
-(97,'2026_03_31_181039_create_dashboard_entries','2026-05-18 10:24:14'),
-(98,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-05-18 10:24:14'),
-(99,'2026_05_14_142254_rename_dashboard_entries_to_workspace_entries','2026-05-18 10:24:32'),
-(100,'2026_05_14_143040_add_fields_to_workspace_entries','2026-05-18 10:24:32'),
-(108,'2026_05_19_111609_add_source_type_to_workspace_entries','2026-05-19 09:36:45'),
-(117,'2026_05_19_112912_create_workspaces','2026-05-19 09:56:39'),
-(125,'2026_05_19_114228_move_workspace_entries_under_workspaces','2026-05-19 10:09:28'),
-(128,'2026_05_25_111809_add_workspace_entry_id_to_modeling_result','2026-05-25 09:22:50');
+(96,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-04-20 13:53:42'),
+(97,'2026_03_31_163435_add_api_key_to_users','2026-05-27 14:19:21'),
+(98,'2026_03_31_181039_create_dashboard_entries','2026-05-27 14:19:21'),
+(99,'2026_05_14_142254_rename_dashboard_entries_to_workspace_entries','2026-05-27 14:19:21'),
+(100,'2026_05_14_143040_add_fields_to_workspace_entries','2026-05-27 14:19:21'),
+(101,'2026_05_19_111609_add_source_type_to_workspace_entries','2026-05-27 14:19:21'),
+(102,'2026_05_19_112912_create_workspaces','2026-05-27 14:19:21'),
+(103,'2026_05_19_114228_move_workspace_entries_under_workspaces','2026-05-27 14:22:49'),
+(104,'2026_05_25_111809_add_workspace_entry_id_to_modeling_result','2026-05-27 14:22:49'),
+(106,'2026_06_03_164607_add_license_url_to_studies','2026-06-03 14:49:35');
 

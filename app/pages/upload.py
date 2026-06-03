@@ -75,6 +75,7 @@ def upload_authors_json():
 
         return {
             'doi':         fetcher.doi,
+            'licenseUrl':  fetcher.license_url,
             'studyName':   fetcher.title,
             'authors':     fetcher.authors,
             'authorCache': fetcher.author_cache,
