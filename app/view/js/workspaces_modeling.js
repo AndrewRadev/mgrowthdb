@@ -1,6 +1,7 @@
 Page('.workspaces-modeling-page', function($page) {
   let chartUrl = $page.data('chartUrl')
   let $form    = $page.find('.js-modeling-form');
+  let $submitButton = $form.find('input[type=submit]');
 
   let orcidId       = $page.data('orcidId');
   let workspaceName = $page.data('workspaceName');
@@ -9,8 +10,11 @@ Page('.workspaces-modeling-page', function($page) {
 
   updateModelFieldVisibility($form);
   if ($activeRadio.length > 0) {
+    $submitButton.prop('disabled', false);
     updateChart($activeRadio.first());
     updateSelectedWorkspaceEntry($activeRadio.first());
+  } else {
+    $submitButton.prop('disabled', true);
   }
 
   let $pendingIndicators = $page.find('[data-modeling-state=pending]');
@@ -38,6 +42,7 @@ Page('.workspaces-modeling-page', function($page) {
 
     updateModelFieldVisibility($form);
     if ($activeRadio.length > 0) {
+      $submitButton.prop('disabled', false);
       updateChart($activeRadio.first());
       updateSelectedWorkspaceEntry($activeRadio.first());
     }
