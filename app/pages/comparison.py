@@ -12,21 +12,23 @@ import sqlalchemy as sql
 
 from app.model.orm import MeasurementContext, ModelingResult
 from app.view.forms.comparative_chart_form import ComparativeChartForm
+from app.model.lib.compare import init_compare_data
+import app.model.lib.util as util
 
 
 def comparison_show_page():
-    left_axis_ids  = _parse_comma_separated_request_ids('l')
-    right_axis_ids = _parse_comma_separated_request_ids('r')
+    left_axis_ids  = util.parse_comma_separated_request_ids('l')
+    right_axis_ids = util.parse_comma_separated_request_ids('r')
 
-    left_axis_model_ids  = _parse_comma_separated_request_ids('lm')
-    right_axis_model_ids = _parse_comma_separated_request_ids('rm')
+    left_axis_model_ids  = util.parse_comma_separated_request_ids('lm')
+    right_axis_model_ids = util.parse_comma_separated_request_ids('rm')
 
     if len(left_axis_ids) + len(right_axis_ids) + len(left_axis_model_ids) + len(right_axis_model_ids) > 0:
         context_ids = left_axis_ids + right_axis_ids
         model_ids = left_axis_model_ids + right_axis_model_ids
         data_source = "link"
     else:
-        compare_data = _init_compare_data()
+        compare_data = init_compare_data(session)
         context_ids = compare_data['contexts']
         model_ids = compare_data['models']
         data_source = "session"
@@ -77,7 +79,7 @@ def comparison_show_page():
 
 
 def comparison_update_json(action):
-    compare_data = _init_compare_data()
+    compare_data = init_compare_data(session)
 
     context_set = set(compare_data['contexts'])
     model_set   = set(compare_data['models'])
@@ -134,18 +136,3 @@ def comparison_chart_fragment():
         chart_form=chart_form,
         chart=chart,
     )
-
-
-def _init_compare_data():
-    data = session.get('compareData', {})
-
-    if 'contexts' not in data:
-        data['contexts'] = []
-    if 'models' not in data:
-        data['models'] = []
-
-    return data
-
-
-def _parse_comma_separated_request_ids(key):
-    return [int(s) for s in request.args.get(key, '').split(',') if s != '']

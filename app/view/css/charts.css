@@ -1,0 +1,114 @@
+.chart-form {
+  margin-top: 20px;
+
+  label {
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .trace-group {
+    display: flex;
+    flex-direction: column;
+    row-gap: 6px;
+  }
+
+  .model-row {
+    padding-left: 6px;
+    margin-top: -4px;
+
+    &.blank {
+      opacity: 0.6;
+    }
+
+    input[type="checkbox"] {
+      margin-left: -4px;
+      margin-right: -2px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.chart-container {
+  .traces-list {
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+
+    .context-row {
+      display: flex;
+      flex-direction: row;
+      &.blank {
+        opacity: 0.6;
+      }
+    }
+
+    .left, .right {
+      justify-content: center;
+      align-items: center;
+      flex-grow: 0;
+    }
+    .left {
+      border-right: 1px solid var(--border-color);
+      padding-right: 5px;
+    }
+    .right {
+      border-left: 1px solid var(--border-color);
+      padding-left: 5px;
+    }
+
+    .middle {
+      flex-grow: 1;
+      padding: 0 5px;
+      border-right: 0;
+      border-left: 2px solid var(--border-color);
+    }
+    .middle.align-right {
+      text-align: right;
+      border-left: 0;
+      border-right: 2px solid var(--border-color);
+    }
+  }
+
+  .group-row {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-top: 10px;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    .left, .right, .middle {
+      border: none !important;
+    }
+
+    .middle {
+      flex-grow: 1;
+      text-align: center;
+    }
+  }
+
+  .data-controls {
+    border-bottom: 2px solid var(--border-color);
+    padding: 4px 0;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .column {
+      display: flex;
+      flex-direction: row;
+    }
+
+    input[type="checkbox"] {
+      margin: 0;
+    }
+  }
+}

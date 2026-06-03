@@ -11,22 +11,28 @@ from app.model.lib.r_script import RScript
 from app.model.orm import (
     ModelingResult,
     MeasurementContext,
+    WorkspaceEntry,
 )
 
 _LOGGER = get_task_logger(__name__)
 
 
 @shared_task
-def process_modeling_request(modeling_result_id, measurement_context_id, args):
+def process_modeling_request(modeling_result_id, *, target_type, target_id, args):
     db_session = FLASK_DB.session
 
-    _process_modeling_request(db_session, modeling_result_id, measurement_context_id, args)
+    _process_modeling_request(db_session, modeling_result_id, target_type, target_id, args)
 
 
-def _process_modeling_request(db_session, modeling_result_id, measurement_context_id, args={}):
+def _process_modeling_request(db_session, modeling_result_id, target_type, target_id, args={}):
     modeling_result = db_session.get(ModelingResult, modeling_result_id)
 
-    measurement_context = db_session.get(MeasurementContext, measurement_context_id)
+    if target_type == 'MeasurementContext':
+        target = db_session.get(MeasurementContext, target_id)
+    elif target_type == 'WorkspaceEntry':
+        target = db_session.get(WorkspaceEntry, target_id)
+    else:
+        raise ValueError(f"Unexpected target type: {target_type}")
 
     modeling_type = modeling_result.type
     point_count   = int(args.get('pointCount', '5'))
@@ -40,12 +46,12 @@ def _process_modeling_request(db_session, modeling_result_id, measurement_contex
         elif modeling_type in ('logistic', 'baranyi_roberts'):
             inputs = {'endTime': end_time}
 
-        data = measurement_context.get_df(db_session)
+        data = target.get_df(db_session)
         if modeling_type in ('logistic', 'baranyi_roberts') and end_time != '':
             data = data[data['time'] <= float(end_time)]
 
-        # We don't need standard deviation for modeling:
-        data = data.drop(columns=['std'])
+        # We don't need error columns for modeling:
+        data = data[["time", "value"]]
 
         # Remove rows with NA values, if any
         data = data.dropna()

@@ -11,6 +11,8 @@ from app.model.orm import (
     MeasurementContext,
     ModelingResult,
     Perturbation,
+    Workspace,
+    WorkspaceEntry,
 )
 from app.model.lib.conversion import (
     CELL_COUNT_UNITS,
@@ -28,6 +30,8 @@ class ComparativeChartForm:
         right_axis_ids=[],
         left_axis_model_ids=[],
         right_axis_model_ids=[],
+        left_axis_workspace_ids=[],
+        right_axis_workspace_ids=[],
         show_std=True,
         show_perturbations=True,
     ):
@@ -44,11 +48,18 @@ class ComparativeChartForm:
         self.right_axis_model_ids = set(right_axis_model_ids)
         self.no_axis_model_ids    = set()
 
+        self.left_axis_workspace_ids  = set(left_axis_workspace_ids)
+        self.right_axis_workspace_ids = set(right_axis_workspace_ids)
+        self.no_axis_workspace_ids    = set()
+
         self.measurement_context_ids = list(self.left_axis_ids) + list(self.right_axis_ids)
         self.measurement_contexts = []
 
         self.modeling_result_ids = list(self.left_axis_model_ids) + list(self.right_axis_model_ids)
         self.modeling_results = []
+
+        self.workspace_entry_ids = list(self.left_axis_workspace_ids) + list(self.right_axis_workspace_ids)
+        self.workspace_entries  = []
 
         self.cell_count_units = 'Cells/mL'
         self.cfu_count_units  = 'CFUs/mL'
@@ -57,7 +68,7 @@ class ComparativeChartForm:
         self.log_left  = False
         self.log_right = False
 
-    def build_chart(self, args=None, width=None, clamp_x_data=False):
+    def build_chart(self, args=None, width=None, clamp_x_data=False, user=None):
         if args:
             self._extract_args(args)
 
@@ -89,6 +100,17 @@ class ComparativeChartForm:
                 sql.orm.selectinload(ModelingResult.measurementContext),
                 sql.orm.selectinload(ModelingResult.measurementContext, MeasurementContext.technique),
             )
+        ).all()
+
+        userId = getattr(user, 'id', None)
+        self.workspace_entries = self.db_session.scalars(
+            sql.select(WorkspaceEntry)
+            .join(Workspace)
+            .where(WorkspaceEntry.id.in_(self.workspace_entry_ids))
+            .where(sql.or_(
+                Workspace.isPublished,
+                Workspace.userId == userId,
+            ))
         ).all()
 
         measurements_df = self.get_measurements_df(self.measurement_context_ids)
@@ -127,9 +149,34 @@ class ComparativeChartForm:
                 metabolite_mass=metabolite_mass,
             )
 
+        for workspace_entry in self.workspace_entries:
+            if workspace_entry.id in self.left_axis_workspace_ids:
+                axis = 'left'
+                log_transform = self.log_left
+            elif workspace_entry.id in self.right_axis_workspace_ids:
+                axis = 'right'
+                log_transform = self.log_right
+            else:
+                continue
+
+            df = workspace_entry.get_df()
+            # TODO (2026-05-19) "Error" is the more generic name, we should use
+            # that as the default
+            df.rename(columns={'error': 'std'}, inplace=True)
+
+            metadata = dict(
+                units=workspace_entry.units,
+                label=workspace_entry.label,
+                axis=axis,
+            )
+
+            if workspace_entry.dataType == 'model':
+                chart.add_model_df(df, **metadata)
+            else:
+                chart.add_df(df, **metadata)
+
         for modeling_result in self.modeling_results:
-            measurement_context = modeling_result.measurementContext
-            technique = measurement_context.technique
+            target = modeling_result.target
 
             if modeling_result.id in self.left_axis_model_ids:
                 axis = 'left'
@@ -137,19 +184,24 @@ class ComparativeChartForm:
             elif modeling_result.id in self.right_axis_model_ids:
                 axis = 'right'
                 log_transform = self.log_right
+            else:
+                continue
 
-            measurement_df = measurements_df[measurements_df['contextId'] == measurement_context.id]
-            if measurement_df.empty:
-                # Could happen if we're just rendering the model without the parent measurement:
-                measurement_df = measurement_context.get_df(self.db_session)
+            if target.class_name == 'MeasurementContext':
+                measurement_df = measurements_df[measurements_df['contextId'] == target.id]
+                if measurement_df.empty:
+                    # Could happen if we're just rendering the model without the parent measurement:
+                    measurement_df = target.get_df(self.db_session)
+            elif target.class_name == 'WorkspaceEntry':
+                measurement_df = target.get_df()
 
             model_df = modeling_result.generate_chart_df(measurement_df)
             label    = modeling_result.get_chart_label()
 
-            if technique.units == '':
-                units = technique.short_name
+            if target.units == '' and target.class_name == 'MeasurementContext':
+                units = target.technique.short_name
             else:
-                units = technique.units
+                units = target.units
 
             chart.add_model_df(
                 model_df,
@@ -179,23 +231,25 @@ class ComparativeChartForm:
 
         return chart
 
-    @property
-    def permalink_query(self):
-        if len(self.measurement_contexts):
-            experiment_id = self.measurement_contexts[0].bioreplicate.experimentId
-            technique_id  = self.measurement_contexts[0].techniqueId
-        elif len(self.modeling_results):
-            experiment_id = self.modeling_results[0].measurementContext.bioreplicate.experimentId
-            technique_id  = self.modeling_results[0].measurementContext.techniqueId
-        else:
-            experiment_id = ''
-            technique_id = ''
+    def permalink_query(self, in_study=True):
+        experiment_id = ''
+        technique_id = ''
+
+        if in_study:
+            if len(self.measurement_contexts):
+                experiment_id = self.measurement_contexts[0].bioreplicate.experimentId
+                technique_id  = self.measurement_contexts[0].techniqueId
+            elif len(self.modeling_results) and self.modeling_results[0].measurementContextId is not None:
+                experiment_id = self.modeling_results[0].measurementContext.bioreplicate.experimentId
+                technique_id  = self.modeling_results[0].measurementContext.techniqueId
 
         parts = {
             'l':  ','.join([str(i) for i in sorted(self.left_axis_ids)]),
             'r':  ','.join([str(i) for i in sorted(self.right_axis_ids)]),
             'lm': ','.join([str(i) for i in sorted(self.left_axis_model_ids)]),
             'rm': ','.join([str(i) for i in sorted(self.right_axis_model_ids)]),
+            'lw': ','.join([str(i) for i in sorted(self.left_axis_workspace_ids)]),
+            'rw': ','.join([str(i) for i in sorted(self.right_axis_workspace_ids)]),
 
             'selectedExperimentId': str(experiment_id),
             'selectedTechniqueId':  str(technique_id),
@@ -203,9 +257,14 @@ class ComparativeChartForm:
 
         return '&'.join([f"{k}={v}" for k, v in parts.items() if v != ''])
 
-    @property
-    def measurement_contexts_by_units(self):
-        sorted_contexts = sorted(self.measurement_contexts, key=self._converted_unit_sort)
+    def group_records_by_units(self):
+        records = [
+            *self.measurement_contexts,
+            *self.workspace_entries,
+            *self.modeling_results,
+        ]
+
+        sorted_contexts = sorted(records, key=self._converted_unit_sort)
 
         groups = [
             (group, list(items))
@@ -226,10 +285,28 @@ class ComparativeChartForm:
         if should_group:
             return groups
         else:
-            return [("__ungrouped__", self.measurement_contexts)]
+            return [("__ungrouped__", records)]
 
-    def _converted_units(self, measurement_context):
-        units = measurement_context.technique.units
+    def get_measurements_df(self, measurement_context_ids):
+        query = (
+            sql.select(
+                Measurement.contextId,
+                Measurement.timeInHours.label("time"),
+                Measurement.value,
+                Measurement.std,
+            )
+            .select_from(Measurement)
+            .where(
+                Measurement.contextId.in_(measurement_context_ids),
+                Measurement.value.is_not(None),
+            )
+            .order_by(Measurement.contextId, Measurement.timeInSeconds)
+        )
+
+        return execute_into_df(self.db_session, query)
+
+    def _converted_units(self, record):
+        units = record.units
 
         if units in CELL_COUNT_UNITS:
             return self.cell_count_units
@@ -240,8 +317,8 @@ class ComparativeChartForm:
         else:
             return units
 
-    def _converted_unit_sort(self, measurement_context):
-        units = measurement_context.technique.units
+    def _converted_unit_sort(self, record):
+        units = record.units
 
         if units in CELL_COUNT_UNITS:
             return 1
@@ -263,6 +340,10 @@ class ComparativeChartForm:
         self.right_axis_model_ids = set()
         self.no_axis_model_ids    = set()
 
+        self.left_axis_workspace_ids  = set()
+        self.right_axis_workspace_ids = set()
+        self.no_axis_workspace_ids    = set()
+
         self.log_left  = False
         self.log_right = False
 
@@ -276,6 +357,11 @@ class ComparativeChartForm:
                 modeling_result_id = int(arg.removeprefix('modelingResult|'))
                 self.modeling_result_ids.append(modeling_result_id)
                 self.left_axis_model_ids.add(modeling_result_id)
+
+            elif arg.startswith('workspaceEntry|'):
+                workspace_entry_id = int(arg.removeprefix('workspaceEntry|'))
+                self.workspace_entry_ids.append(workspace_entry_id)
+                self.left_axis_workspace_ids.add(workspace_entry_id)
 
             elif arg.startswith('axis|'):
                 record_type, record_id = arg.removeprefix('axis|').split('|')
@@ -293,6 +379,10 @@ class ComparativeChartForm:
                     left_axis  = self.left_axis_model_ids
                     right_axis = self.right_axis_model_ids
                     no_axis    = self.no_axis_model_ids
+                elif record_type == 'workspaceEntry':
+                    left_axis  = self.left_axis_workspace_ids
+                    right_axis = self.right_axis_workspace_ids
+                    no_axis    = self.no_axis_workspace_ids
                 else:
                     raise ValueError(f"Unexpected record type: {record_type}")
 
@@ -321,21 +411,3 @@ class ComparativeChartForm:
                 self.cfu_count_units = value
             elif arg == 'metaboliteUnits':
                 self.metabolite_units = value
-
-    def get_measurements_df(self, measurement_context_ids):
-        query = (
-            sql.select(
-                Measurement.contextId,
-                Measurement.timeInHours.label("time"),
-                Measurement.value,
-                Measurement.std,
-            )
-            .select_from(Measurement)
-            .where(
-                Measurement.contextId.in_(measurement_context_ids),
-                Measurement.value.is_not(None),
-            )
-            .order_by(Measurement.contextId, Measurement.timeInSeconds)
-        )
-
-        return execute_into_df(self.db_session, query)

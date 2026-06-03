@@ -37,7 +37,7 @@ class TestExperimentExportForm(DatabaseTest):
         )
         form.build_chart()
         self.assertEqual(
-            form.permalink_query,
+            form.permalink_query(),
             f"l={mc1.id},{mc2.id}&lm={mr1.id},{mr2.id}&selectedExperimentId={e1.publicId}&selectedTechniqueId={t.id}",
         )
 
@@ -51,7 +51,7 @@ class TestExperimentExportForm(DatabaseTest):
         )
         form.build_chart()
         self.assertEqual(
-            form.permalink_query,
+            form.permalink_query(),
             f"l={mc2.id}&r={mc1.id}&lm={mr1.id}&rm={mr2.id}&selectedExperimentId={e1.publicId}&selectedTechniqueId={t.id}",
         )
 
@@ -63,7 +63,7 @@ class TestExperimentExportForm(DatabaseTest):
         )
         form.build_chart()
         self.assertEqual(
-            form.permalink_query,
+            form.permalink_query(),
             f"l={mc2.id}&lm={mr1.id}&selectedExperimentId={e2.publicId}&selectedTechniqueId={t.id}",
         )
 

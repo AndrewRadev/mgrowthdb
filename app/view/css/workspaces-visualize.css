@@ -1,0 +1,16 @@
+.workspaces-visualize-page {
+  .columns {
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+
+    .controls-column {
+      width: 30%;
+    }
+
+    .chart-column {
+      width: 70%;
+      overflow-x: hidden;
+    }
+  }
+}

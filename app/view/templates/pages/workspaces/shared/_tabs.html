@@ -1,0 +1,28 @@
+{% set orcidId = workspace.user.orcidId %}
+
+<ul class="tabs">
+  <li class="{{ "current" if request.endpoint == 'workspaces_index_page' }}">
+    <a
+        class="js-tab-index"
+        href="{{ url_for('workspaces_index_page', orcidId=orcidId, name=workspace.name) }}">
+      Upload data
+    </a>
+  </li>
+  <li class="{{ "current" if request.endpoint == 'workspaces_visualize_page' }}">
+    <a
+        class="js-tab-visualize"
+        href="{{ url_for('workspaces_visualize_page', orcidId=orcidId, name=workspace.name) }}">
+      Visualize
+    </a>
+  </li>
+
+  {% if workspace.manageable_by_user(g.current_user): %}
+    <li class="{{ "current" if request.endpoint == 'workspaces_modeling_page' }}">
+      <a
+          class="js-tab-modeling"
+          href="{{ url_for('workspaces_modeling_page', orcidId=orcidId, name=workspace.name) }}">
+        Fit models
+      </a>
+    </li>
+  {% endif %}
+</ul>

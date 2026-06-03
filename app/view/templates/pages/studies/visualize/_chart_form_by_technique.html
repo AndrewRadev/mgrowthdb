@@ -62,7 +62,7 @@
     <div
         class="experiment-container margin-top-10 scroll-shadows hidden js-experiment-container"
         data-experiment-id="{{ experiment.publicId }}">
-      <div class="experiment">
+      <div class="experiment trace-group">
         {% for technique in study.measurementTechniques: %}
           {% for (bioreplicate, compartment), contexts in technique.get_grouped_contexts() if bioreplicate.experimentId == experiment.publicId: %}
             {% if technique.subjectType != 'bioreplicate': %}

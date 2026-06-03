@@ -26,6 +26,10 @@ class OrmBase(DeclarativeBase):
 
         return sql.case(*cases, else_=len(cases))
 
+    @property
+    def class_name(self):
+        return self.__class__.__name__
+
     def update(self, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key):

@@ -68,8 +68,16 @@ class MeasurementContext(OrmBase):
     ), deferred=True)
 
     @property
+    def readyModelingResults(self):
+        return [mr for mr in self.modelingResults if mr.state == 'ready']
+
+    @property
     def publishedModelingResults(self):
-        return [mr for mr in self.modelingResults if mr.isPublished]
+        return [mr for mr in self.readyModelingResults if mr.isPublished]
+
+    @property
+    def units(self):
+        return self.technique.units
 
     def get_df(self, db_session):
         from app.model.orm import Measurement

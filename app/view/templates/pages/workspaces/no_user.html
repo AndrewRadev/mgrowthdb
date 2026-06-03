@@ -1,0 +1,23 @@
+{% from 'pages/workspaces/_upload_form.html' import render_upload_form %}
+{% from 'pages/workspaces/_workspace_entry.html' import render_workspace_entry %}
+
+{% extends '_layout.html' %}
+
+{% block title %}: Workspaces{% endblock %}
+
+{% block content %}
+  <div class="container workspaces-page">
+    <div class="workspaces-header-component flex-row">
+      {% include 'pages/workspaces/shared/_header.html' %}
+    </div>
+
+    <article>
+      <p class="warning-message">
+        In order to upload data to a workspace, please
+        <a href="{{ url_for("user_login_page") }}">log in</a>
+        to the application using your
+        {{ "https://orcid.org/"|external_link("ORCID") }}.
+      </p>
+    </article>
+  </div>
+{% endblock %}

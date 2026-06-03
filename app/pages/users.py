@@ -24,6 +24,7 @@ from app.model.orm import (
 )
 from app.model.lib import orcid
 from app.model.lib.errors import LoginRequired
+from app.model.lib.chart import Chart
 
 
 def user_show_page():

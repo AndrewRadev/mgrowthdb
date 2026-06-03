@@ -1,0 +1,95 @@
+{% from 'utils/_growth_unit_options.html' import render_growth_unit_options %}
+{% from 'utils/_metabolite_unit_options.html' import render_metabolite_unit_options %}
+
+{% macro render_workspace_entry_form(workspace_entry) %}
+
+  <div class="form-container js-form-container hidden">
+    <form
+        class="simple-form smaller js-edit-form"
+        action="{{ url_for('workspaces_update_entry_action', id=workspace_entry.id) }}"
+        method="POST">
+
+      <div class="form-row">
+        <label class="full">
+          <span>Label</span>
+          <input
+              type="text"
+              name="label"
+              class="form-input-blue form-input-full form-input-small"
+              value="{{ workspace_entry.label }}" />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="full">
+          <span>Data type</span>
+          <select name="dataType" class="form-input-blue form-input-full form-input-small">
+            <option value=""></option>
+            <option {{ "selected" if workspace_entry.dataType == "measurement" }} value="measurement">
+              Observational measurements
+            </option>
+            <option {{ "selected" if workspace_entry.dataType == "model" }} value="model">
+              Model predictions
+            </option>
+            <option {{ "selected" if workspace_entry.dataType == "other" }} value="other">
+              Other
+            </option>
+          </select>
+        </label>
+
+        <label class="full">
+          <span>Measurement subject type</span>
+          <select name="subjectType" class="form-input-blue form-input-full form-input-small js-subject-type">
+            <option value="">
+            </option>
+            <option {{ "selected" if workspace_entry.subjectType == "community" }} value="community">
+              Microbial community
+            </option>
+            <option {{ "selected" if workspace_entry.subjectType == "strain" }} value="strain">
+              Microbial strain
+            </option>
+            <option {{ "selected" if workspace_entry.subjectType == "metabolite" }} value="metabolite">
+              Metabolite
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="full {{ "hidden" if workspace_entry.subjectType is not none }} js-no-units">
+          <span>Units</span>
+          <select name="noUnits" class="form-input-blue form-input-full form-input-small">
+            <option value="">N/A</option>
+          </select>
+        </label>
+
+        <label class="full {{ "hidden" if workspace_entry.subjectType not in ('community', 'strain') }} js-growth-units">
+          <span>Growth units</span>
+          <select name="growthUnits" class="form-input-blue form-input-full form-input-small">
+            {{ render_growth_unit_options(selected_units=workspace_entry.units, include_relative=True) }}
+          </select>
+        </label>
+
+        <label class="full {{ "hidden" if workspace_entry.subjectType != "metabolite" }} js-metabolite-units">
+          <span>Metabolite units</span>
+          <select name="metaboliteUnits" class="form-input-blue form-input-full form-input-small">
+            {{ render_metabolite_unit_options(selected_units=workspace_entry.units) }}
+          </select>
+        </label>
+
+        <button
+            type="submit"
+            class="js-edit green-button small-button smaller flex-end">
+          Save
+        </button>
+
+        <button
+            type="button"
+            class="js-edit white-button small-button smaller flex-end">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+
+{% endmacro %}

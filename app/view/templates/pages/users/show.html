@@ -16,7 +16,28 @@
       {{ post_button("Log out", url_for("user_logout_action"), class="flex-right") }}
     </div>
 
-    <p>ORCID: {{ g.current_user.orcidUrl|external_link() }}</p>
+    <ul>
+      <li>ORCID: {{ g.current_user.orcidUrl|external_link() }}</li>
+      <li>
+        <a href="{{ url_for('workspaces_index_page', orcidId=g.current_user.orcidId, name="default") }}">Workspaces</a>
+      </li>
+    </ul>
+
+    <div class="copy-button-wrapper flex-row flex-grow">
+      <button type="button" class="js-copy-button copy-button green-button">
+        Copy 📋
+      </button>
+      <input
+          autocomplete="off"
+          data-real-value="{{ g.current_user.apiKey }}"
+          type="text"
+          value="{{ "*" * 36 }}"
+          class="js-export-url export-url form-input-blue full"
+          readonly />
+      <button type="button" class="js-show-button show-button green-button">
+        Show 🕵️
+      </button>
+    </div>
 
     {% include 'shared/flashes.html' %}
 

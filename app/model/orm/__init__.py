@@ -26,3 +26,5 @@ from .submission import Submission
 from .submission_backup import SubmissionBackup
 from .taxon import Taxon
 from .user import User
+from .workspace import Workspace
+from .workspace_entry import WorkspaceEntry

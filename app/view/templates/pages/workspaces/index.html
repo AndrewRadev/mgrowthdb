@@ -1,0 +1,68 @@
+{% from 'pages/workspaces/_upload_form.html' import render_upload_form %}
+{% from 'pages/workspaces/_workspace_entry.html' import render_workspace_entry %}
+
+{% extends '_layout.html' %}
+
+{% block title %}: Workspaces{% endblock %}
+
+{% block content %}
+  <div class="container workspaces-page">
+    <div class="workspaces-header-component flex-row">
+      {% include 'pages/workspaces/shared/_header.html' %}
+    </div>
+
+    <article>
+      {% include 'pages/workspaces/shared/_tabs.html' %}
+
+      {% if workspace.manageable_by_user(g.current_user): %}
+        <p class="help small">
+          Upload your growth or modeling data without attaching it to a
+          particular study, then go to the "visualize" page to explore it. To
+          share the data with others, make this workspace public and send them
+          the page URL.
+        </p>
+      {% endif %}
+
+      <div class="columns flex-row">
+        <div
+            {% if workspace.manageable_by_user(g.current_user): %}
+              style="width: 50%;"
+            {% endif %}
+            class="column column-entries">
+
+          <h3>Direct upload</h3>
+
+          {% if workspace.uploadedEntries|length == 0: %}
+            <p class="help">
+              No data uploaded yet
+            </p>
+          {% else: %}
+            <ul class="workspace-entry-list scroll-shadows">
+              {% for workspace_entry in workspace.uploadedEntries: %}
+                <li class="workspace-entry js-workspace-entry">
+                  {{ render_workspace_entry(workspace_entry) }}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          {% if workspace.manageable_by_user(g.current_user) or workspace.apiEntries|length > 0: %}
+            <h3>API data</h3>
+
+            <p class="help">
+              You can push data to this page using the
+              {{ "https://mgrowthdb.readthedocs.io/en/latest/api.html"|external_link("API") }},
+              and it will appear here.
+            </p>
+          {% endif %}
+        </div>
+
+        {% if workspace.manageable_by_user(g.current_user): %}
+          <div class="column column-form" style="width: 50%;">
+            {{ render_upload_form(workspace, errors) }}
+          </div>
+        {% endif %}
+      </div>
+    </article>
+  </div>
+{% endblock %}

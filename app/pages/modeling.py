@@ -112,7 +112,12 @@ def modeling_submit_action(publicId):
     g.db_session.add(modeling_result)
     g.db_session.commit()
 
-    process_modeling_request.delay(modeling_result.id, measurement_context_id, args)
+    process_modeling_request.delay(
+        modeling_result.id,
+        target_type='MeasurementContext',
+        target_id=measurement_context_id,
+        args=args,
+    )
 
     return {'modelingResultId': modeling_result.id}
 
@@ -170,8 +175,6 @@ def modeling_chart_fragment(publicId, measurementContextId):
         study_id=publicId,
         chart=chart,
         modeling_record=modeling_record,
-        form_data=request.form,
-        modeling_type=modeling_type,
         model_params=model_params,
         r_summary=r_summary,
         measurement_context=measurement_context,

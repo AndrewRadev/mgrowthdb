@@ -27,6 +27,12 @@
     display: inline-block;
   }
 
+  .uncompare {
+    .white-button {
+      background-color: #eee;
+    }
+  }
+
   .bioreplicates {
     display: flex;
     flex-direction: column;

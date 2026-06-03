@@ -1,7 +1,11 @@
 import tests.init  # noqa: F401
 
+import json
 from datetime import datetime, UTC
 
+import sqlalchemy as sql
+
+from app.model.orm import WorkspaceEntry
 from tests.page_test import PageTest
 
 
@@ -625,3 +629,119 @@ class TestApiPages(PageTest):
         mc_json = [entry for entry in response_json['measurementContexts'] if entry['id'] == mc.id][0]
         self.assertEqual(mc_json['techniqueOriginalUnits'], 'mM')
         self.assertEqual(mc_json['techniqueUnits'], 'mM')
+
+    def test_workspace_endpoints(self):
+        user = self.create_user(orcidId="test-orcid-id", apiKey="test-api-key")
+        w1 = self.create_workspace(userId=user.id)
+        w2 = self.create_workspace(userId=user.id, name="public", publishedAt=datetime.now(UTC))
+
+        test_data = "time,value\n1,100\n2,200\n3,400"
+
+        we1 = self.create_workspace_entry(label="WE1", data=test_data, workspaceId=w1.id)
+        we2 = self.create_workspace_entry(label="WE2", data=test_data, workspaceId=w2.id)
+        we3 = self.create_workspace_entry(label="WE3", data=test_data, workspaceId=w2.id)
+
+        self.db_session.commit()
+
+        # Default workspace is private, accessible only by api key:
+        response = self.client.get('/api/v1/workspace/test-orcid-id/default.json')
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "403 Forbidden")
+
+        response = self.client.get('/api/v1/workspace/test-orcid-id/default.json?apiKey=test-api-key')
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["name"], "default")
+        self.assertEqual([e["id"] for e in response_json["entries"]], [we1.id])
+
+        response = self.client.get('/api/v1/workspace/test-orcid-id/public.json')
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["name"], "public")
+        self.assertEqual([e["id"] for e in response_json["entries"]], [we2.id, we3.id])
+
+        # Entries in private workspaces are only accessible via api key:
+        response = self.client.get(f"/api/v1/workspace-entry/{we1.id}.json")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "404 Not found")
+
+        response = self.client.get(f"/api/v1/workspace-entry/{we1.id}.csv")
+        self.assertEqual(response.text, "404 Not found")
+
+        response = self.client.get(f"/api/v1/workspace-entry/{we1.id}.json?apiKey=test-api-key")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["label"], "WE1")
+
+        response = self.client.get(f"/api/v1/workspace-entry/{we1.id}.csv?apiKey=test-api-key")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df.columns.tolist(), ['time', 'value'])
+
+        # Public workspace, accessible to the world
+        response = self.client.get(f"/api/v1/workspace-entry/{we2.id}.json")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["label"], "WE2")
+
+        response = self.client.get(f"/api/v1/workspace-entry/{we2.id}.csv")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df.columns.tolist(), ['time', 'value'])
+
+    def test_workspace_update(self):
+        user = self.create_user(orcidId="test-orcid-id", apiKey="test-api-key")
+        workspace = self.create_workspace(userId=user.id)
+        api_url = '/api/v1/workspace/test-orcid-id/default.json'
+
+        self.db_session.commit()
+
+        payload = {
+            "apiKey": "test-api-key",
+            "entries": [{
+                "label": "test entry",
+                "data": """
+                    time,value
+                    1,100,
+                    2,200,
+                    3,400,
+                """,
+            }]
+        }
+
+        # Workspace entry does not exist:
+        self.assertEqual(workspace.entries, [])
+
+        response = self.client.post(api_url, data=json.dumps(payload))
+        self.db_session.commit()
+        self.db_session.refresh(user)
+        response_json = self._get_json(response)
+
+        self.assertTrue(response_json["workspaceUrl"].endswith("/workspaces/test-orcid-id/default/"))
+
+        # Workspace entry exists:
+        self.assertNotEqual(workspace.entries, [])
+        workspace_entry = workspace.entries[0]
+
+        # A new workspaces entry is created after pushing another batch of data:
+        response = self.client.post(api_url, data=json.dumps(payload))
+        self.db_session.commit()
+        self.db_session.refresh(workspace)
+        response_json = self._get_json(response)
+
+        self.assertEqual(len(workspace.entries), 1)
+
+        new_workspace_entry = workspace.entries[0]
+        self.assertNotEqual(workspace_entry, new_workspace_entry)
+
+        # No data sent: BadRequest
+        bad_payload = {"apiKey": "test-api-key"}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "400 Bad request")
+
+        # Wrong api key: 400 client error
+        bad_payload = {"apiKey": "wrong-api-key", "entries": []}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertIn("API key", response_json["error"])
+
+        # Missing api key: Forbidden
+        bad_payload = {"entries": []}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "403 Forbidden")

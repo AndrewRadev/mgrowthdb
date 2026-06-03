@@ -38,7 +38,12 @@ class TestModeling(DatabaseTest):
                 value=value,
             )
 
-        modeling_result = _process_modeling_request(self.db_session, modeling_result.id, measurement_context.id)
+        modeling_result = _process_modeling_request(
+            self.db_session,
+            modeling_result.id,
+            'MeasurementContext',
+            measurement_context.id,
+        )
 
         self.assertEqual(len(modeling_result.params['coefficients']), 4)
         self.assertEqual(set(modeling_result.params['coefficients'].keys()), {'y0', 'h0', 'K', 'mumax'})

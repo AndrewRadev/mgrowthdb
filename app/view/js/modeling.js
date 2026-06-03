@@ -1,6 +1,7 @@
 Page('.study-modeling-page', function($page) {
-  let studyId = $page.data('studyId');
-  let $form   = $page.find('.js-modeling-form');
+  let studyId       = $page.data('studyId');
+  let $form         = $page.find('.js-modeling-form');
+  let $submitButton = $form.find('input[type=submit]');
 
   let $uploadContainer = $('.js-upload-container');
   $uploadContainer.customFileInput();
@@ -14,8 +15,11 @@ Page('.study-modeling-page', function($page) {
 
   updateCustomModelVisibility($form, $activeRadio);
   if ($activeRadio.length > 0) {
+    $submitButton.prop('disabled', false);
     updateChart($activeRadio.first());
     updateSelectedContext($activeRadio.first());
+  } else {
+    $submitButton.prop('disabled', true).addClass('disabled');
   }
 
   let $pendingIndicators = $page.find('[data-modeling-state=pending]');
@@ -53,6 +57,7 @@ Page('.study-modeling-page', function($page) {
 
     updateCustomModelVisibility($form, $activeRadio);
     if ($activeRadio.length > 0) {
+      $submitButton.prop('disabled', false);
       updateChart($activeRadio.first());
       updateSelectedContext($activeRadio.first());
     }

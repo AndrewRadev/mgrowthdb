@@ -1,0 +1,19 @@
+{% macro render_metabolite_unit_options(selected_units) %}
+
+  <optgroup label="Molar concentration">
+    <option value="mM" {{ "selected" if selected_units == 'mM' }}>Millimolars (mM)</option>
+    <option value="μM" {{ "selected" if selected_units == 'μM' }}>Micromolars (μM)</option>
+    <option value="nM" {{ "selected" if selected_units == 'nM' }}>Nanomolars (nM)</option>
+    <option value="pM" {{ "selected" if selected_units == 'pM' }}>Picomolars (pM)</option>
+  </optgroup>
+
+  <optgroup label="Mass concentration">
+    <option value="g/L" {{ "selected" if selected_units == 'g/L' }}>Grams per Liter (g/L)</option>
+    <option value="mg/L" {{ "selected" if selected_units == 'mg/L' }}>Milligrams per Liter (mg/L)</option>
+  </optgroup>
+
+  <optgroup label="Other">
+    <option value="AUC" {{ "selected" if selected_units == 'AUC' }}>AUC</option>
+  </optgroup>
+
+{% endmacro %}
