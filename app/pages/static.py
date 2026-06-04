@@ -5,12 +5,16 @@ Static pages: home, about
 from pathlib import Path
 from datetime import datetime
 
-from flask import render_template, g
+from flask import (
+    g,
+    render_template,
+    current_app,
+)
 import sqlalchemy as sql
 
 from app.model.orm import (
     Experiment,
-    Measurement,
+    MeasurementContext,
     Metabolite,
     Study,
     StudyMetabolite,
@@ -18,13 +22,12 @@ from app.model.orm import (
     Taxon,
 )
 from app.model.lib.util import read_timestamp_date
+from app.pages.help import HELP_TOPICS
 
 
 def static_home_page():
-    study_count = g.db_session.scalars(
-        sql.select(sql.func.count(Study.publicId))
-        .where(Study.isPublished)
-    ).one()
+    HELP_TOPICS.process_once(debug=current_app.config["DEBUG"])
+    help_topic_words = HELP_TOPICS.word_count
 
     experiment_count = g.db_session.scalars(
         sql.select(sql.func.count(sql.distinct(Experiment.publicId)))
@@ -32,8 +35,8 @@ def static_home_page():
         .where(Study.isPublished)
     ).one()
 
-    measurement_count = g.db_session.scalars(
-        sql.select(sql.func.count(sql.distinct(Measurement.id)))
+    measurement_context_count = g.db_session.scalars(
+        sql.select(sql.func.count(sql.distinct(MeasurementContext.id)))
         .join(Study)
         .where(Study.isPublished)
     ).one()
@@ -59,15 +62,15 @@ def static_home_page():
 
     return render_template(
         "pages/static/home.html",
-        study_count=study_count,
         experiment_count=experiment_count,
-        measurement_count=measurement_count,
+        measurement_context_count=measurement_context_count,
         metabolite_count=metabolite_count,
         study_metabolite_count=study_metabolite_count,
         taxa_count=taxa_count,
         study_strain_count=study_strain_count,
         last_ncbi_update=last_ncbi_update,
         last_chebi_update=last_chebi_update,
+        help_topic_words=help_topic_words,
     )
 
 

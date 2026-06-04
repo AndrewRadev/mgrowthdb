@@ -32,6 +32,7 @@ class HelpTopics:
         self.help_topic_dir = Path(help_topic_dir)
 
         self.markdown = MarkdownIt().enable('table')
+        self.word_count = 0
 
         self._html_cache = {}
         self._text_cache = {}
@@ -92,6 +93,8 @@ class HelpTopics:
         if self._html_cache and not debug:
             return
 
+        self.word_count = 0
+
         for file in self.help_topic_dir.iterdir():
             extension = file.suffix
             basename  = str(file).removesuffix(extension)
@@ -111,4 +114,7 @@ class HelpTopics:
                 self._html_cache[base_key] = html_content
 
                 soup = BeautifulSoup(html_content, 'html.parser')
-                self._text_cache[base_key] = ' '.join(soup.get_text(' ', strip=True).split())
+                words = soup.get_text(' ', strip=True).split()
+
+                self._text_cache[base_key] = ' '.join(words)
+                self.word_count += len(words)
