@@ -55,6 +55,8 @@
   .bioreplicates-toc {
     position: sticky;
     top: 20px;
+    overflow: auto;
+    max-height: 90vh;
     margin-top: 20px;
     margin-left: 20px;
     flex: 1;
