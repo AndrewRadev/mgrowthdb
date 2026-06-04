@@ -143,7 +143,7 @@ The application starts from `main.py`, which imports and runs code from the "ini
 
 The application loosely follows the model-view-controller (MVC) architecture with these three folders holding the three layers. Inside `model`, we keep domain logic dedicated to a specific unit of data. This could be a wrapper for a database table, like "experiment" or "user", or a logical concept like "submission" that is loaded from data in the session. The functions and classes inside the relevant model are all meant to encapsulate potentially complex logic that reads and writes this data. The "orm" directory contains [SQLAlchemy](https://www.sqlalchemy.org/) ORM models, while the "lib" directory contains more general-purpose code.
 
-The `app/view/templates` folder contains [Jinja2](https://jinja.palletsprojects.com/en/stable/) templates for every page or HTML fragment. The javascript, CSS, and images that are rendered in the main layout are located in the `app/view/static` directory. This follows the default structure of flask apps.
+The `app/view/templates` folder contains [Jinja2](https://jinja.palletsprojects.com/en/stable/) templates for every page or HTML fragment. Javascript and CSS code is located under `app/view/js` and `app/view/css`, respectively.
 
 The `app/pages` folder has all the handler functions that instantiate model objects, call utility functions, and inject the output into a template. These are hooked up to URL routes in [`initialization/routes.py`](initialization/routes.py).
 
