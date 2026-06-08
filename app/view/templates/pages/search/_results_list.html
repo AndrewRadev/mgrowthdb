@@ -67,11 +67,11 @@
         <table class="simple-table margin-top-10 small">
           <tr>
             {% if study.strains: %}
-              <th>Strains</th>
+              <th>Strains ({{ study.strains|length }})</th>
             {% endif %}
 
             {% if study.metabolites: %}
-              <th>Metabolites</th>
+              <th>Metabolites ({{ study.metabolites|length }})</th>
             {% endif %}
           </tr>
 
