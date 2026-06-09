@@ -25,6 +25,7 @@ db/config.toml
 static/build/*
 static/.webassets-cache/*
 static/export/*
+!static/export/README.txt
 
 # Micromamba environment
 .micromamba/*
