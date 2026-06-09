@@ -67,6 +67,10 @@
             {{ model_info_list|map(attribute="name")|unique|join(", ") }}
             <br>
           {% endif %}
+
+          <strong>Data</strong>: Measurements of
+          <strong>{{ study.bioreplicates|length }}</strong> biological replicates in
+          <strong>{{ study.experiments|length }}</strong> experiments.
         </p>
 
         <table class="simple-table margin-top-10 small">
