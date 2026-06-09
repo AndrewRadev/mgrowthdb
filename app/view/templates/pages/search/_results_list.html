@@ -45,6 +45,11 @@
             {% if study.authors: %}
               by {{ study.authors|author_link_list(query_words=search.query_words, limit=10) }}
             {% endif %}
+
+            {% if study.publicationDate: %}
+              <br>
+              <strong>Publication date</strong>: {{ study.publicationDate }}
+            {% endif %}
           {% endif %}
         </p>
 

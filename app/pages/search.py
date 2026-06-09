@@ -27,9 +27,10 @@ def search_index_page():
         g.db_session,
         user=g.current_user,
         query=request.args.get('q'),
+        sort_order=request.args.get('sort', g.search_sort_order),
         ncbiIds=request.args.getlist('ncbiIds'),
         chebiIds=request.args.getlist('chebiIds'),
-        per_page=int(request.args.get('perPage', g.items_per_page)),
+        per_page=int(request.args.get('perPage', g.search_items_per_page)),
         offset=int(request.args.get('offset', '0')),
     )
 
@@ -48,6 +49,7 @@ def search_index_page():
 
     response = make_response(html)
     response.set_cookie('items-per-page', str(search.per_page))
+    response.set_cookie('sort-order', str(search.sort_order))
 
     return response
 

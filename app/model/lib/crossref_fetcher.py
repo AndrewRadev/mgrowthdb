@@ -46,8 +46,8 @@ class CrossrefFetcher:
         if len(licenses):
             self.license_url = licenses[0].get("URL")
 
-        publication_date_parts = message_field.get("published-online", {}).get("date-parts", [])
-        if not publication_date_parts:
-            publication_date_parts = message_field.get("published-print", {}).get("date-parts", [])
-        if len(publication_date_parts):
-            self.publication_date = '-'.join([f"{int(str(part)):02}" for part in publication_date_parts[0]])
+        for key in ['published-online', 'published-print', 'published']:
+            publication_date_parts = message_field.get(key, {}).get("date-parts", [])
+            if len(publication_date_parts):
+                self.publication_date = '-'.join([f"{int(str(part)):02}" for part in publication_date_parts[0]])
+                break

@@ -21,6 +21,7 @@ class StudySearch():
         ncbiIds=None,
         chebiIds=None,
         per_page=10,
+        sort_order='uploadDate_desc',
         offset=0,
     ):
         self.db_session = db_session
@@ -30,13 +31,22 @@ class StudySearch():
         self.ncbiIds    = [int(n) for n in (ncbiIds or [])]
         self.chebiIds   = chebiIds or []
         self.offset     = offset
+        self.sort_order = sort_order
 
         self.query_words = []
         self.has_more = False
 
     def fetch_results(self):
         publish_clause = self._build_publish_clause()
-        order_clauses = (Study.publicId.desc(),)
+
+        if self.sort_order == 'publicationDate_asc':
+            order_clauses = (Study.publicationDate.asc(),)
+        elif self.sort_order == 'publicationDate_desc':
+            order_clauses = (Study.publicationDate.desc(),)
+        elif self.sort_order == 'uploadDate_asc':
+            order_clauses = (Study.publicId.asc(),)
+        else:
+            order_clauses = (Study.publicId.desc(),)
 
         db_query = (
             sql.select(Study)

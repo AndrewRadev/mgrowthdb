@@ -63,7 +63,8 @@ def _set_variables():
     else:
         g.sidebar_open = False
 
-    g.items_per_page = request.cookies.get('items-per-page', '10')
+    g.search_items_per_page = request.cookies.get('items-per-page', '10')
+    g.search_sort_order = request.cookies.get('sort-order', 'uploadDate_desc')
     g.now = datetime.now(UTC)
 
 
