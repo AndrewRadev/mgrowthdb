@@ -198,6 +198,7 @@ def _save_study(db_session, submission_form, user_uuid=None):
         'url':              submission.studyDesign['study'].get('url', '').strip(),
         'authors':          submission.studyDesign['study'].get('authors', []),
         'authorCache':      submission.studyDesign['study'].get('authorCache', ''),
+        'publicationDate':  submission.studyDesign['study'].get('publicationDate'),
         'uuid':             submission.studyUniqueID,
         'projectUuid':      submission.projectUniqueID,
         'timeUnits':        submission.studyDesign['timeUnits'],

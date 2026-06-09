@@ -10,9 +10,10 @@ class CrossrefFetcher:
     def __init__(self, doi):
         self.doi = doi
 
-        self.authors      = []
-        self.author_cache = ''
-        self.license_url  = None
+        self.authors          = []
+        self.author_cache     = ''
+        self.license_url      = None
+        self.publication_date = None
 
         self._response_json = None
 
@@ -44,3 +45,9 @@ class CrossrefFetcher:
         licenses = message_field.get("license", [])
         if len(licenses):
             self.license_url = licenses[0].get("URL")
+
+        publication_date_parts = message_field.get("published-online", {}).get("date-parts", [])
+        if not publication_date_parts:
+            publication_date_parts = message_field.get("published-print", {}).get("date-parts", [])
+        if len(publication_date_parts):
+            self.publication_date = '-'.join([f"{int(str(part)):02}" for part in publication_date_parts[0]])

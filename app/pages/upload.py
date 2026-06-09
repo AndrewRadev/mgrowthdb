@@ -74,12 +74,18 @@ def upload_authors_json():
         fetcher.make_request()
 
         return {
-            'doi':         fetcher.doi,
-            'licenseUrl':  fetcher.license_url,
-            'studyName':   fetcher.title,
-            'authors':     fetcher.authors,
-            'authorCache': fetcher.author_cache,
-            'authorsHtml': render_template('pages/upload/step1/_authors.html', authors=fetcher.authors)
+            'doi':             fetcher.doi,
+            'licenseUrl':      fetcher.license_url,
+            'publicationDate': fetcher.publication_date,
+            'studyName':       fetcher.title,
+            'authors':         fetcher.authors,
+            'authorCache':     fetcher.author_cache,
+
+            'authorsHtml': render_template(
+                'pages/upload/step1/_authors.html',
+                authors=fetcher.authors,
+                publicationDate=fetcher.publication_date,
+            )
         }
     except ValueError as e:
         return {

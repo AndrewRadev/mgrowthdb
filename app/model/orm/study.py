@@ -44,12 +44,14 @@ class Study(OrmBase):
 
     name:        Mapped[str] = mapped_column(sql.String(255))
     description: Mapped[str] = mapped_column(sql.String, nullable=True)
-    url:         Mapped[str] = mapped_column(sql.String, nullable=True)
-    licenseUrl:  Mapped[str] = mapped_column(sql.String, nullable=True)
     timeUnits:   Mapped[str] = mapped_column(sql.String(100))
 
-    authors:     Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
-    authorCache: Mapped[str]      = mapped_column(sql.String)
+    # Publication info:
+    url:             Mapped[str]      = mapped_column(sql.String, nullable=True)
+    authors:         Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
+    authorCache:     Mapped[str]      = mapped_column(sql.String)
+    publicationDate: Mapped[str]      = mapped_column(sql.String, nullable=True)
+    licenseUrl:      Mapped[str]      = mapped_column(sql.String, nullable=True)
 
     projectUuid: Mapped[str] = mapped_column(sql.ForeignKey('Projects.uuid'))
     project: Mapped['Project'] = relationship(back_populates="studies")

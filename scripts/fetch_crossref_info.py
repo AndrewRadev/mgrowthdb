@@ -28,9 +28,10 @@ with app.app_context():
 
         fetcher.make_request()
 
-        study.authors = fetcher.authors
-        study.authorCache = fetcher.author_cache
-        study.licenseUrl = fetcher.license_url
+        study.authors         = fetcher.authors
+        study.authorCache     = fetcher.author_cache
+        study.licenseUrl      = fetcher.license_url
+        study.publicationDate = fetcher.publication_date
 
         if submission := study.lastSubmission:
             submission.studyDesign['study']['authors']     = study.authors
@@ -40,8 +41,9 @@ with app.app_context():
             flag_modified(submission, 'studyDesign')
             db_session.add(submission)
 
-        print(f" > Author cache: {study.authorCache}")
-        print(f" > License URL:  {study.licenseUrl}")
+        print(f" > Author cache:     {study.authorCache}")
+        print(f" > License URL:      {study.licenseUrl}")
+        print(f" > Publication Date: {study.publicationDate}")
 
         db_session.add(study)
 

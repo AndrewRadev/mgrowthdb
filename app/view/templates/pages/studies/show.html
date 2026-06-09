@@ -73,7 +73,7 @@
 
       <h2>Basic information</h2>
 
-      {% if study.url or study.licenseUrl: %}
+      {% if study.url or study.licenseUrl or study.publicationDate: %}
         <p class="small">
           {% if study.url: %}
             <strong>Publication</strong>: {{ study.url|external_link }}
@@ -81,6 +81,11 @@
             {% if study.authors: %}
               by {{ study.authors|author_link_list(limit=10) }}
             {% endif %}
+            <br>
+          {% endif %}
+
+          {% if study.publicationDate: %}
+            <strong>Publication date</strong>: {{ study.publicationDate }}
             <br>
           {% endif %}
 

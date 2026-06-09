@@ -55,6 +55,40 @@ class TestCrossrefFetcher(unittest.TestCase):
             self.assertEqual(fetcher.author_cache, '')
             self.assertEqual(fetcher.title, 'Test study')
 
+    def test_fetching_publication_date(self):
+        with requests_mock.Mocker() as m:
+            m.get('https://api.crossref.org/works/abc', json={
+                "status": "ok",
+                "message": {
+                    "published-online": {"date-parts": [[2024, 2, 5]]},
+                }
+            })
+            m.get('https://api.crossref.org/works/def', json={
+                "status": "ok",
+                "message": {
+                    "published-online": {"date-parts": [[2023]]},
+                    "published-print": {"date-parts": [[2023, 10]]},
+                }
+            })
+            m.get('https://api.crossref.org/works/ghi', json={
+                "status": "ok",
+                "message": {
+                    "published-print": {"date-parts": [[2023, 10]]},
+                }
+            })
+
+            fetcher = CrossrefFetcher(doi='abc')
+            fetcher.make_request()
+            self.assertEqual(fetcher.publication_date, '2024-02-05')
+
+            fetcher = CrossrefFetcher(doi='def')
+            fetcher.make_request()
+            self.assertEqual(fetcher.publication_date, '2023')
+
+            fetcher = CrossrefFetcher(doi='ghi')
+            fetcher.make_request()
+            self.assertEqual(fetcher.publication_date, '2023-10')
+
     def test_error_handling(self):
         with requests_mock.Mocker() as m:
             m.get('https://api.crossref.org/works/doi1', status_code=404)

@@ -27,6 +27,7 @@ DEFAULT_STUDY_DESIGN = {
         'licenseUrl':       None,
         'authors':          [],
         'authorCache':      None,
+        'publicationDate':  None,
         'embargoExpiresAt': None,
     },
 
@@ -160,6 +161,7 @@ class SubmissionForm:
             'licenseUrl':       data.get('license_url', ''),
             'authors':          json.loads(data.get('authors', '[]')),
             'authorCache':      data.get('authorCache', ''),
+            'publicationDate':  data.get('publicationDate', ''),
             'embargoExpiresAt': data.get('embargo_expires_at', None),
         }
 

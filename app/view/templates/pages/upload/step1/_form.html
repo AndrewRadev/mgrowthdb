@@ -41,8 +41,10 @@
     </div>
 
     <div class="js-authors-preview">
-      {% set authors = submission.studyDesign['study']['authors'] or [] %}
-      {% set authorCache = submission.studyDesign['study']['authorCache'] or '' %}
+      {% set authors         = submission.studyDesign['study']['authors'] or [] %}
+      {% set authorCache     = submission.studyDesign['study']['authorCache'] or '' %}
+      {% set publicationDate = submission.studyDesign['study']['publicationDate'] or '' %}
+
       {% include 'pages/upload/step1/_authors.html' %}
     </div>
 

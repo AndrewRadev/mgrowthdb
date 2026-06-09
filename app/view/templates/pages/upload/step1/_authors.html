@@ -1,8 +1,14 @@
 {% if authors: %}
-  Authors: {{ authors|author_link_list(limit=10) }}
+  <strong>Authors</strong>: {{ authors|author_link_list(limit=10) }}
 
   <input type="hidden" name="authors" value='{{ authors|tojson }}' />
   <input type="hidden" name="authorCache" value="{{ authorCache }}" />
+
+  {% if publicationDate: %}
+    <br>
+    <strong>Publication date</strong>: {{ publicationDate }}
+    <input type="hidden" name="publicationDate" value="{{ publicationDate }}" />
+  {% endif %}
 {% elif error: %}
   <div class="error-message">{{ error }}</div>
 {% endif %}
