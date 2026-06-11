@@ -140,8 +140,13 @@ def _close_db_connection(response):
 
 
 def _render_bad_request(error):
+    description = error.get_description()
+
     if _is_json(request):
-        return {'error': '400 Bad request'}, 400
+        # Clean HTML-like description for JSON
+        description = description.removeprefix('<p>').removesuffix('</p>')
+
+        return {'error': '400 Bad request', 'description': description}, 400
     else:
         raise error
 

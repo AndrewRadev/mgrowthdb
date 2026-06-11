@@ -686,7 +686,7 @@ class TestApiPages(PageTest):
     def test_workspace_update(self):
         user = self.create_user(orcidId="test-orcid-id", apiKey="test-api-key")
         workspace = self.create_workspace(userId=user.id)
-        api_url = '/api/v1/workspace/test-orcid-id/default.json'
+        api_url = '/api/v1/workspaces/default.json'
 
         self.db_session.commit()
 
@@ -728,6 +728,19 @@ class TestApiPages(PageTest):
         new_workspace_entry = workspace.entries[0]
         self.assertNotEqual(workspace_entry, new_workspace_entry)
 
+        # Label defaults to second column name, data columns relabeled
+        payload = {"apiKey": "test-api-key", "entries": [{
+            "data": "Time,Cell count,Error\n1,1e6,1e3",
+        }]}
+        response = self.client.post(api_url, data=json.dumps(payload))
+        response_json = self._get_json(response)
+        self.db_session.commit()
+        self.db_session.refresh(workspace)
+
+        new_workspace_entry = workspace.entries[0]
+        self.assertEqual(new_workspace_entry.label, "Cell count")
+        self.assertEqual(new_workspace_entry.get_df().columns.tolist(), ['time', 'value', 'error'])
+
         # No data sent: BadRequest
         bad_payload = {"apiKey": "test-api-key"}
         response = self.client.post(api_url, data=json.dumps(bad_payload))
@@ -745,3 +758,21 @@ class TestApiPages(PageTest):
         response = self.client.post(api_url, data=json.dumps(bad_payload))
         response_json = self._get_json(response)
         self.assertEqual(response_json["error"], "403 Forbidden")
+
+        # Data payload doesn't have enough columns
+        bad_payload = {"apiKey": "test-api-key", "entries": [{
+            "label": "test entry",
+            "data": "time\n1",
+        }]}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "400 Bad request")
+
+        # Data payload doesn't have enough rows
+        bad_payload = {"apiKey": "test-api-key", "entries": [{
+            "label": "test entry",
+            "data": "time,value",
+        }]}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "400 Bad request")

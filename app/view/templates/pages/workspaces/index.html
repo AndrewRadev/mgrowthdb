@@ -33,13 +33,15 @@
 
           <h3>Direct upload</h3>
 
-          {% if workspace.uploadedEntries|length == 0: %}
+          {% set uploaded_entries = workspace.uploadedEntries %}
+
+          {% if uploaded_entries|length == 0: %}
             <p class="help">
               No data uploaded yet
             </p>
           {% else: %}
             <ul class="workspace-entry-list scroll-shadows">
-              {% for workspace_entry in workspace.uploadedEntries: %}
+              {% for workspace_entry in uploaded_entries: %}
                 <li class="workspace-entry js-workspace-entry">
                   {{ render_workspace_entry(workspace_entry) }}
                 </li>
@@ -47,14 +49,26 @@
             </ul>
           {% endif %}
 
-          {% if workspace.manageable_by_user(g.current_user) or workspace.apiEntries|length > 0: %}
+          {% set api_entries = workspace.apiEntries %}
+
+          {% if workspace.manageable_by_user(g.current_user) or api_entries|length > 0: %}
             <h3>API data</h3>
 
-            <p class="help">
-              You can push data to this page using the
-              {{ "https://mgrowthdb.readthedocs.io/en/latest/api.html"|external_link("API") }},
-              and it will appear here.
-            </p>
+            {% if api_entries|length > 0: %}
+              <ul class="workspace-entry-list scroll-shadows">
+                {% for workspace_entry in api_entries: %}
+                  <li class="workspace-entry js-workspace-entry">
+                    {{ render_workspace_entry(workspace_entry) }}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else: %}
+              <p class="help">
+                You can push data to this page using the
+                {{ "https://mgrowthdb.readthedocs.io/en/latest/api.html"|external_link("API") }},
+                and it will appear here.
+              </p>
+            {% endif %}
           {% endif %}
         </div>
 

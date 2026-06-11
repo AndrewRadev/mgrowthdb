@@ -1,5 +1,6 @@
 import re
 import json
+from io import StringIO
 
 from flask import (
     g,
@@ -8,6 +9,7 @@ from flask import (
 )
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 import sqlalchemy as sql
+import pandas as pd
 
 from app.model.lib.conversion import (
     convert_df_units,
@@ -338,16 +340,16 @@ def workspace_json(orcidId, name="default"):
     }
 
 
-def workspace_update_json(orcidId, name="default"):
+def workspace_update_json(name="default"):
     request_json = json.loads(request.data)
 
     if 'apiKey' not in request_json:
         raise Forbidden
     if 'entries' not in request_json:
-        raise BadRequest
+        raise BadRequest("No 'entries' array given")
 
     current_user = _get_current_user(request_json['apiKey'])
-    workspace = _get_workspace(orcidId, name, current_user)
+    workspace = _get_workspace(current_user.orcidId, name, current_user)
 
     # Clear out existing "api" entries:
     for entry in workspace.entries:
@@ -355,22 +357,57 @@ def workspace_update_json(orcidId, name="default"):
             g.db_session.delete(entry)
 
     # Recreate "api" entries
+    workspace_entries = []
     for entry in request_json['entries']:
-        workspace_entry = WorkspaceEntry(
-            workspace=workspace,
-            sourceType="api",
-            label=entry['label'],
-            data=entry['data'],
-        )
-        g.db_session.add(workspace_entry)
+        df = pd.read_csv(StringIO(entry['data']))
 
+        # Check for enough rows and columns:
+        if len(df.columns) < 2:
+            raise BadRequest(f"At least 2 columns are expected, {len(df.columns)} were found")
+
+        row_count = df.shape[0]
+        if row_count <= 0:
+            raise BadRequest("No data rows were found")
+
+        # If label is not provided, use second column's name
+        label = entry.get('label') or df.columns[1]
+
+        # Rename columns to: "time", "value", "error"
+        df.rename(columns={df.columns[0]: 'time', df.columns[1]: 'value'}, inplace=True)
+        if len(df.columns) >= 3:
+            df.rename(columns={df.columns[2]: 'error'}, inplace=True)
+
+        workspace_entries.append(WorkspaceEntry(
+            workspace=workspace,
+            label=label,
+            data=df.to_csv(index=False),
+            sourceType='api',
+            dataType=entry.get('dataType'),
+            subjectType=entry.get('subjectType'),
+            units=entry.get('units'),
+        ))
+
+    g.db_session.add_all(workspace_entries)
     g.db_session.commit()
 
-    workspace_url = url_for('workspaces_index_page', orcidId=workspace.user.orcidId, name=workspace.name)
+    root_url = request.host_url.removesuffix('/')
+
+    workspace_url = url_for(
+        'workspaces_index_page',
+        orcidId=workspace.user.orcidId,
+        name=workspace.name,
+    )
+    workspace_visualize_url = url_for(
+        'workspaces_visualize_page',
+        orcidId=workspace.user.orcidId,
+        name=workspace.name,
+        selectedSourceType='api',
+    )
 
     return {
-        'workspaceUrl': workspace_url,
-        'workspaceEntryId': workspace_entry.id,
+        'workspaceUrl': f"{root_url}{workspace_url}",
+        'workspaceVisualizeUrl': f"{root_url}{workspace_visualize_url}",
+        'workspaceEntryIds': [w.id for w in workspace_entries],
     }
 
 
