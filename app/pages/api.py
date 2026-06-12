@@ -333,22 +333,20 @@ def workspace_json(orcidId, name="default"):
 
     return {
         "name": workspace.name,
-        "entries": [{
-            "id": entry.id,
-            "label": entry.label,
-        } for entry in workspace.entries],
+        "entries": [_workspace_entry_fields(entry) for entry in workspace.entries],
     }
 
 
 def workspace_update_json(name="default"):
     request_json = json.loads(request.data)
 
-    if 'apiKey' not in request_json:
-        raise Forbidden
     if 'entries' not in request_json:
         raise BadRequest("No 'entries' array given")
 
-    current_user = _get_current_user(request_json['apiKey'])
+    current_user = _get_current_user(request_json.get('apiKey'))
+    if current_user is None:
+        raise Forbidden
+
     workspace = _get_workspace(current_user.orcidId, name, current_user)
 
     # Clear out existing "api" entries:
@@ -420,15 +418,7 @@ def workspace_entry_json(id):
     if not workspace_entry.workspace.isPublished and workspace_entry.user != current_user:
         raise NotFound
 
-    return {
-        "id":          workspace_entry.id,
-        "label":       workspace_entry.label,
-        "units":       workspace_entry.units,
-        "sourceType":  workspace_entry.sourceType,
-        "dataType":    workspace_entry.dataType,
-        "subjectType": workspace_entry.subjectType,
-        "subjectId":   workspace_entry.subjectId,
-    }
+    return _workspace_entry_fields(workspace_entry)
 
 
 def workspace_entry_csv(id):
@@ -529,6 +519,17 @@ def _measurement_subject_fields(measurement_context):
             'name': subject_name,
             **extra_data,
         }
+    }
+
+
+def _workspace_entry_fields(workspace_entry):
+    return {
+        "id":          workspace_entry.id,
+        "label":       workspace_entry.label,
+        "units":       workspace_entry.units,
+        "sourceType":  workspace_entry.sourceType,
+        "dataType":    workspace_entry.dataType,
+        "subjectType": workspace_entry.subjectType,
     }
 
 

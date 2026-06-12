@@ -14,9 +14,10 @@ class HelpTopics:
     A class that reads help topic templates as markdown or HTML and provides an
     interface to search through their text.
 
-    Reads the HTML once
+    Reads the code once with the ``process_once`` method and stores the
+    contents in memory.
 
-    Depends on Flask's `render_template` to evaluate the templates as jinja2.
+    Depends on Flask's ``render_template`` to evaluate the templates as jinja2.
     In the future, it might be nice to isolate it from these, but for now, it
     does the job and nothing else depends on the class, so it's fine as it is.
     """

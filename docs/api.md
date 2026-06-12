@@ -31,7 +31,7 @@ The `measurementTimeUnits` key describes what time units measurements will be fe
 
 Successful results will be returned with an HTTP status code of `200`. A request that somehow doesn't fit the requirements of the API will have a response code of `400` ("bad request"). A request for a missing entity will return the code `404` ("not found"). For a JSON endpoint, the body of an unsuccessful response will have an "error" key that describes the issue. For a CSV endpoint, you can expect an error message as a single line of text.
 
-## Types of values
+### Types of values
 
 Decimal values will be encoded as strings, since JSON doesn't technically support floating-point values.
 
@@ -65,6 +65,14 @@ There are also other units that are not convertible with the others:
 - an empty string, indicating a unitless value like OD or pH.
 
 Below, in the structure descriptions, these will be described as the type `Unit`. The original units that the data was uploaded in will be labeled "original", e.g. `techniqueOriginalUnits`.
+
+### Permissions
+
+The data in mGrowthDB is publicly available, but in some cases, it may not be published yet by its owners. In that case, these studies will not be available in the search and will only return limited data and metadata upon request.
+
+Workspaces allow more fine-grained access. You can provide an API key to get read and write access to workspaces that you own. You can find this key in your profile page and reset it if it becomes compromised.
+
+To pass the API key along to a request, you can attach it as the query parameter `apiKey`, or you can send it in a JSON payload. You can see examples of this in the "Workspaces" section.
 
 ## Search
 
@@ -201,6 +209,8 @@ Again, the result will be an OR operation, where records associated with any of 
 ## Public entity metadata
 
 There are three major entities with stable public ids: projects, studies, and experiments. We can fetch names, descriptions, and links to other entities from those central objects.
+
+Workspaces are another entity we can read and write from that can be considered "stable" in terms of identifiers, but they can may be temporary depending on their owners choices. Interacting with workspaces will be discussed in a later section.
 
 ### Projects
 
@@ -513,7 +523,7 @@ curl -s "$ROOT_URL/api/v1/measurement-context/1440.csv"
 
 Example output:
 
-```csv
+```
 time,value,std
 0.0,2619.0,477.072
 4.0,36072.333,1522.018
@@ -558,7 +568,7 @@ curl -s "$ROOT_URL/api/v1/measurement-context/1314.csv"
 }
 ```
 
-```csv
+```
 time,value,std
 0.0,0.57,
 4.0,0.53,
@@ -638,7 +648,7 @@ curl -s "$ROOT_URL/api/v1/bioreplicate/1314.csv"
 }
 ```
 
-```csv
+```
 measurementContextId,subjectType,subjectName,subjectExternalId,time,value,std
 3328,bioreplicate,Average(BT_WC),,0.0,0.006,0.001
 3328,bioreplicate,Average(BT_WC),,4.0,0.034,0.0
@@ -740,7 +750,7 @@ curl -s "$ROOT_URL/api/v1/model-prediction/29.csv"
 }
 ```
 
-```csv
+```
 time,value,std
 0.0,2381.8389,
 0.6030150753768844,3537.524301675712,
@@ -748,3 +758,167 @@ time,value,std
 1.809045226130653,7785.456559068567,
 [...196 more lines...]
 ```
+
+## Workspaces
+
+A workspace is identified by two parameters:
+
+- The [ORCID](https://orcid.org/) of the user that owns the workspace
+- The name of the workspace, which defaults to "default".
+
+A user can delete or create new workspaces, but their default workspace will always exist, as long as they have an account in the application. Data from workspaces can be read, but you can also push data to workspaces, as long as you provide the API key found on your profile page.
+
+You can only push data to your own workspaces and it will appear in the "API" section.
+
+You can only read a workspace's data and metadata if the workspace is made publicly available, or if the API key you're using identifies you as the owner of the workspace. See the "Permissions" section above for details and continue reading to see example usage below.
+
+### Reading workspace data
+
+To get metadata about a particular workspace, you can make a request to the `/workspace/` endpoint with the parameters described above. The response structure should look like the following:
+
+```typescript
+{
+  name: string,
+  entries: [{
+    id: number,
+    label: string,
+    units?: Unit,
+    sourceType?: "upload" | "api",
+    dataType?: "measurement" | "model" | "other",
+    subjectType?: "community" | "strain" | "metabolite",
+  }]
+}
+```
+
+Note that most of the metadata is nullable. A user can upload data without providing any details about its nature.
+
+Example request:
+
+```bash
+curl -s "$ROOT_URL/api/v1/workspace/0009-0004-1479-7441/default.json"
+```
+
+This will fetch the "default" workspace for the user with ORCID `0009-0004-1479-7441`. An example output:
+
+```json
+{
+  "name": "default",
+  "entries": [
+    {
+      "id": 257,
+      "label": "FC live of the bh1_A community",
+      "units": "Cells/μL",
+      "sourceType": "upload",
+      "dataType": "measurement",
+      "subjectType": "community"
+    },
+    {
+      "id": 258,
+      "label": "FC of Bacteroides thetaiotaomicron VPI-5482 in Average(bhbtri)",
+      "units": "Cells/μL",
+      "sourceType": "upload",
+      "dataType": "measurement",
+      "subjectType": "strain"
+    },
+    {
+      "id": 259,
+      "label": "Baranyi-Roberts predictions",
+      "units": "Cells/μL",
+      "sourceType": "upload",
+      "dataType": "model",
+      "subjectType": "strain"
+    }
+  ]
+}
+```
+
+An individual workspace entry's metadata can also be fetched by id. For instance:
+
+```bash
+curl -s "$ROOT_URL/api/v1/workspace-entry/257.json"
+```
+
+The output is the same metadata seen above:
+
+```json
+{
+  "id": 257,
+  "label": "FC live of the bh1_A community",
+  "units": "Cells/μL",
+  "sourceType": "upload",
+  "dataType": "measurement",
+  "subjectType": "community"
+}
+```
+
+We can also get the uploaded data by fetching the CSV endpoint:
+
+```bash
+curl -s "$ROOT_URL/api/v1/workspace-entry/257.csv"
+```
+
+Output:
+
+```
+time,value,error
+0.0,2197000.0,
+4.0,2105000.0,
+8.0,2505000.0,
+12.0,10255000.0,
+16.0,24660000.0,
+20.0,94715000.0,
+24.0,318410000.0,
+28.0,671785000.0,
+32.0,960330000.0,
+36.0,859940000.0,
+40.0,1113985000.0,
+44.0,981155000.0,
+48.0,847580000.0,
+60.0,233545000.0,
+72.0,123860000.0,
+96.0,110720000.0,
+120.0,74315000.0,
+```
+
+### Pushing data with an API key
+
+You can send a POST request to one of your workspaces with a package of data entries that will be processed into "workspace entry" records. The endpoint only includes the workspace name and not the user's ORCID, since it also takes a mandatory API key that uniquely identifies a user. Here is an example payload that can be sent to a workspace endpoint:
+
+```json
+{
+  "apiKey": "[redacted]",
+  "entries": [{
+    "label": "API push test",
+    "data": "time,value,std\n0.0,2197.0,\n4.0,2105.0,\n8.0,2505.0,\n",
+    "dataType": "measurement",
+    "subjectType": "strain",
+    "units": "Cells/μL"
+  }]
+}
+```
+
+Note that the "apiKey" field is redacted -- it will only work if you place your own API key there. The raw data is encoded as a CSV string. The first column will always be interpreted as the time values, the second, whatever its name, will be considered to contain measurement values, while the third, if present, will be the error column.
+
+You can provide as many entries as you like, and they will be created in the order they appear in the JSON payload. That way, you can group them together logically, e.g. pushing observational measurements and their model in sequential pairs. Most of the metadata is also optional. If the "label" is missing, it will be taken from the column name of the second column of the data.
+
+We can save this file as `payload.json` and then trigger a curl request, passing it along like this:
+
+```bash
+curl -s "$ROOT_URL/api/v1/workspaces/default.json" \
+    --header "Content-Type: application/json" \
+    --data @payload.json
+```
+
+The result returned includes the URL of the workspace where you can find the data, a "visualize" URL that will show the visualize page of that workspace with the "API" data source selected, and a list of the workspace entry IDs that were created by your action:
+
+```json
+{
+  "workspaceUrl": "https://mgrowthdb.gbiomed.kuleuven.be/workspaces/0009-0004-1479-7441/default/",
+  "workspaceVisualizeUrl": "https://mgrowthdb.gbiomed.kuleuven.be/workspaces/0009-0004-1479-7441/default/visualize/?selectedSourceType=api",
+  "workspaceEntryIds": [
+    260
+  ]
+}
+```
+
+It's important to note that, if you trigger this request again, the previous API-created records in that workspace will be deleted and the given entries will be created. Each push **replaces** the data in that workspace, though only the entries that were previously pushed via the API (with a `sourceType` field of `api`). Files uploaded directly through the web interface will not be affected. This is done so that re-running scripts that push to the workspace do not end up accidentally accumulating many duplicate records.
