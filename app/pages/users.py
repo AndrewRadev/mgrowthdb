@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 from datetime import datetime, UTC
 
 from flask import (
@@ -24,7 +25,6 @@ from app.model.orm import (
 )
 from app.model.lib import orcid
 from app.model.lib.errors import LoginRequired
-from app.model.lib.chart import Chart
 
 
 def user_show_page():
@@ -162,6 +162,15 @@ def user_logout_action():
         del session['submission_id']
 
     return redirect(url_for('static_home_page'))
+
+
+def user_reset_api_key_action():
+    g.current_user.apiKey = str(uuid4())
+
+    g.db_session.add(g.current_user)
+    g.db_session.commit()
+
+    return redirect(url_for('user_show_page'))
 
 
 def _user_login_show():

@@ -13,95 +13,172 @@
         Profile page for {{ g.current_user.name }}
       </h1>
 
-      {{ post_button("Log out", url_for("user_logout_action"), class="flex-right") }}
+      {{ post_button("⏻ Log out", url_for("user_logout_action"), class="flex-right flex-end") }}
     </div>
 
-    <ul>
-      <li>ORCID: {{ g.current_user.orcidUrl|external_link() }}</li>
-      <li>
-        <a href="{{ url_for('workspaces_index_page', orcidId=g.current_user.orcidId, name="default") }}">Workspaces</a>
+    {% set current_tab = request.args.get('tab', 'info') %}
+
+    <ul class="tabs">
+      <li class="{{ "current" if current_tab == 'info' }}">
+        <a href="{{ url_for('user_show_page') }}">
+          Info
+        </a>
+      </li>
+      <li class="{{ "current" if current_tab == 'studies' }}">
+        <a href="{{ url_for('user_show_page', tab='studies') }}">
+          Studies
+        </a>
+      </li>
+      <li class="{{ "current" if current_tab == 'projects' }}">
+        <a href="{{ url_for('user_show_page', tab='projects') }}">
+          Projects
+        </a>
+      </li>
+      <li class="{{ "current" if current_tab == 'strains' }}">
+        <a href="{{ url_for('user_show_page', tab='strains') }}">
+          Custom strains
+        </a>
       </li>
     </ul>
 
-    <div class="copy-button-wrapper flex-row flex-grow">
-      <button type="button" class="js-copy-button copy-button green-button">
-        Copy 📋
-      </button>
-      <input
-          autocomplete="off"
-          data-real-value="{{ g.current_user.apiKey }}"
-          type="text"
-          value="{{ "*" * 36 }}"
-          class="js-export-url export-url form-input-blue full"
-          readonly />
-      <button type="button" class="js-show-button show-button green-button">
-        Show 🕵️
-      </button>
-    </div>
+    {% if current_tab == 'info': %}
+      <h3>Basic information</h3>
 
-    {% include 'shared/flashes.html' %}
+      <p class="help">
+        We only have access to your ORCID and name from the ORCID login API. We
+        do not fetch any additional data.
+      </p>
 
-    <h3>Your projects</h3>
-
-    {% if g.current_user.managedProjects: %}
       <ul>
-        {% for project in g.current_user.managedProjects: %}
-          <li>
-            <a href="{{ url_for('project_show_page', publicId=project.publicId) }}">
-              [{{ project.publicId }}] {{ project.name }}
-            </a>
-          </li>
-        {% endfor %}
+        <li>
+          <strong>Your ORCID</strong>: {{ g.current_user.orcidUrl|external_link() }}
+        </li>
+        <li>
+          <strong>Your workspaces</strong>:
+          <a href="{{ url_for('workspaces_index_page', orcidId=g.current_user.orcidId, name="default") }}">Workspaces</a>
+        </li>
       </ul>
+
+      <h3>Your API key</h3>
+
+      <p class="help">
+        You can use this key with the mGrowthDB
+        <a class="external" href="https://mgrowthdb.readthedocs.io/en/latest/api.html">API</a>
+        to push data to your workspaces, or to read private workspaces. You
+        don't need a key for public data. You can reset it and get a new one if
+        you accidentally reveal your current key somewhere.
+      </p>
+
+      <br>
+
+      <div class="copy-button-wrapper flex-row flex-grow">
+        <button type="button" class="js-copy-button copy-button green-button">
+          Copy 📋
+        </button>
+        <input
+            autocomplete="off"
+            data-real-value="{{ g.current_user.apiKey }}"
+            type="text"
+            value="{{ "*" * 36 }}"
+            class="js-export-url export-url form-input-blue full"
+            readonly />
+        <button type="button" class="js-show-button show-button green-button">
+          Show 🕵️
+        </button>
+
+        {{ post_button("⟳ Reset API key", url_for("user_reset_api_key_action"), class="flex-right flex-end", confirm="This will invalidate the previous key and give you a new one. Are you sure?") }}
+      </div>
     {% endif %}
 
-    <form action="{{ url_for('user_claim_project_action') }}" class="simple-form" method="POST">
-      <div class="form-row full">
-        <label class="uuid full">
-          <span>Claim project by UUID:</span>
-          <input name="uuid" class="form-input-full form-input-blue" type="text" required />
-        </label>
+    {% if current_tab == 'studies': %}
+      <h2>Your studies</h2>
 
-        <input type="submit" class="flex-end" value="Get access" />
-      </div>
-    </form>
+      {% include 'shared/flashes.html' %}
 
-    <h3>Your studies</h3>
+      <form action="{{ url_for('user_claim_study_action') }}" class="simple-form" method="POST">
+        <div class="form-row full">
+          <label class="uuid full">
+            <span>Claim study by UUID:</span>
+            <input name="uuid" class="form-input-full form-input-blue" type="text" required />
+          </label>
 
-    {% if g.current_user.managedStudies: %}
-      <ul>
-        {% for study in g.current_user.managedStudies: %}
-          <li>
-            <a href="{{ url_for('study_show_page', publicId=study.publicId) }}">
-              [{{ study.publicId }}] {{ study.name }}
-            </a>
-          </li>
-        {% endfor %}
-      </ul>
+          <input type="submit" class="flex-end" value="Get access" />
+        </div>
+      </form>
+
+      {% if g.current_user.managedStudies: %}
+        <ul>
+          {% for study in g.current_user.managedStudies: %}
+            <li>
+              <a href="{{ url_for('study_show_page', publicId=study.publicId) }}">
+                [{{ study.publicId }}] {{ study.name }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else: %}
+        <p class="help">
+          You do not have access to any studies. You can get access to a study
+          by claiming it by UUID, or you can upload your own study and it will
+          show up here.
+        </p>
+      {% endif %}
     {% endif %}
 
-    <form action="{{ url_for('user_claim_study_action') }}" class="simple-form" method="POST">
-      <div class="form-row full">
-        <label class="uuid full">
-          <span>Claim study by UUID:</span>
-          <input name="uuid" class="form-input-full form-input-blue" type="text" required />
-        </label>
+    {% if current_tab == 'projects': %}
+      <h2>Your projects</h2>
 
-        <input type="submit" class="flex-end" value="Get access" />
-      </div>
-    </form>
+      {% include 'shared/flashes.html' %}
 
-    {% if custom_strains: %}
-      <h3>Your custom strains</h3>
+      <form action="{{ url_for('user_claim_project_action') }}" class="simple-form" method="POST">
+        <div class="form-row full">
+          <label class="uuid full">
+            <span>Claim project by UUID:</span>
+            <input name="uuid" class="form-input-full form-input-blue" type="text" required />
+          </label>
 
-      <ul>
-        {% for strain in custom_strains: %}
-          <li>
-            [<a href="{{ url_for('study_show_page', publicId=strain.study.publicId) }}">{{ strain.study.publicId }}</a>]
-            {{ render_strain_link(strain) }}
-          </li>
-        {% endfor %}
-      </ul>
+          <input type="submit" class="flex-end" value="Get access" />
+        </div>
+      </form>
+
+      {% if g.current_user.managedProjects: %}
+        <ul>
+          {% for project in g.current_user.managedProjects: %}
+            <li>
+              <a href="{{ url_for('project_show_page', publicId=project.publicId) }}">
+                [{{ project.publicId }}] {{ project.name }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else: %}
+        <p class="help">
+          You do not have access to any projects. You can get access to a
+          project and its studies by claiming it by UUID, or you can upload
+          your own study and its project will show up here.
+        </p>
+      {% endif %}
+    {% endif %}
+
+    {% if current_tab == 'strains': %}
+      <h2>Your custom strains</h2>
+
+      {% if custom_strains: %}
+        <ul>
+          {% for strain in custom_strains: %}
+            <li>
+              [<a href="{{ url_for('study_show_page', publicId=strain.study.publicId) }}">{{ strain.study.publicId }}</a>]
+              {{ render_strain_link(strain) }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else: %}
+        <p class="help">
+          You haven't defined any custom strains. When uploading a study,
+          strains you define will show up here so you can have easy access to
+          their details.
+        </p>
+      {% endif %}
     {% endif %}
   </div>
 {% endblock %}

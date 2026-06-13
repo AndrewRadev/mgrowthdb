@@ -54,23 +54,6 @@ $(document).ready(function() {
     });
   });
 
-  $('.js-tabs .tab-headers span').on('click', function(e) {
-    e.preventDefault();
-
-    let $clickedHeader = $(this);
-    let $container = $clickedHeader.parents('.js-tabs')
-
-    let $headers = $container.find('.tab-headers span');
-    let $bodies = $clickedHeader.parents('.js-tabs').find('.tab-body');
-
-    $headers.removeClass('active');
-    $clickedHeader.addClass('active');
-
-    let clickedIndex = $headers.index(this);
-    $bodies.removeClass('active');
-    $($bodies[clickedIndex]).addClass('active');
-  });
-
   // Copy button for secrets:
   $(document).on('click', '.js-copy-button', function(e) {
     e.preventDefault();

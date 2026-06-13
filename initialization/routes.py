@@ -150,9 +150,10 @@ def init_routes(app):
     app.add_url_rule("/search/",          view_func=search_pages.search_index_page)
     app.add_url_rule("/advanced-search/", view_func=search_pages.advanced_search_index_page)
 
-    app.add_url_rule("/profile/", view_func=user_pages.user_show_page)
-    app.add_url_rule("/login/",   view_func=user_pages.user_login_page)
-    app.add_url_rule("/logout/",  view_func=user_pages.user_logout_action, methods=["POST"])
+    app.add_url_rule("/profile/",       view_func=user_pages.user_show_page)
+    app.add_url_rule("/login/",         view_func=user_pages.user_login_page)
+    app.add_url_rule("/logout/",        view_func=user_pages.user_logout_action, methods=["POST"])
+    app.add_url_rule("/reset-api-key/", view_func=user_pages.user_reset_api_key_action, methods=["POST"])
 
     app.add_url_rule(
         "/workspaces/",
