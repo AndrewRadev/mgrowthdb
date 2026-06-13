@@ -20,7 +20,7 @@ class TestProfile(PageTest):
         s1 = bootstrap_study(self.db_session, 'synthetic_gut', 'test_user')
         s2 = bootstrap_study(self.db_session, 'ri_bt_bh_in_chemostat_controls', 'another_user')
 
-        response = self.client.get('/profile/')
+        response = self.client.get('/profile/?tab=projects')
         response_text = self._get_text(response)
 
         self.assertEqual(response.status_code, 200)
@@ -45,7 +45,7 @@ class TestProfile(PageTest):
         s1 = bootstrap_study(self.db_session, 'synthetic_gut', 'test_user')
         s2 = bootstrap_study(self.db_session, 'ri_bt_bh_in_chemostat_controls', 'another_user')
 
-        response = self.client.get('/profile/')
+        response = self.client.get('/profile/?tab=studies')
         response_text = self._get_text(response)
 
         self.assertEqual(response.status_code, 200)
@@ -71,11 +71,11 @@ class TestProfile(PageTest):
     def _claim_project(self, uuid):
         response = self.client.post('/claim-project/', data={'uuid': uuid})
         self.assertEqual(response.status_code, 302)
-        response = self.client.get('/profile/')
+        response = self.client.get('/profile/?tab=projects')
         return self._get_text(response)
 
     def _claim_study(self, uuid):
         response = self.client.post('/claim-study/', data={'uuid': uuid})
         self.assertEqual(response.status_code, 302)
-        response = self.client.get('/profile/')
+        response = self.client.get('/profile/?tab=studies')
         return self._get_text(response)
