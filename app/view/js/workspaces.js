@@ -60,7 +60,10 @@ Page('.workspaces-page', function($page) {
       url: deleteUrl,
       cache: false,
       success: function(response) {
-        $entry.fadeOut(500);
+        $entry.fadeOut(500, function() {
+          $page.find('.js-upload-count').html(`(${response.uploadCount})`)
+          $page.find('.js-api-count').html(`(${response.apiCount})`)
+        });
       }
     })
   });

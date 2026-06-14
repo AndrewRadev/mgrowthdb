@@ -882,7 +882,7 @@ time,value,error
 
 ### Pushing data with an API key
 
-You can send a POST request to one of your workspaces with a package of data entries that will be processed into "workspace entry" records. The endpoint only includes the workspace name and not the user's ORCID, since it also takes a mandatory API key that uniquely identifies a user. Here is an example payload that can be sent to a workspace endpoint:
+You can send a POST request to one of your workspaces with a package of data entries that will be processed into "workspace entry" records. The endpoint only includes the workspace name and not the user's ORCID: `/workspace/<name>.json`. That's because it also takes a mandatory API key that uniquely identifies a user. Here is an example payload that can be sent to a workspace endpoint:
 
 ```json
 {
@@ -909,7 +909,7 @@ curl -s "$ROOT_URL/api/v1/workspaces/default.json" \
     --data @payload.json
 ```
 
-The result returned includes the URL of the workspace where you can find the data, a "visualize" URL that will show the visualize page of that workspace with the "API" data source selected, and a list of the workspace entry IDs that were created by your action:
+The returned result includes the URL of the workspace where you can find the data, a "visualize" URL that will show the visualize page of that workspace with the "API" data source selected, and a list of the workspace entry IDs that were created by your action:
 
 ```json
 {
@@ -922,3 +922,13 @@ The result returned includes the URL of the workspace where you can find the dat
 ```
 
 It's important to note that, if you trigger this request again, the previous API-created records in that workspace will be deleted and the given entries will be created. Each push **replaces** the data in that workspace, though only the entries that were previously pushed via the API (with a `sourceType` field of `api`). Files uploaded directly through the web interface will not be affected. This is done so that re-running scripts that push to the workspace do not end up accidentally accumulating many duplicate records.
+
+If you'd like to avoid deleting your previous entries, you need to provide an `append` query parameter, for example:
+
+```bash
+curl -s "$ROOT_URL/api/v1/workspaces/default.json?append=1" \
+    --header "Content-Type: application/json" \
+    --data @payload.json
+```
+
+Running this curl request will end up duplicating the data in the "API" section, but if you have multiple different payloads, you might be looking to push them one at a time.

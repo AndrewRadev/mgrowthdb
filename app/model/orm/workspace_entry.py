@@ -109,7 +109,7 @@ class WorkspaceEntry(OrmBase):
 
     @property
     def canBeModeled(self):
-        return self.sourceType == 'upload' and self.dataType == 'measurement' and self.isGrowth
+        return self.sourceType in ('upload', 'api') and self.dataType == 'measurement' and self.isGrowth
 
     @property
     def readyModelingResults(self):

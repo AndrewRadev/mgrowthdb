@@ -31,9 +31,14 @@
             {% endif %}
             class="column column-entries">
 
-          <h3>Direct upload</h3>
-
           {% set uploaded_entries = workspace.uploadedEntries %}
+
+          <h3>
+            Direct upload
+            <span class="js-upload-count">
+              {{ '({})'.format(uploaded_entries|length) if uploaded_entries|length > 0 }}
+            </span>
+          </h3>
 
           {% if uploaded_entries|length == 0: %}
             <p class="help">
@@ -52,7 +57,12 @@
           {% set api_entries = workspace.apiEntries %}
 
           {% if workspace.manageable_by_user(g.current_user) or api_entries|length > 0: %}
-            <h3>API data</h3>
+            <h3>
+              API data
+              <span class="js-api-count">
+                {{ '({})'.format(api_entries|length) if api_entries|length > 0 }}
+              </span>
+            </h3>
 
             {% if api_entries|length > 0: %}
               <ul class="workspace-entry-list scroll-shadows">

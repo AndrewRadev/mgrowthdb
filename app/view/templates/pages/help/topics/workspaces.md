@@ -34,7 +34,11 @@ The metadata form is optional. You can upload the CSV and then simply plot the d
 
 ## API
 
-*This feature is currently a work in progress*
+Apart from uploading data CSVs, you can also populate your workspace with data through the programmatic API. This process is described in detail in the developer documentation: [API/workspaces](https://mgrowthdb.readthedocs.io/en/latest/api.html#workspaces).
+
+When you push data through the API, it will show up on the workspace page in the "API data" section. It will also become available in charts in the "Visualize" tab. You can fit models to API-pushed data, but bear in mind that pushing data again will delete all the existing API entries (and their fitted models) and replace them with the sent data. This is done to avoid accidentally uploading the same datasets over and over again if running the push in a script that is invoked multiple times.
+
+If you'd like to retain the previously-pushed data and push a new batch of entries to the workspace, you can pass an `?append=1` query parameter.
 
 ## Visualizing and fitting models
 

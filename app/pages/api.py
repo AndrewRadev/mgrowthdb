@@ -349,12 +349,13 @@ def workspace_update_json(name="default"):
 
     workspace = _get_workspace(current_user.orcidId, name, current_user)
 
-    # Clear out existing "api" entries:
-    for entry in workspace.entries:
-        if entry.sourceType == 'api':
-            g.db_session.delete(entry)
+    # Clear out existing "api" entries, unless we got an `append` parameter:
+    if not request.args.get('append', False):
+        for entry in workspace.entries:
+            if entry.sourceType == 'api':
+                g.db_session.delete(entry)
 
-    # Recreate "api" entries
+    # Create "api" entries
     workspace_entries = []
     for entry in request_json['entries']:
         df = pd.read_csv(StringIO(entry['data']))

@@ -230,7 +230,11 @@ def workspaces_delete_entry_action(id):
     g.db_session.delete(workspace_entry)
     g.db_session.commit()
 
-    return {'status': 'ok'}
+    return {
+        'status': 'ok',
+        'uploadCount': len(workspace.uploadedEntries),
+        'apiCount': len(workspace.apiEntries),
+    }
 
 
 def workspaces_delete_all_action(id):
