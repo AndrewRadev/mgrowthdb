@@ -146,7 +146,7 @@
       </p>
 
       <p>
-        We allow researchers to authenticate themselves using
+        We encourage researchers to authenticate themselves using
         {{ "https://orcid.org/"|external_link("ORCID") }}
         and upload their experimental data by following a step-by-step process
         that ensures it fits a standardized structure. If your data is
@@ -187,6 +187,29 @@
         <a href="{{ url_for('workspaces_root_page') }}">Workspace</a> pages,
         where you can experiment freely.
       </p>
+
+      <div class="heading">
+        <h3>Learn more about mGrowthDB</h3>
+
+        <p>
+          To know more about the project, you can read our
+          {{ "https://www.biorxiv.org/content/10.1101/2025.10.13.682118v1"|external_link("preprint in bioRxiv") }},
+          check out the database's record in
+          {{ "https://doi.org/10.25504/FAIRsharing.de8ed6"|external_link("FAIRsharing.org") }},
+          or explore the videos in our
+          {{ "https://www.youtube.com/@mgrowthdb"|external_link("YouTube channel") }}.
+        </p>
+
+        <p>
+          If you'd like to contribute to the development of the project, you'll
+          find installation instructions on our GitHub repository,
+          {{ "https://github.com/msysbio/bacterial_growth"|external_link("msysbio/bacterial_growth") }},
+          or the active-development fork at {{ "https://github.com/AndrewRadev/mgrowthdb"|external_link("AndrewRadev/mgrowthdb") }},
+          though the most comprehensive source of information for this purpose
+          is the developer documentation at
+          {{ "https://mgrowthdb.readthedocs.io/en/latest/"|external_link("ReadTheDocs") }}.
+        </p>
+      </div>
     </article>
   </div>
 {% endblock %}
