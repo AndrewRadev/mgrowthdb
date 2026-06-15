@@ -172,8 +172,8 @@ Page('.study-visualize-page', function($page) {
         find(`.js-trace-row[data-subject="${selectedSubject}"]`).
         removeClass('hidden');
     } else {
-      console.error("Could not find technique or subject select dropdown");
-      return;
+      // Show everything
+      $form.find('.js-trace-row').removeClass('hidden');
     }
 
     // Update chart:
@@ -206,7 +206,7 @@ Page('.study-visualize-page', function($page) {
 
     let rootUrl = window.location.origin;
 
-    for (let selection of ['technique', 'subject']) {
+    for (let selection of ['technique', 'subject', 'average']) {
       let permalinkUrl = new URL($permalink.attr('href'), rootUrl);
 
       let tabParams = permalinkUrl.searchParams;
