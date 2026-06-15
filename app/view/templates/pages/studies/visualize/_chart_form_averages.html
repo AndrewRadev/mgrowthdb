@@ -35,7 +35,13 @@
             <span class="icon icon-inline icon-info" data-tooltip="{{ experiment.description }}">
             </span>
 
-            {{ measurement_context.technique.short_name }}
+            {% if measurement_context.subjectType == 'metabolite': %}
+              {{ measurement_context.subjectName }}
+            {% elif measurement_context.subjectType == 'strain': %}
+              {{ measurement_context.technique.short_name }} of {{ measurement_context.subjectName }}
+            {% else: %}
+              {{ measurement_context.technique.short_name }}
+            {% endif %}
 
             in
 
