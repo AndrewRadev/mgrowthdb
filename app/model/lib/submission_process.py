@@ -91,8 +91,9 @@ def validate_data_file(submission_form, data_file=None):
     # Validate columns:
     community_columns, strain_columns, metabolite_columns = _get_expected_column_names(submission_form)
     expected_value_columns = {*community_columns, *strain_columns, *metabolite_columns}
+    mandatory_columns = ['Biological Replicate', 'Compartment', 'Time']
 
-    expected_columns = {'Biological Replicate', 'Compartment', 'Time', *expected_value_columns}
+    expected_columns = {*mandatory_columns, *expected_value_columns}
     found_columns = set()
 
     for sheet_name in sheets:
@@ -102,6 +103,12 @@ def validate_data_file(submission_form, data_file=None):
     missing_columns = expected_columns.difference(found_columns)
     for missing_column in missing_columns:
         errors.append(f"Missing column: {missing_column}")
+
+    # Do not continue if the required columns are missing, since we'll index
+    # them later in the function:
+    for mandatory_column in mandatory_columns:
+        if mandatory_column in missing_columns:
+            return errors
 
     # Validate row keys:
     expected_bioreplicates = {
