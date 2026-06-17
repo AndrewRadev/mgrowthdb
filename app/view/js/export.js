@@ -18,6 +18,12 @@ Page('.export-page', function($page) {
     updatePreview($form);
   });
 
+  $form.on('click', '.js-select-average', function() {
+    $form.find('.section-experiment input[type=checkbox]').prop('checked', false);
+    $form.find('.section-experiment input[type=checkbox].js-average').prop('checked', true);
+    updatePreview($form);
+  });
+
   $form.on('click', '.js-select-none', function() {
     $form.find('.section-experiment input[type=checkbox]').prop('checked', false);
     updatePreview($form);
@@ -26,6 +32,7 @@ Page('.export-page', function($page) {
   function updatePreview($form) {
     $.ajax({
       url: `/study/${studyId}/export/preview`,
+      method: 'POST',
       dataType: 'html',
       data: $form.serializeArray(),
       success: function(response) {

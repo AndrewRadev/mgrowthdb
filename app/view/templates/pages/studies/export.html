@@ -23,7 +23,7 @@
       <form
           class="simple-form"
           action="{{ url_for('study_download_data_zip', publicId=studyId) }}"
-          method="GET">
+          method="POST">
         <h2 style="margin-bottom: 0">
           Export options
         </h2>
@@ -114,8 +114,22 @@
               <h2>Biological replicates</h3>
 
               <div class="form-row">
-                <button type="button" class="js-select-all white-button">Select all</button>
-                <button type="button" class="js-select-none white-button">Select none</button>
+                <button type="submit" class="green-button full">
+                  <span class="icon icon-inline icon-download-white"></span>
+                  Download ZIP file
+                </button>
+              </div>
+
+              <div class="form-row margin-top-10 small flex-row">
+                <button type="button" class="js-select-all white-button flex-1">
+                  Select all
+                </button>
+                <button type="button" class="js-select-none white-button flex-1">
+                  Select none
+                </button>
+                <button type="button" class="js-select-average white-button flex-1">
+                  Select averages
+                </button>
               </div>
             </div>
 
@@ -128,13 +142,25 @@
                 <div class="section-bioreplicates box">
                   {% for bioreplicate in experiment.bioreplicates: %}
                     <label>
-                      <input type="checkbox" name="bioreplicates" value="{{ bioreplicate.id }}" checked />
+                      <input
+                          type="checkbox"
+                          class="{{ 'js-average' if bioreplicate.calculationType == 'average' }}"
+                          name="bioreplicates"
+                          value="{{ bioreplicate.id }}"
+                          checked />
                       {{ bioreplicate.name }}
                     </label>
                   {% endfor %}
                 </div>
               </div>
             {% endfor %}
+
+            <div class="form-row submit-row margin-top-10">
+              <button type="submit" class="green-button full">
+                <span class="icon icon-inline icon-download-white"></span>
+                Download ZIP file
+              </button>
+            </div>
           </div>
 
           <div class="flex-column column-right">
@@ -143,17 +169,6 @@
             <div class="preview js-preview box">
 
             </div>
-          </div>
-        </div>
-
-        <div class="form-row submit-row">
-          <input type="submit" class="green-button" value="Download ZIP file" />
-
-          <div class="separator">or</div>
-
-          <div class="copy-button-wrapper flex-row flex-grow">
-            <button type="button" class="js-copy-button copy-button green-button">Copy 📋</button>
-            <input type="text" value="" class="js-export-url export-url form-input-blue" readonly />
           </div>
         </div>
       </form>

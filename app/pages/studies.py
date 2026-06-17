@@ -88,7 +88,7 @@ def study_export_preview_fragment(publicId):
     _fetch_study_for_visitor(publicId)
 
     csv_previews = []
-    export_form = ExperimentExportForm(g.db_session, request.args)
+    export_form = ExperimentExportForm(g.db_session, request.form)
     experiment_data = export_form.get_experiment_data()
 
     for experiment, experiment_df in experiment_data.items():
@@ -105,7 +105,7 @@ def study_download_data_zip(publicId):
     study = _fetch_study_for_visitor(publicId)
     csv_data = []
 
-    export_form = ExperimentExportForm(g.db_session, request.args)
+    export_form = ExperimentExportForm(g.db_session, request.form)
     experiment_data = export_form.get_experiment_data()
 
     for experiment, experiment_df in experiment_data.items():
