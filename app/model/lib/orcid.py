@@ -20,11 +20,11 @@ def get_login_url(orcid_client_id, app_host):
     return f"{_get_orcid_root_url()}/oauth/authorize?{query_string}"
 
 
-def authenticate_user(code, client_id, secret, app_host):
+def authenticate_user(code, client_id, client_secret, app_host):
     url = f"{_get_orcid_root_url()}/oauth/token"
     data = {
         'client_id':     client_id,
-        'client_secret': secret,
+        'client_secret': client_secret,
         'grant_type':    'authorization_code',
         'code':          code,
         'redirect_uri':  f"https://{app_host}/login/",

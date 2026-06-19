@@ -202,7 +202,7 @@ def _find_or_create_user(db_session, user_data, user_uuid):
         user = User(
             uuid=user_uuid,
             orcidId=user_data['orcid'],
-            apiKey=str(uuid4),
+            apiKey=str(uuid4()),
         )
         workspace = Workspace(name="default", user=user)
 
