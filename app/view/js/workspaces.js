@@ -83,7 +83,7 @@ Page('.workspaces-page', function($page) {
       url: deleteUrl,
       cache: false,
       success: function(response) {
-        window.location.reload();
+        window.location = window.location;
       }
     })
   });
