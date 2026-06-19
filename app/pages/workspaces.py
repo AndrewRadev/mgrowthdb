@@ -2,6 +2,7 @@ import itertools
 from datetime import datetime, UTC
 
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 import sqlalchemy as sql
 from flask import (
     g,
@@ -35,13 +36,14 @@ def workspaces_root_page():
 
 
 def workspaces_index_page(orcidId, name="default"):
-    errors = {}
+    errors = []
+    warnings = []
     workspace = _find_workspace(orcidId, name)
 
     if request.method == 'POST':
         file = request.files['data']
 
-        df, errors = _process_upload(file)
+        df, errors, warnings = _process_upload(file)
         if df is not None:
             metadata = _extract_entry_metadata()
 
@@ -58,6 +60,7 @@ def workspaces_index_page(orcidId, name="default"):
         "pages/workspaces/index.html",
         workspace=workspace,
         errors=errors,
+        warnings=warnings,
     )
 
 
@@ -65,13 +68,14 @@ def workspaces_data_preview_fragment():
     file = request.files['file']
     include_error = request.form.get('includeError', 'false') == 'true'
 
-    df, errors = _process_upload(file)
+    df, errors, warnings = _process_upload(file)
 
     return render_template(
         "pages/workspaces/_data_preview.html",
         df=df,
         include_error=include_error,
         errors=errors,
+        warnings=warnings,
     )
 
 
@@ -383,12 +387,22 @@ def _find_workspace(orcidId, name, public=True):
 
 def _process_upload(file):
     errors = []
+    warnings = []
 
     try:
         df = pd.read_csv(file)
     except RuntimeError:
         errors.append(f"Could not process file {file.filename}")
         return None, errors
+
+    numeric_columns     = [c for c in df.columns if is_numeric_dtype(df[c].dtype)]
+    non_numeric_columns = [c for c in df.columns if not is_numeric_dtype(df[c].dtype)]
+
+    if len(non_numeric_columns):
+        column_description = ', '.join(non_numeric_columns)
+        warnings.append(f"Ignoring non-numeric columns: {column_description}")
+
+    df = df[[*numeric_columns]]
 
     column_count = len(df.columns)
     if column_count < 2:
@@ -398,7 +412,7 @@ def _process_upload(file):
     if row_count <= 0:
         errors.append("No data rows were found")
 
-    return df, errors
+    return df, errors, warnings
 
 
 def _extract_entry_metadata():

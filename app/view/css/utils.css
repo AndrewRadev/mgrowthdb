@@ -207,6 +207,13 @@ hr {
   padding-bottom: 10px;
 }
 
+.warning-message-list {
+  background: #fff3cd;
+  border-left: 4px solid #ffeeba;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 table.simple-table {
   border-collapse: collapse;
 

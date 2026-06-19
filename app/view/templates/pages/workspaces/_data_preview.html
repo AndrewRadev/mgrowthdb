@@ -1,6 +1,8 @@
 {% from 'utils/_form_errors.html' import render_form_errors %}
+{% from 'utils/_form_warnings.html' import render_form_warnings %}
 
 {{ render_form_errors(errors) }}
+{{ render_form_warnings(warnings) }}
 
 {% if df is not none: %}
   <table class="dataframe-table full">

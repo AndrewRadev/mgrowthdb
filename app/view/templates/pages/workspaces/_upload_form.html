@@ -1,10 +1,12 @@
 {% from "utils/_growth_unit_options.html" import render_growth_unit_options %}
 {% from "utils/_metabolite_unit_options.html" import render_metabolite_unit_options %}
 {% from "utils/_form_errors.html" import render_form_errors %}
+{% from "utils/_form_warnings.html" import render_form_warnings %}
 
-{% macro render_upload_form(workspace, errors) %}
+{% macro render_upload_form(workspace, errors, warnings) %}
 
   {{ render_form_errors(errors) }}
+  {{ render_form_warnings(errors) }}
 
   <form
       enctype="multipart/form-data"

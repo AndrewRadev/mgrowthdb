@@ -84,7 +84,7 @@
 
         {% if workspace.manageable_by_user(g.current_user): %}
           <div class="column column-form" style="width: 50%;">
-            {{ render_upload_form(workspace, errors) }}
+            {{ render_upload_form(workspace, errors, warnings) }}
           </div>
         {% endif %}
       </div>
