@@ -22,6 +22,7 @@ from app.model.orm import (
     StudyStrain,
     StudyUser,
     User,
+    Workspace,
 )
 from app.model.lib import orcid
 from app.model.lib.errors import LoginRequired
@@ -48,10 +49,27 @@ def user_show_page():
 
 
 def user_login_page():
+    orcid_client_id = current_app.config["ORCID_CLIENT_ID"]
+
     if 'code' in request.args:
-        return _user_login_submit(request.args['code'])
+        user_data = orcid.authenticate_user(
+            code=request.args['code'],
+            client_id=orcid_client_id,
+            client_secret=current_app.config["ORCID_SECRET"],
+            app_host=request.host,
+        )
+
+        user = _find_or_create_user(g.db_session, user_data, session['user_uuid'])
+        session['user_uuid'] = user.uuid
+
+        return redirect(url_for('user_show_page'))
     else:
-        return _user_login_show()
+        orcid_url = orcid.get_login_url(orcid_client_id, request.host)
+
+        return render_template(
+            "pages/users/login.html",
+            orcid_url=orcid_url,
+        )
 
 
 def user_backdoor_page():
@@ -173,23 +191,8 @@ def user_reset_api_key_action():
     return redirect(url_for('user_show_page'))
 
 
-def _user_login_show():
-    orcid_client_id = current_app.config["ORCID_CLIENT_ID"]
-    orcid_url       = orcid.get_login_url(orcid_client_id, request.host)
-
-    return render_template(
-        "pages/users/login.html",
-        orcid_url=orcid_url,
-    )
-
-
-def _user_login_submit(orcid_code):
-    orcid_client_id = current_app.config["ORCID_CLIENT_ID"]
-    orcid_secret    = current_app.config["ORCID_SECRET"]
-
-    user_data = orcid.authenticate_user(orcid_code, orcid_client_id, orcid_secret, request.host)
-
-    user = g.db_session.scalars(
+def _find_or_create_user(db_session, user_data, user_uuid):
+    user = db_session.scalars(
         sql.select(User)
         .where(User.orcidId == user_data['orcid'])
         .limit(1)
@@ -197,17 +200,17 @@ def _user_login_submit(orcid_code):
 
     if not user:
         user = User(
-            uuid=session['user_uuid'],
+            uuid=user_uuid,
             orcidId=user_data['orcid'],
+            apiKey=str(uuid4),
         )
+        workspace = Workspace(name="default", user=user)
 
     user.name        = user_data['name']
     user.orcidToken  = user_data['access_token']
     user.lastLoginAt = datetime.now(UTC)
 
-    g.db_session.add(user)
-    g.db_session.commit()
+    db_session.add(user)
+    db_session.commit()
 
-    session['user_uuid'] = user.uuid
-
-    return redirect(url_for('user_show_page'))
+    return user
