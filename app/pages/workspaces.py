@@ -44,7 +44,7 @@ def workspaces_index_page(orcidId, name="default"):
         file = request.files['data']
 
         df, errors, warnings = _process_upload(file)
-        if df is not None:
+        if df is not None and len(errors) == 0:
             metadata = _extract_entry_metadata()
 
             new_entries = WorkspaceEntry.from_upload(
