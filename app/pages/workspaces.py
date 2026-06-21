@@ -395,6 +395,12 @@ def _process_upload(file):
         errors.append(f"Could not process file {file.filename}")
         return None, errors
 
+    row_count = df.shape[0]
+    if row_count <= 0:
+        # If there are no data rows, non-numeric column checks won't work
+        errors.append("No data rows were found")
+        return df, errors, warnings
+
     numeric_columns     = [c for c in df.columns if is_numeric_dtype(df[c].dtype)]
     non_numeric_columns = [c for c in df.columns if not is_numeric_dtype(df[c].dtype)]
 
@@ -408,9 +414,17 @@ def _process_upload(file):
     if column_count < 2:
         errors.append(f"At least 2 columns are expected, {column_count} were found")
 
-    row_count = df.shape[0]
-    if row_count <= 0:
-        errors.append("No data rows were found")
+    time_values = df[df.columns[0]].tolist()
+    duplicate_time_values = list(util.find_duplicates(time_values))
+    if len(duplicate_time_values):
+        description = ', '.join([str(t) for t in sorted(duplicate_time_values)])
+        errors.append(f"Duplicated time values: {description}")
+
+    if sorted(time_values) != time_values:
+        errors.append(
+            "Time values are not monotonic, "
+            "are there multiple measurement targets in a single data file?"
+        )
 
     return df, errors, warnings
 

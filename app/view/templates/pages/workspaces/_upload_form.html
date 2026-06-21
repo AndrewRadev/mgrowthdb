@@ -6,7 +6,7 @@
 {% macro render_upload_form(workspace, errors, warnings) %}
 
   {{ render_form_errors(errors) }}
-  {{ render_form_warnings(errors) }}
+  {{ render_form_warnings(warnings) }}
 
   <form
       enctype="multipart/form-data"
