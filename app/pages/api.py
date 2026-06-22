@@ -9,6 +9,7 @@ from flask import (
 )
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 import sqlalchemy as sql
+from sqlalchemy.orm.exc import NoResultFound
 import pandas as pd
 
 from app.model.lib.conversion import (
@@ -347,7 +348,14 @@ def workspace_update_json(name="default"):
     if current_user is None:
         raise Forbidden
 
-    workspace = _get_workspace(current_user.orcidId, name, current_user)
+    try:
+        workspace = _get_workspace(current_user.orcidId, name, current_user)
+    except NoResultFound as e:
+        workspace = Workspace(
+            user=current_user,
+            name=name,
+        )
+        g.db_session.add(workspace)
 
     # Clear out existing "api" entries, unless we got an `append` parameter:
     if not request.args.get('append', False):
