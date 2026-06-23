@@ -133,30 +133,42 @@
 
         <h3>
           <a href="{{ url_for('upload_status_page') }}">
-            Upload your project
+            Upload your study
           </a>
         </h3>
       </div>
 
       <p>
-        At mGrowthDB, we recognize the invaluable contributions of researchers
-        in advancing our understanding of microbial dynamics. Sharing growth
-        data publicly plays a crucial role in increasing scientific progress
-        and collaboration within the research community.
-      </p>
-
-      <p>
         We encourage researchers to authenticate themselves using
         {{ "https://orcid.org/"|external_link("ORCID") }}
         and upload their experimental data by following a step-by-step process
-        that ensures it fits a standardized structure. If your data is
-        published in a paper or pre-print, you can provide a DOI to it to let
-        us pre-fetch some of the metadata for you, including authorship and
-        licensing information.
+        that ensures it fits a standardized structure. Sharing growth data
+        publicly plays a crucial role in increasing scientific progress and
+        collaboration within the research community. If your data is published
+        in a paper or pre-print, you can provide a DOI to let us pre-fetch some
+        of the metadata for you, including authorship and licensing
+        information. Here are a few example studies that showcase the variety
+        of data in mGrowthDB:
       </p>
 
-      </p>
-        Learn more in our <a href="{{ url_for('help_show_page', name='upload-process') }}">documentation</a> or check out our
+      <ul>
+        <li>
+          <a href="{{ url_for('study_show_page', publicId="SMGDB00000005") }}">SMGDB00000005</a>: A bioRxiv pre-print by {{ "http://msysbiology.com/"|external_link("Faust lab") }} that examines microbial community stable states in perturbation experiments.
+        </li>
+
+        <li>
+          <a href="{{ url_for('study_show_page', publicId="SMGDB00000013") }}">SMGDB00000013</a>: A study by {{ "https://wp.unil.ch/mitrilab/"|external_link("Mitri lab") }} about bacterial degradation of metal working fluids, leading to insights about positive inter-community interactions.
+        </li>
+
+        <li>
+          <a href="{{ url_for('study_show_page', publicId="SMGDB00000015") }}">SMGDB00000015</a>: An investigation of microbial species relevant to the human respiratory tract and their community dynamics by the {{ "http://www.gorelab.org/"|external_link("Gore lab") }} in MIT.
+        </li>
+      </ul>
+
+      <p>
+        Learn more about uploading your data in our
+        <a href="{{ url_for('help_show_page', name='upload-process') }}">documentation</a>
+        or check out our
         {{ "https://www.youtube.com/playlist?list=PLt4q_h8pw5qfMb5fL-UCSf3SNjhR-Ld4a"|external_link("video tutorial") }}.
       </p>
 
@@ -168,32 +180,63 @@
         <h3>Visualize and analyze growth data</h3>
       </div>
 
-      <p>
-        Visitors can visualize the growth of microbial cultures within or
-        across experiments in any published study. They can also collect data
-        traces in different studies and investigate them in our
-        "<a href="{{ url_for('comparison_show_page') }}">Comparison view</a>".
-      </p>
+      <div class="clear"></div>
 
-      <p>
-        Study owners can fit select growth models to their data through the web interface, courtesy of the
-        {{ "https://cran.r-project.org/web/packages/growthrates/"|external_link("growthrates R package") }}.
-        Growth parameters can be downloaded in CSV format.
-      </p>
+      <div class="study-example-container margin-top-10">
+        <ul class="study-example-text">
+          <li class="js-example-1 focus">
+            <button class="green-button small-button small">&rarr;</button>
+            Visitors can visualize the growth of microbial cultures within or
+            across experiments in any published study. They can also collect data
+            traces from different studies and investigate them in our
+            "<a href="{{ url_for('comparison_show_page') }}">Comparison view</a>".
+            If provided, metabolites and pH measurements can be plotted along
+            with cell abundances for additional insights.
+          </li>
 
-      <p>
-        In case you wish to explore your data without uploading it to a study
-        or simply test the visualization and model-fitting interfaces, try the
-        <a href="{{ url_for('workspaces_root_page') }}">Workspace</a> pages,
-        where you can experiment freely.
-      </p>
+          <li class="js-example-2">
+            <button class="white-button small-button small">&rarr;</button>
+            Study owners can fit selected growth models to their data through
+            the web interface, courtesy of the
+            {{ "https://cran.r-project.org/web/packages/growthrates/"|external_link("growthrates R package") }}.
+            Custom model predictions can be uploaded and attached to the data
+            traces for other researchers' context. Growth parameters can be
+            downloaded in CSV format.
+          </li>
+
+          <li class="js-example-3">
+            <button class="white-button small-button small">&rarr;</button>
+            In case you wish to explore your data without uploading it to a study
+            or simply test the visualization and model-fitting interfaces, you
+            can try the
+            <a href="{{ url_for('workspaces_root_page') }}">Workspace</a> pages,
+            where you can experiment freely. The uploaded data will be private
+            by default, or you can open it up and share it with colleagues.
+          </li>
+        </ul>
+
+        <div class="study-example-images">
+          <img
+              title="Example of visualization of a study's data"
+              class="example example1 js-example-1 focus"
+              src="{{ url_for('static', filename='images/home/example1.png') }}" />
+          <img
+              title="Example of a model-fitting chart"
+              class="example example2 js-example-2"
+              src="{{ url_for('static', filename='images/home/example2.png') }}" />
+          <img
+              title="Demonstration of the workspace upload form"
+              class="example example3 js-example-3"
+              src="{{ url_for('static', filename='images/home/example3.png') }}" />
+        </div>
+      </div>
 
       <div class="heading">
         <h3>Learn more about mGrowthDB</h3>
 
         <p>
           To know more about the project, you can read our
-          {{ "https://www.biorxiv.org/content/10.1101/2025.10.13.682118v1"|external_link("preprint in bioRxiv") }},
+          {{ "https://www.biorxiv.org/content/10.1101/2025.10.13.682118v1"|external_link("pre-print in bioRxiv") }},
           check out the database's record in
           {{ "https://doi.org/10.25504/FAIRsharing.de8ed6"|external_link("FAIRsharing.org") }},
           or explore the videos in our

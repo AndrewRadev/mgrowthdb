@@ -53,6 +53,7 @@ def init_assets(app):
         '../app/view/js/upload/step5.js',
         '../app/view/js/upload/step6.js',
         '../app/view/js/main.js',
+        '../app/view/js/home.js',
         '../app/view/js/search.js',
         '../app/view/js/export.js',
         '../app/view/js/study.js',
