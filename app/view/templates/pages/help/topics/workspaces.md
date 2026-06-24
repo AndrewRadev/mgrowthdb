@@ -1,4 +1,4 @@
-*This information is also available as a video tutorial: <a class="external" rel="noreferrer nofollow" target="_blank" href="https://www.youtube.com/watch?v=WS-mRodmsMs">Workspaces</a>*
+*This information is also available as a video tutorial: <a class="external" rel="noreferrer nofollow" target="_blank" href="https://www.youtube.com/playlist?list=PLt4q_h8pw5qfDWeMUkmruUKiEHVZ0NfyM">Workspaces</a>*
 
 Workspaces are a way to upload data and visualize it without the context of a study. In general, we'd recommend that you organize your data into studies with rich metadata. However, workspaces could be a good solution when:
 
