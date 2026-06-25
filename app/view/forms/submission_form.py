@@ -112,6 +112,10 @@ class SubmissionForm:
                 }
                 self.submission.dataFileId = previous_submission.dataFileId
 
+            # Update the project info to the last saved one:
+            self.submission.studyDesign['project']['name'] = study.project.name
+            self.submission.studyDesign['project']['description'] = study.project.description
+
     @property
     def show_embargo_date_input(self):
         "Embargo date input is shown if the study is not published yet"
