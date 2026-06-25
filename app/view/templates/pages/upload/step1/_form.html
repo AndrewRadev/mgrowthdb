@@ -207,15 +207,17 @@
             <input
                 type="date"
                 min="{{ g.now.strftime("%Y-%m-%d") }}"
+                max="{{ submission.maxEmbargoDate.strftime("%Y-%m-%d") }}"
                 name="embargo_expires_at"
                 value="{{ submission.studyDesign['study']['embargoExpiresAt'] or '' }}"
                 class="form-input-full form-input-blue {{ "error" if submission_form.has_error('embargo_expires_at') }}" />
 
             <div class="help margin-top-10">
               Once you upload your study, a record will appear on mGrowthDB but
-              it will not show your data. If you set a specific embargo date,
-              the data will be published <strong>automatically</strong> the day
-              after that date.
+              it will not show your data. If you set a specific embargo date
+              (up to 1 year from the submission's creation date), the data will
+              be published <strong>automatically</strong> the day after that
+              date.
               <br>
               <br>
               If you do not set an embargo date, you'll have to

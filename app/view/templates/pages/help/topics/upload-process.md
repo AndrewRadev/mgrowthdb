@@ -76,7 +76,7 @@ There's two additional fields if you're preparing a submission that creates a ne
     </div>
 </p>
 
-The left field lets you specify an embargo date. The study will not be published until that date has passed. The day after, at 2am UTC, the system will automatically make the study publicly available. This means that visitors will be able to see its data and find it in the search interface.
+The left field lets you specify an embargo date. The study will not be published until that date has passed. The day after, at 2am UTC, the system will automatically make the study publicly available. This means that visitors will be able to see its data and find it in the search interface. The maximum embargo date you can pick is 1 year from the start of the submission.
 
 If no embargo date is set, you need to publish the study yourself whenever you choose, after a 24-hour buffer period. You can view the data and submit updates to it, but visitors will only see a placeholder page.
 

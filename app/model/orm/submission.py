@@ -67,6 +67,10 @@ class Submission(OrmBase):
         return self.publishedAt != None
 
     @property
+    def maxEmbargoDate(self):
+        return self.createdAt.replace(year=self.createdAt.year + 1)
+
+    @property
     def completedStepCount(self):
         return sum([
             1 if self.projectUniqueID and self.studyUniqueID else 0,
