@@ -143,6 +143,8 @@ class Study(OrmBase):
     def manageable_by_user(self, user):
         if not user or not user.uuid:
             return False
+        elif user.isAdmin:
+            return True
         else:
             return user.uuid in self.managerUuids
 

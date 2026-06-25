@@ -146,6 +146,21 @@
               [{{ project.publicId }}] {{ project.name|truncate(50) }}
             </option>
           {% endfor %}
+
+          {# Special case: user is an admin and needs access to the project #}
+          {% if submission.study and submission.study.manageable_by_user(g.current_user) and submission.study.project.uuid not in g.current_user.managedProjects: %}
+            {% set existing_study = submission.study %}
+            {% set existing_project = existing_study.project %}
+
+            <option
+                value="{{ existing_project.uuid }}"
+                {{ "selected" if existing_project.uuid == submission.projectUniqueID }}
+                data-name="{{ existing_project.name }}"
+                data-description="{{ existing_project.description or '' }}"
+                data-study-uuids='{{ existing_project.studyUuids|tojson }}'>
+              [{{ existing_project.publicId }}] {{ existing_project.name|truncate(50) }}
+            </option>
+          {% endif %}
         </select>
       </label>
 
