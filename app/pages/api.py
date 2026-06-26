@@ -50,6 +50,7 @@ def project_json(publicId):
 
 
 def study_json(publicId):
+    current_user = _get_current_user()
     study = g.db_session.get_one(Study, publicId)
 
     data = {
@@ -58,7 +59,7 @@ def study_json(publicId):
         'projectId': study.project.publicId,
     }
 
-    if study.isPublished:
+    if study.visible_to_user(current_user):
         data.update({
             'description': study.description,
             'url':         study.url,
@@ -74,9 +75,10 @@ def study_json(publicId):
 
 
 def experiment_json(publicId):
+    current_user = _get_current_user()
     experiment = g.db_session.get_one(Experiment, publicId)
 
-    if not experiment.study.isPublished:
+    if not experiment.study.visible_to_user(current_user):
         raise NotFound
 
     if experiment.community:
@@ -143,8 +145,9 @@ def experiment_json(publicId):
 
 
 def experiment_csv(publicId):
+    current_user = _get_current_user()
     experiment = g.db_session.get(Experiment, publicId)
-    if not experiment or not experiment.study.isPublished:
+    if not experiment or not experiment.study.visible_to_user(current_user):
         raise NotFound
 
     df = experiment.get_df(g.db_session)
@@ -153,8 +156,9 @@ def experiment_csv(publicId):
 
 
 def measurement_context_json(id):
+    current_user = _get_current_user()
     measurement_context = g.db_session.get(MeasurementContext, id)
-    if not measurement_context or not measurement_context.study.isPublished:
+    if not measurement_context or not measurement_context.study.visible_to_user(current_user):
         raise NotFound
 
     measurement_count = g.db_session.scalars(
@@ -177,8 +181,9 @@ def measurement_context_json(id):
 
 
 def measurement_context_csv(id):
+    current_user = _get_current_user()
     measurement_context = g.db_session.get(MeasurementContext, id)
-    if not measurement_context or not measurement_context.study.isPublished:
+    if not measurement_context or not measurement_context.study.visible_to_user(current_user):
         raise NotFound
 
     df           = measurement_context.get_df(g.db_session)
@@ -197,8 +202,9 @@ def measurement_context_csv(id):
 
 
 def model_prediction_json(id):
+    current_user = _get_current_user()
     modeling_result = g.db_session.get(ModelingResult, id)
-    if not modeling_result or not modeling_result.study.isPublished:
+    if not modeling_result or not modeling_result.study.visible_to_user(current_user):
         raise NotFound
 
     return {
@@ -231,8 +237,9 @@ def model_prediction_csv(id):
 
 
 def bioreplicate_json(id):
+    current_user = _get_current_user()
     bioreplicate = g.db_session.get(Bioreplicate, id)
-    if not bioreplicate or not bioreplicate.study.isPublished:
+    if not bioreplicate or not bioreplicate.study.visible_to_user(current_user):
         raise NotFound
 
     return {
@@ -255,8 +262,9 @@ def bioreplicate_json(id):
 
 
 def bioreplicate_csv(id):
+    current_user = _get_current_user()
     bioreplicate = g.db_session.get(Bioreplicate, id)
-    if not bioreplicate or not bioreplicate.study.isPublished:
+    if not bioreplicate or not bioreplicate.study.visible_to_user(current_user):
         raise NotFound
 
     df = bioreplicate.get_df(g.db_session)
