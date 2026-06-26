@@ -511,6 +511,7 @@ def _create_average_measurements(db_session, study, experiment):
                     subject_name=average_bioreplicate.name,
                     subject_external_id=None,
                 )
+                has_measurements = True
             else:
                 grouped_contexts = itertools.groupby(
                     measurement_contexts,
@@ -518,12 +519,18 @@ def _create_average_measurements(db_session, study, experiment):
                 )
 
                 for key, subject_contexts in grouped_contexts:
+                    subject_contexts = list(subject_contexts)
                     (
                         subject_id,
                         subject_type,
                         subject_name,
                         subject_external_id,
                     ) = key
+
+                    # If there is a single context for this cluster of
+                    # measurements, there is nothing to average:
+                    if len(subject_contexts) <= 1:
+                        continue
 
                     # One context for each subject:
                     _create_average_measurement_context(
@@ -536,8 +543,7 @@ def _create_average_measurements(db_session, study, experiment):
                         subject_name=subject_name,
                         subject_external_id=subject_external_id,
                     )
-
-            has_measurements = True
+                    has_measurements = True
 
     if not has_measurements:
         db_session.delete(average_bioreplicate)

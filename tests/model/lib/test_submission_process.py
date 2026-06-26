@@ -467,14 +467,21 @@ class TestSubmissionProcess(DatabaseTest):
         c1 = self.create_compartment()
         self.create_experiment_compartment(compartmentId=c1.id, experimentId=experiment.publicId)
 
-        mt = self.create_measurement_technique(subjectType='bioreplicate', study_technique={'studyId': study.publicId})
+        mt1 = self.create_measurement_technique(
+            subjectType='bioreplicate',
+            study_technique={'studyId': study.publicId},
+        )
+        mt2 = self.create_measurement_technique(
+            subjectType='metabolite',
+            study_technique={'studyId': study.publicId},
+        )
 
         b1 = self.create_bioreplicate(name="b1", experimentId=experiment.publicId)
         mc1 = self.create_measurement_context(
             subjectId=b1.id,
             subjectType='bioreplicate',
             bioreplicateId=b1.id,
-            techniqueId=mt.id,
+            techniqueId=mt1.id,
             compartmentId=c1.id,
         )
         for i, value in enumerate([10, 20, 30]):
@@ -485,7 +492,7 @@ class TestSubmissionProcess(DatabaseTest):
             subjectId=b2.id,
             subjectType='bioreplicate',
             bioreplicateId=b2.id,
-            techniqueId=mt.id,
+            techniqueId=mt1.id,
             compartmentId=c1.id,
         )
         for i, value in enumerate([20, 40, 60]):
@@ -506,7 +513,7 @@ class TestSubmissionProcess(DatabaseTest):
             subjectId=b3.id,
             subjectType='bioreplicate',
             bioreplicateId=b3.id,
-            techniqueId=mt.id,
+            techniqueId=mt1.id,
             compartmentId=c1.id,
             studyId=study.publicId,
         )
@@ -524,6 +531,41 @@ class TestSubmissionProcess(DatabaseTest):
         _create_average_measurements(self.db_session, study, experiment)
         self.db_session.refresh(experiment)
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3"})
+
+        # Don't create averages if they're one measurement context per subject
+        b4 = self.create_bioreplicate(name="b4", experimentId=experiment.publicId)
+        m1 = self.create_metabolite()
+        m2 = self.create_metabolite()
+        mc4 = self.create_measurement_context(
+            subjectId=m1.id,
+            subjectType='metabolite',
+            bioreplicateId=b4.id,
+            techniqueId=mt2.id,
+            compartmentId=c1.id,
+            studyId=study.publicId,
+        )
+        mc5 = self.create_measurement_context(
+            subjectId=m2.id,
+            subjectType='metabolite',
+            bioreplicateId=b4.id,
+            techniqueId=mt2.id,
+            compartmentId=c1.id,
+            studyId=study.publicId,
+        )
+        for i, value in enumerate([30, 50, 70]):
+            # Time points offset by 1:
+            self.create_measurement(timeInSeconds=i + 1, value=value, contextId=mc4.id)
+            self.create_measurement(timeInSeconds=i + 1, value=value, contextId=mc5.id)
+
+        self.db_session.flush()
+        self.db_session.refresh(experiment)
+
+        # Average bioreplicate doesn't get created:
+        self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3", "b4"})
+        _create_average_measurements(self.db_session, study, experiment)
+        self.db_session.refresh(experiment)
+        self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3", "b4"})
+
 
     def test_updating_study_before_publication(self):
         study = self.create_study(publishedAt=None)
