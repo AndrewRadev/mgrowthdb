@@ -507,7 +507,7 @@ class TestSubmissionProcess(DatabaseTest):
         self.assertEqual(average_bioreplicate.calculationType, 'average')
         self.assertEqual([int(m.value) for m in average_bioreplicate.measurements], [15, 30, 45])
 
-        # Don't create averages if their time points don't match
+        # Don't create averages if none of their time points match
         b3 = self.create_bioreplicate(name="b3", experimentId=experiment.publicId)
         mc3 = self.create_measurement_context(
             subjectId=b3.id,
@@ -518,8 +518,8 @@ class TestSubmissionProcess(DatabaseTest):
             studyId=study.publicId,
         )
         for i, value in enumerate([30, 50, 70]):
-            # Time points offset by 1:
-            self.create_measurement(timeInSeconds=i + 1, value=value, contextId=mc3.id)
+            # Time points offset by 3 so there's no overlap:
+            self.create_measurement(timeInSeconds=i + 3, value=value, contextId=mc3.id)
 
         self.db_session.delete(average_bioreplicate)
         self.db_session.flush()
@@ -531,6 +531,12 @@ class TestSubmissionProcess(DatabaseTest):
         _create_average_measurements(self.db_session, study, experiment)
         self.db_session.refresh(experiment)
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3"})
+
+        # Delete b1, b2, b3 to avoid interfering with the next averages:
+        self.db_session.delete(b1)
+        self.db_session.delete(b2)
+        self.db_session.delete(b3)
+        self.db_session.flush()
 
         # Don't create averages if they're one measurement context per subject
         b4 = self.create_bioreplicate(name="b4", experimentId=experiment.publicId)
@@ -553,19 +559,17 @@ class TestSubmissionProcess(DatabaseTest):
             studyId=study.publicId,
         )
         for i, value in enumerate([30, 50, 70]):
-            # Time points offset by 1:
-            self.create_measurement(timeInSeconds=i + 1, value=value, contextId=mc4.id)
-            self.create_measurement(timeInSeconds=i + 1, value=value, contextId=mc5.id)
+            self.create_measurement(timeInSeconds=i, value=value, contextId=mc4.id)
+            self.create_measurement(timeInSeconds=i, value=value, contextId=mc5.id)
 
         self.db_session.flush()
         self.db_session.refresh(experiment)
 
         # Average bioreplicate doesn't get created:
-        self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3", "b4"})
+        self.assertEqual({b.name for b in experiment.bioreplicates}, {"b4"})
         _create_average_measurements(self.db_session, study, experiment)
         self.db_session.refresh(experiment)
-        self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3", "b4"})
-
+        self.assertEqual({b.name for b in experiment.bioreplicates}, {"b4"})
 
     def test_updating_study_before_publication(self):
         study = self.create_study(publishedAt=None)

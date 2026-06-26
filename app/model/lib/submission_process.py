@@ -490,19 +490,28 @@ def _create_average_measurements(db_session, study, experiment):
             if len(measurement_contexts) <= 1:
                 continue
 
-            # If measurement time points don't match, don't average them:
-            time_point_sets = set()
+            # Only average the shared time points, if any
+            common_time_points = None
+            max_time_point_count = 0
+
             for measurement_context in measurement_contexts:
                 time_points = [m.timeInSeconds for m in measurement_context.measurements]
-                time_point_sets.add(frozenset(time_points))
+                if len(time_points) > max_time_point_count:
+                    max_time_point_count = len(time_points)
 
-            if len(time_point_sets) > 1:
+                if common_time_points is None:
+                    common_time_points = frozenset(time_points)
+                else:
+                    common_time_points = common_time_points.intersection(time_points)
+
+            if common_time_points is None or len(common_time_points) <= (max_time_point_count // 2):
                 continue
 
             if technique.subjectType == 'bioreplicate':
                 # A single context for a group of bioreplicates
                 _create_average_measurement_context(
                     db_session,
+                    common_time_points=common_time_points,
                     parent_records=(study, technique, compartment),
                     measurement_contexts=measurement_contexts,
                     average_bioreplicate=average_bioreplicate,
@@ -535,6 +544,7 @@ def _create_average_measurements(db_session, study, experiment):
                     # One context for each subject:
                     _create_average_measurement_context(
                         db_session,
+                        common_time_points=common_time_points,
                         parent_records=(study, technique, compartment),
                         measurement_contexts=list(subject_contexts),
                         average_bioreplicate=average_bioreplicate,
@@ -551,6 +561,7 @@ def _create_average_measurements(db_session, study, experiment):
 
 def _create_average_measurement_context(
     db_session,
+    common_time_points,
     parent_records,
     measurement_contexts,
     average_bioreplicate,
@@ -568,7 +579,10 @@ def _create_average_measurement_context(
             sql.func.avg(Measurement.value),
             sql.func.std(Measurement.value),
         )
-        .where(Measurement.contextId.in_([mc.id for mc in measurement_contexts]))
+        .where(
+            Measurement.contextId.in_([mc.id for mc in measurement_contexts]),
+            Measurement.timeInSeconds.in_(common_time_points),
+        )
         .group_by(Measurement.timeInSeconds)
         .order_by(Measurement.timeInSeconds)
     ).all()
