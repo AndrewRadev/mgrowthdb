@@ -84,6 +84,7 @@ def upload_authors_json():
             'authorsHtml': render_template(
                 'pages/upload/step1/_authors.html',
                 authors=fetcher.authors,
+                authorCache=fetcher.author_cache,
                 publicationDate=fetcher.publication_date,
             )
         }

@@ -11,10 +11,7 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
     let $url = $step1.find('input[name=study_url]');
     let doi = ($url.val() || '').trim();
 
-    let $licenseUrl        = $step1.find('input[name=license_url]');
-    let $authorsInput      = $step1.find('input[name=authors]');
-    let $authorsCacheInput = $step1.find('input[name=authorsCache]');
-
+    let $licenseUrl     = $step1.find('input[name=license_url]');
     let $authorsPreview = $step1.find('.js-authors-preview');
     let $studyName      = $step1.find('input[name=study_name]');
 
@@ -38,16 +35,6 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
 
         if (response.licenseUrl) {
           $licenseUrl.animateVal(response.licenseUrl);
-        }
-
-        if (response.authors) {
-          $authorsInput.val(JSON.stringify(response.authors));
-          $authorsCacheInput.val(response.authorCache);
-
-          let existingStudyName = ($studyName.val() || '').trim();
-          if (existingStudyName.length == 0 && response.studyName.length > 0) {
-            $studyName.animateVal(response.studyName);
-          }
         }
       }
     });
