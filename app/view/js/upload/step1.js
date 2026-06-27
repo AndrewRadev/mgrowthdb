@@ -36,6 +36,13 @@ Page('.upload-page .step-content.step-1.active', function($step1) {
         if (response.licenseUrl) {
           $licenseUrl.animateVal(response.licenseUrl);
         }
+
+        if (response.authors) {
+          let existingStudyName = ($studyName.val() || '').trim();
+          if (existingStudyName.length == 0 && response.studyName.length > 0) {
+            $studyName.animateVal(response.studyName);
+          }
+        }
       }
     });
   });
