@@ -1,0 +1,23 @@
+import sqlalchemy as sql
+
+
+def up(conn):
+    query = """
+        ALTER TABLE Studies
+        ADD publicationType VARCHAR(100) DEFAULT NULL,
+        ADD INDEX Studies_publicationType (publicationType)
+    """
+    conn.execute(sql.text(query))
+
+
+def down(conn):
+    query = """
+        ALTER TABLE Studies
+        DROP publicationType
+    """
+    conn.execute(sql.text(query))
+
+
+if __name__ == "__main__":
+    from app.model.lib.migrate import run
+    run(__file__, up, down)

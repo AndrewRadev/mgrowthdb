@@ -510,9 +510,11 @@ CREATE TABLE Studies (
   lastSubmissionId int DEFAULT NULL,
   licenseUrl varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   publicationDate varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  publicationType varchar(100) COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (publicId),
   UNIQUE KEY studyUniqueID (uuid),
-  KEY Studies_publicationDate (publicationDate)
+  KEY Studies_publicationDate (publicationDate),
+  KEY Studies_publicationType (publicationType)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -844,5 +846,6 @@ INSERT INTO MigrationVersions VALUES
 (104,'2026_05_25_111809_add_workspace_entry_id_to_modeling_result','2026-05-27 14:22:49'),
 (105,'2026_06_03_164607_add_license_url_to_studies','2026-06-03 15:44:09'),
 (106,'2026_06_09_113637_add_publication_date_to_studies','2026-06-09 10:35:16'),
-(109,'2026_06_27_151530_delete_modeling_requests','2026-06-27 13:19:32');
+(109,'2026_06_27_151530_delete_modeling_requests','2026-06-27 13:19:32'),
+(111,'2026_06_27_154711_add_publication_type_to_studies','2026-06-27 13:49:00');
 

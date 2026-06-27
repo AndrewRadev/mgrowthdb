@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Literal
 from datetime import datetime, UTC
 import itertools
 
@@ -52,6 +52,12 @@ class Study(OrmBase):
     authorCache:     Mapped[str]      = mapped_column(sql.String)
     publicationDate: Mapped[str]      = mapped_column(sql.String, nullable=True)
     licenseUrl:      Mapped[str]      = mapped_column(sql.String, nullable=True)
+
+    publicationType: Mapped[Literal[
+        'dataset',
+        'preprint',
+        'publication',
+    ] | None] = mapped_column(sql.String, nullable=True)
 
     projectUuid: Mapped[str] = mapped_column(sql.ForeignKey('Projects.uuid'))
     project: Mapped['Project'] = relationship(back_populates="studies")

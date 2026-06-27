@@ -1,4 +1,5 @@
 import requests
+import re
 
 
 class CrossrefFetcher:
@@ -14,6 +15,7 @@ class CrossrefFetcher:
         self.author_cache     = ''
         self.license_url      = None
         self.publication_date = None
+        self.publication_type = None
 
         self._response_json = None
 
@@ -50,4 +52,13 @@ class CrossrefFetcher:
             publication_date_parts = message_field.get(key, {}).get("date-parts", [])
             if len(publication_date_parts):
                 self.publication_date = '-'.join([f"{int(str(part)):02}" for part in publication_date_parts[0]])
+
                 break
+
+        if resource_url := message_field.get('resource', {}).get('primary', {}).get('URL'):
+            if re.match(r'https?://(www.)?biorxiv.org/', resource_url):
+                self.publication_type = 'preprint'
+            else:
+                self.publication_type = 'publication'
+        else:
+            self.publication_type = 'dataset'

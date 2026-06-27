@@ -12,16 +12,16 @@ app = create_app()
 
 with app.app_context():
     db_session = FLASK_DB.session
-    studies = db_session.scalars(
-        sql.select(Study)
-        .where(
-            Study.url.is_not(None),
-            Study.url != '',
-        )
-    )
+    studies = db_session.scalars(sql.select(Study))
 
     for study in studies:
         print(f"Study: [{study.publicId}] {study.name}")
+
+        if study.url is None or study.url == '':
+            print(" > No URL, marking as 'dataset'")
+            study.publicationType = 'dataset'
+            db_session.add(study)
+            continue
 
         doi = study.url
         fetcher = CrossrefFetcher(doi)
@@ -32,6 +32,7 @@ with app.app_context():
         study.authorCache     = fetcher.author_cache
         study.licenseUrl      = fetcher.license_url
         study.publicationDate = fetcher.publication_date
+        study.publicationType = fetcher.publication_type
 
         if submission := study.lastSubmission:
             submission.studyDesign['study']['authors']     = study.authors
@@ -44,6 +45,7 @@ with app.app_context():
         print(f" > Author cache:     {study.authorCache}")
         print(f" > License URL:      {study.licenseUrl}")
         print(f" > Publication Date: {study.publicationDate}")
+        print(f" > Publication Type: {study.publicationType}")
 
         db_session.add(study)
 

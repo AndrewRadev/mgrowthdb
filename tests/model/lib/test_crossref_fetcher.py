@@ -55,6 +55,34 @@ class TestCrossrefFetcher(unittest.TestCase):
             self.assertEqual(fetcher.author_cache, '')
             self.assertEqual(fetcher.title, 'Test study')
 
+    def test_fetching_publication_type(self):
+        type_mapping = [
+            ("https://www.nature.com/articles/s41467-025-56012-8",                'publication'),
+            ("https://www.frontiersin.org/article/10.3389/fmicb.2019.02449/full", 'publication'),
+            ("https://www.biorxiv.org/content/10.1101/2024.11.28.625814v1",       'preprint'),
+            ("https://biorxiv.org/content/10.1101/2024.11.28.625814v1",           'preprint'),
+            ("http://biorxiv.org/content/10.1101/2024.11.28.625814v1",            'preprint'),
+        ]
+
+        for url, expected_type in type_mapping:
+            with requests_mock.Mocker() as m:
+                m.get('https://api.crossref.org/works/abc', json={
+                    "status": "ok",
+                    "message": {"resource": {"primary": {"URL": url}}}
+                })
+                fetcher = CrossrefFetcher(doi='abc')
+                fetcher.make_request()
+                self.assertEqual(fetcher.publication_type, expected_type)
+
+        with requests_mock.Mocker() as m:
+            m.get('https://api.crossref.org/works/abc', json={
+                "status": "ok",
+                "message": {}
+            })
+            fetcher = CrossrefFetcher(doi='abc')
+            fetcher.make_request()
+            self.assertEqual(fetcher.publication_type, 'dataset')
+
     def test_fetching_publication_date(self):
         with requests_mock.Mocker() as m:
             m.get('https://api.crossref.org/works/abc', json={
