@@ -9,6 +9,12 @@
     <strong>Publication date</strong>: {{ publicationDate }}
     <input type="hidden" name="publicationDate" value="{{ publicationDate }}" />
   {% endif %}
+
+  {% if publicationType: %}
+    <br>
+    <strong>Publication type</strong>: {{ publicationType }}
+    <input type="hidden" name="publicationType" value="{{ publicationType }}" />
+  {% endif %}
 {% elif error: %}
   <div class="error-message">{{ error }}</div>
 {% endif %}

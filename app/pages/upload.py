@@ -76,6 +76,7 @@ def upload_authors_json():
         return {
             'doi':             fetcher.doi,
             'licenseUrl':      fetcher.license_url,
+            'publicationType': fetcher.publication_type,
             'publicationDate': fetcher.publication_date,
             'studyName':       fetcher.title,
             'authors':         fetcher.authors,
@@ -85,6 +86,7 @@ def upload_authors_json():
                 'pages/upload/step1/_authors.html',
                 authors=fetcher.authors,
                 authorCache=fetcher.author_cache,
+                publicationType=fetcher.publication_type,
                 publicationDate=fetcher.publication_date,
             )
         }
