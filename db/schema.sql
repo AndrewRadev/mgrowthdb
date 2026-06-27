@@ -323,28 +323,6 @@ CREATE TABLE MigrationVersions (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `ModelingRequests`
---
-
-DROP TABLE IF EXISTS ModelingRequests;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE ModelingRequests (
-  id int NOT NULL AUTO_INCREMENT,
-  `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  jobUuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  state varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `error` text,
-  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  PRIMARY KEY (id),
-  KEY ModelingRequests_studyId (studyId),
-  CONSTRAINT ModelingRequests_studyId FOREIGN KEY (studyId) REFERENCES Studies (publicId)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `ModelingResults`
 --
 
@@ -354,7 +332,6 @@ DROP TABLE IF EXISTS ModelingResults;
 CREATE TABLE ModelingResults (
   id int NOT NULL AUTO_INCREMENT,
   `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  requestId int DEFAULT NULL,
   state varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `error` text,
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -370,10 +347,8 @@ CREATE TABLE ModelingResults (
   publishedAt datetime DEFAULT NULL,
   workspaceEntryId int DEFAULT NULL,
   PRIMARY KEY (id),
-  KEY Calculations_calculationTechniqueId (requestId),
   KEY ModelingResults_customModelId (customModelId),
   KEY ModelingResults_workspaceEntryId (workspaceEntryId),
-  CONSTRAINT Calculations_calculationTechniqueId FOREIGN KEY (requestId) REFERENCES ModelingRequests (id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT ModelingResults_customModelId FOREIGN KEY (customModelId) REFERENCES CustomModels (id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT ModelingResults_workspaceEntryId FOREIGN KEY (workspaceEntryId) REFERENCES WorkspaceEntries (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -533,8 +508,8 @@ CREATE TABLE Studies (
   authors json NOT NULL DEFAULT (json_array()),
   authorCache text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
   lastSubmissionId int DEFAULT NULL,
-  licenseUrl varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
-  publicationDate varchar(100) COLLATE utf8mb4_bin DEFAULT NULL,
+  licenseUrl varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  publicationDate varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (publicId),
   UNIQUE KEY studyUniqueID (uuid),
   KEY Studies_publicationDate (publicationDate)
@@ -867,6 +842,7 @@ INSERT INTO MigrationVersions VALUES
 (102,'2026_05_19_112912_create_workspaces','2026-05-27 14:19:21'),
 (103,'2026_05_19_114228_move_workspace_entries_under_workspaces','2026-05-27 14:22:49'),
 (104,'2026_05_25_111809_add_workspace_entry_id_to_modeling_result','2026-05-27 14:22:49'),
-(106,'2026_06_03_164607_add_license_url_to_studies','2026-06-03 14:49:35'),
-(108,'2026_06_09_113637_add_publication_date_to_studies','2026-06-09 09:39:17');
+(105,'2026_06_03_164607_add_license_url_to_studies','2026-06-03 15:44:09'),
+(106,'2026_06_09_113637_add_publication_date_to_studies','2026-06-09 10:35:16'),
+(109,'2026_06_27_151530_delete_modeling_requests','2026-06-27 13:19:32');
 
