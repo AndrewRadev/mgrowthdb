@@ -14,7 +14,7 @@ def experiment_show_page(publicId):
 
 
 def _fetch_experiment(publicId):
-    experiment = g.db_session.get(Experiment, publicId)
+    experiment = g.db_session.get_one(Experiment, publicId)
 
     if not experiment.study.visible_to_user(g.current_user):
         raise Forbidden()
