@@ -9,7 +9,7 @@ export PIDFILE="$(pwd)/var/prod-server.pid"
 echo "PID file: $PIDFILE"
 echo $$ > "$PIDFILE"
 
-gunicorn --log-level DEBUG -w 3 --bind "0.0.0.0:8081" "main:create_app()" &
+gunicorn --log-level DEBUG -w 3 --timeout 90 --bind "0.0.0.0:8081" "main:create_app()" &
 export SERVER_PID=$!
 
 celery -A scripts.run_celery worker --concurrency=3 --loglevel INFO &
