@@ -2,7 +2,7 @@
 __pycache__
 
 # Ignore route dump used for tooling purposes and other Vim stuff:
-.routes.json
+.flask_tools.json
 .projections.json
 _project.vim
 
@@ -13,17 +13,19 @@ docs/_build/
 docs/api/
 
 # Ignore var/ directory where the running process can store things
-var/backups/*
-var/mysql/*
+var/*
 !var/backups/.keep
+!var/external_data/.keep
 !var/mysql/.keep
 
 # Configuration contains passwords, copy config/database.toml.example:
 db/config.toml
 
 # Compiled assets:
-app/view/static/build/*
-app/view/static/.webassets-cache/*
+static/build/*
+static/.webassets-cache/*
+static/export/*
+!static/export/README.txt
 
 # Micromamba environment
 .micromamba/*

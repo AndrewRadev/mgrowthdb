@@ -1,12 +1,12 @@
-{% macro render_experiments_toc(study) %}
+{% macro render_experiments_toc(experiments) %}
 
-  <div class="box experiments-toc">
+  <div class="box experiments-toc scroll-shadows">
     <h2>Experiments</h2>
 
     <ol>
-      {% for experiment in study.experiments: %}
+      {% for experiment in experiments: %}
         <li>
-          <a href="#experiment-{{ experiment.id }}" class="js-smooth-scroll">
+          <a href="#experiment-{{ experiment.publicId }}" class="js-smooth-scroll">
             {{ experiment.name }}
           </a>
         </li>

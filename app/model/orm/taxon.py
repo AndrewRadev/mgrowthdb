@@ -1,61 +1,69 @@
 import re
+from typing import List
 
 import sqlalchemy as sql
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
+    relationship,
 )
 
 from app.model.orm.orm_base import OrmBase
 
 
 class Taxon(OrmBase):
+    """
+    A taxon record imported from NCBI.
+
+    This entity is independent from any particular study and it represents the
+    general information about a specific taxon.
+    """
+
     __tablename__ = 'Taxa'
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    ncbiId: Mapped[str] = mapped_column(sql.String(512))
+    ncbiId: Mapped[int] = mapped_column(sql.Integer)
     name:   Mapped[str] = mapped_column(sql.String(512))
+
+    studyStrains: Mapped[List['StudyStrain']] = relationship(
+        back_populates="taxon"
+    )
 
     @property
     def short_name(self):
         return re.sub(r'^([A-Z])[A-Za-z]+ ', r'\1. ', self.name)
 
     @staticmethod
-    def search_by_name(db_conn, term, page=1, per_page=10):
+    def search_by_name(db_session, term, page=1, per_page=10):
         term = term.lower().strip()
         if len(term) <= 0:
             return [], 0
 
-        term_pattern = '%' + '%'.join(term.split()) + '%'
-        first_word = term.split()[0]
+        limit  = per_page
+        offset = (page - 1) * per_page
 
-        query = """
-            SELECT
-                ncbiId AS id,
-                CONCAT(name, ' (NCBI:', ncbiId, ')') AS text
-            FROM Taxa
-            WHERE LOWER(name) LIKE :term_pattern
-            ORDER BY
-                LOCATE(:first_word, LOWER(name)) ASC,
-                name ASC
-            LIMIT :per_page
-            OFFSET :offset
-        """
-        results = db_conn.execute(sql.text(query), {
-            'first_word': first_word,
-            'term_pattern': term_pattern,
-            'per_page': per_page,
-            'offset': (page - 1) * per_page,
-        }).all()
-        results = [row._asdict() for row in results]
+        term_pattern = '%'.join(term.split()) + '%'
 
-        count_query = """
-            SELECT COUNT(*)
-            FROM Taxa
-            WHERE LOWER(name) LIKE :term_pattern
-        """
-        total_count = db_conn.execute(sql.text(count_query), {'term_pattern': term_pattern}).scalar()
+        results = db_session.execute(
+            sql.select(
+                Taxon.ncbiId,
+                Taxon.name,
+            )
+            .distinct()
+            .where(sql.func.lower(Taxon.name).like(term_pattern))
+            .order_by(sql.func.lower(Taxon.name).asc())
+            .limit(limit)
+            .offset(offset)
+        ).all()
+
+        results = [{'id': row[0], 'text': f"{row[1]} (NCBI:{row[0]})"} for row in results]
+
+        total_count = db_session.scalars(
+            sql.select(sql.func.count(Taxon.ncbiId.distinct()))
+            .where(sql.func.lower(Taxon.name).like(term_pattern))
+        ).one()
+
         has_more = (page * per_page < total_count)
 
         return results, has_more

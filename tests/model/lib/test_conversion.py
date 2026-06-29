@@ -1,12 +1,53 @@
+import tests.init  # noqa: F401
+
 import unittest
+
+import pandas as pd
 
 from app.model.lib.conversion import (
     convert_time,
+    convert_df_units,
     convert_measurement_units,
 )
 
 
 class TestConversion(unittest.TestCase):
+    def test_converting_df_units(self):
+        df = pd.DataFrame.from_dict({
+            'time':  [1, 2, 3],
+            'value': [10, 20, 30],
+            'std':   [2, 4, 6],
+        })
+
+        cell_df = df.copy()
+        result_units = convert_df_units(cell_df, 'Cells/μL', 'Cells/mL')
+
+        self.assertEqual(cell_df['value'].tolist(), [10_000, 20_000, 30_000])
+        self.assertEqual(cell_df['std'].tolist(), [2000, 4000, 6000])
+        self.assertEqual(result_units, 'Cells/mL')
+
+        # Incompatible units: no change in values, result units are the same as
+        # source units:
+        result_units = convert_df_units(df, 'Cells/mL', 'mM')
+
+        self.assertEqual(cell_df['value'].tolist(), [10_000, 20_000, 30_000])
+        self.assertEqual(cell_df['std'].tolist(), [2000, 4000, 6000])
+        self.assertEqual(result_units, 'Cells/mL')
+
+        # Metabolites:
+        metabolite_df = df.copy()
+        result_units = convert_df_units(metabolite_df, 'mM', 'mg/L', 13)
+
+        self.assertEqual(metabolite_df['value'].tolist(), [130, 260, 390])
+        self.assertEqual(metabolite_df['std'].tolist(), [26, 52, 78])
+        self.assertEqual(result_units, 'mg/L')
+
+        # Metabolites without a mass given, no change
+        result_units = convert_df_units(metabolite_df, 'mg/L', 'mM')
+        self.assertEqual(metabolite_df['value'].tolist(), [130, 260, 390])
+        self.assertEqual(metabolite_df['std'].tolist(), [26, 52, 78])
+        self.assertEqual(result_units, 'mg/L')
+
     def test_cell_concentration_conversion(self):
         value = convert_measurement_units(2, 'Cells/μL', 'Cells/mL')
         self.assertEqual(value, 2000)
@@ -35,9 +76,14 @@ class TestConversion(unittest.TestCase):
         value = convert_measurement_units(200, 'g/L', 'mM', mass=mass)
         self.assertEqual(value, 4000)
 
+        value = convert_measurement_units(200, 'mg/L', 'mM', mass=mass)
+        self.assertEqual(value, 4)
+
         mass = 30
         value = convert_measurement_units(4000, 'mM', 'g/L', mass=mass)
         self.assertEqual(value, 120)
+        value = convert_measurement_units(4000, 'mM', 'mg/L', mass=mass)
+        self.assertEqual(value, 120_000)
 
         # Can't convert g/L without a mass
         value = convert_measurement_units(200, 'g/L', 'mM')

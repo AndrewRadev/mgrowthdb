@@ -1,6 +1,7 @@
 import re
-from typing import List
+from typing import List, Literal
 from datetime import datetime, UTC
+import itertools
 
 import sqlalchemy as sql
 from sqlalchemy.orm import (
@@ -15,27 +16,50 @@ from app.model.orm.orm_base import OrmBase
 
 
 class Study(OrmBase):
+    """
+    The main container for a particular scientific study.
+
+    Updates to experiments and measurements can only be done by issuing a
+    ``Submission`` to update a particular study. Access control over the
+    individual experiments is also done at the study level.
+
+    It has a fixed ``publicId`` identifier starting with the prefix "SMGDB".
+    """
+
     __tablename__ = 'Studies'
 
     # A relationship representing ownership of these records. Clearing them out
     # should directly delete them so they can be replaced.
-    owner_relationship = lambda: relationship(
+    owner_relationship = lambda **kwargs: relationship(
         back_populates='study',
         cascade='all, delete-orphan',
+        **kwargs
     )
 
-    studyUniqueID: Mapped[str] = mapped_column(sql.String(100), primary_key=True)
-    ownerUniqueID: Mapped[str] = mapped_column(sql.ForeignKey('Users.uuid'))
+    publicId: Mapped[str] = mapped_column(sql.String(100), primary_key=True)
+    uuid:     Mapped[str] = mapped_column(sql.String(100), nullable=False)
 
-    owner: Mapped['User'] = relationship(back_populates='ownedStudies')
+    ownerUuid: Mapped[str]    = mapped_column(sql.ForeignKey('Users.uuid'))
+    owner:     Mapped['User'] = relationship(back_populates='ownedStudies')
 
-    studyId:          Mapped[str] = mapped_column(sql.String(100))
-    studyName:        Mapped[str] = mapped_column(sql.String(100))
-    studyDescription: Mapped[str] = mapped_column(sql.String, nullable=True)
-    studyURL:         Mapped[str] = mapped_column(sql.String, nullable=True)
-    timeUnits:        Mapped[str] = mapped_column(sql.String(100))
+    name:        Mapped[str] = mapped_column(sql.String(255))
+    description: Mapped[str] = mapped_column(sql.String, nullable=True)
+    timeUnits:   Mapped[str] = mapped_column(sql.String(100))
 
-    projectUniqueID: Mapped[str] = mapped_column(sql.ForeignKey('Projects.projectUniqueID'))
+    # Publication info:
+    url:             Mapped[str]      = mapped_column(sql.String, nullable=True)
+    authors:         Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
+    authorCache:     Mapped[str]      = mapped_column(sql.String)
+    publicationDate: Mapped[str]      = mapped_column(sql.String, nullable=True)
+    licenseUrl:      Mapped[str]      = mapped_column(sql.String, nullable=True)
+
+    publicationType: Mapped[Literal[
+        'dataset',
+        'preprint',
+        'publication',
+    ] | None] = mapped_column(sql.String, nullable=True)
+
+    projectUuid: Mapped[str] = mapped_column(sql.ForeignKey('Projects.uuid'))
     project: Mapped['Project'] = relationship(back_populates="studies")
 
     createdAt:        Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
@@ -44,19 +68,29 @@ class Study(OrmBase):
     publishedAt:      Mapped[datetime] = mapped_column(UtcDateTime, nullable=True)
     embargoExpiresAt: Mapped[datetime] = mapped_column(UtcDateTime, nullable=True)
 
-    studyUsers:  Mapped[List['StudyUser']]  = owner_relationship()
-    experiments: Mapped[List['Experiment']] = owner_relationship()
-    strains:     Mapped[List['Strain']]     = owner_relationship()
+    studyUsers:  Mapped[List['StudyUser']]   = owner_relationship()
+    experiments: Mapped[List['Experiment']]  = owner_relationship()
+    strains:     Mapped[List['StudyStrain']] = owner_relationship(order_by='StudyStrain.name')
 
     communities:  Mapped[List['Community']]   = owner_relationship()
     compartments: Mapped[List['Compartment']] = owner_relationship()
 
-    measurementTechniques:  Mapped[List['MeasurementTechnique']]  = owner_relationship()
-    measurementContexts:    Mapped[List['MeasurementContext']]    = owner_relationship()
-    modelingRequests:       Mapped[List['ModelingRequest']]       = owner_relationship()
-    experimentCompartments: Mapped[List['ExperimentCompartment']] = owner_relationship()
-    bioreplicates:          Mapped[List['Bioreplicate']]          = owner_relationship()
-    perturbations:          Mapped[List['Perturbation']]          = owner_relationship()
+    studyTechniques: Mapped[List['StudyTechnique']] = owner_relationship(
+        order_by='StudyTechnique.subjectTypeOrdering, StudyTechnique.typeOrdering',
+    )
+
+    measurementContexts: Mapped[List['MeasurementContext']] = owner_relationship()
+    customModels:        Mapped[List['CustomModel']]        = owner_relationship()
+
+    bioreplicates: Mapped[List['Bioreplicate']] = relationship(
+        secondary='Experiments',
+        viewonly=True,
+    )
+
+    measurementTechniques: Mapped[List['MeasurementTechnique']] = relationship(
+        secondary='StudyTechniques',
+        viewonly=True,
+    )
 
     measurements: Mapped[List['Measurement']] = relationship(
         order_by='Measurement.timeInSeconds',
@@ -65,53 +99,71 @@ class Study(OrmBase):
     )
 
     modelingResults: Mapped[List['ModelingResult']] = relationship(
-        secondary='ModelingRequests',
+        secondary='MeasurementContexts',
         viewonly=True,
     )
 
     studyMetabolites: Mapped[List['StudyMetabolite']] = owner_relationship()
     metabolites: Mapped[List['Metabolite']] = relationship(
+        order_by='Metabolite.name',
         secondary='StudyMetabolites',
         viewonly=True,
     )
 
-    @hybrid_property
-    def uuid(self):
-        return self.studyUniqueID
-
-    @hybrid_property
-    def publicId(self):
-        return self.studyId
-
-    @hybrid_property
-    def name(self):
-        return self.studyName
-
-    @hybrid_property
-    def description(self):
-        return self.studyDescription
+    lastSubmissionId: Mapped[int] = mapped_column(sql.ForeignKey('Submissions.id'), nullable=True)
+    lastSubmission: Mapped['Submission'] = relationship()
 
     @hybrid_property
     def isPublished(self):
-        return self.publishedAt
+        return self.publishedAt != None
 
-    @hybrid_property
+    @property
+    def nameWithId(self):
+        return f"[{self.publicId}] {self.name}"
+
+    @property
     def isPublishable(self):
-        return self.publishableAt and self.publishableAt <= datetime.now(UTC)
+        now = datetime.now(UTC)
+
+        if self.embargoExpiresAt:
+            return self.embargoExpiresAt <= now
+        elif self.publishableAt:
+            return self.publishableAt <= now
+        else:
+            return False
+
+    @property
+    def managerUuids(self):
+        return {su.userUniqueID for su in self.studyUsers}
 
     def visible_to_user(self, user):
         if self.isPublished:
             return True
         elif not user or not user.uuid:
             return False
+        elif user.isAdmin:
+            return True
         else:
             return user.uuid in self.managerUuids
 
     def manageable_by_user(self, user):
         if not user or not user.uuid:
             return False
+        elif user.isAdmin:
+            return True
         else:
             return user.uuid in self.managerUuids
+
+    def get_model_info_list(self):
+        info_set = set()
+
+        for modeling_result in self.modelingResults:
+            if not modeling_result.isPublished:
+                continue
+
+            info_set.add(modeling_result.info)
+
+        return sorted(info_set, key=lambda i: i.name)
 
     def find_last_submission(self, db_session):
         from app.model.orm import Submission
@@ -123,16 +175,95 @@ class Study(OrmBase):
             .limit(1)
         ).one_or_none()
 
-    @property
-    def managerUuids(self):
-        return {su.userUniqueID for su in self.studyUsers}
+    def fetch_grouped_measurement_subjects(self, db_session):
+        from app.model.orm import MeasurementContext, MeasurementTechnique, StudyTechnique
 
-    def publish(self):
+        records = db_session.execute(
+            sql.select(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+                MeasurementContext.subjectName,
+            )
+            .join(MeasurementContext.technique)
+            .join(MeasurementTechnique.studyTechnique)
+            .where(StudyTechnique.studyId == self.publicId)
+            .distinct()
+            .order_by(MeasurementContext.subjectId)
+        ).all()
+
+        # Hack: sort averages first by checking the name. Annoying, but we
+        # don't have `calculationType` here
+        sort_order = ["bioreplicate", "strain", "metabolite"]
+        sorted_records = sorted(
+            records,
+            key=lambda r: (sort_order.index(r[0]), not r[2].startswith('Average('))
+        )
+
+        grouped_records = [
+            (type, [(id, name) for (_, id, name) in group])
+            for type, group in itertools.groupby(sorted_records, key=lambda r: r[0])
+        ]
+
+        return grouped_records
+
+    def fetch_experiment_ids_by_measurement_subject(self, db_session):
+        from app.model.orm import Bioreplicate, Experiment, MeasurementContext
+
+        records = db_session.execute(
+            sql.select(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+                Experiment.publicId,
+            )
+            .join(MeasurementContext.bioreplicate)
+            .join(Bioreplicate.experiment)
+            .where(Experiment.studyId == self.publicId)
+            .order_by(
+                MeasurementContext.subjectType,
+                MeasurementContext.subjectId,
+            )
+            .distinct()
+        ).all()
+
+        grouped_records = {
+            (type, id): sorted([record[2] for record in group])
+            for (type, id), group in itertools.groupby(records, key=lambda r: (r[0], r[1]))
+        }
+
+        return grouped_records
+
+    def publish(self, db_session):
         if not self.isPublishable:
             return False
         else:
             self.publishedAt = datetime.now(UTC)
+            db_session.add(self)
+            db_session.commit()
+
+            if submission := self.lastSubmission:
+                submission.publishedAt = datetime.now(UTC)
+                db_session.add(submission)
+                db_session.commit()
+
             return True
+
+    def get_cc_code(self):
+        """
+        If the license URL is to a Creative Commons license, get the
+        corresponding code to render the appropriate image.
+        """
+        from urllib.parse import urlsplit
+
+        if self.licenseUrl is None:
+            return None
+
+        parts = urlsplit(self.licenseUrl)
+        if parts.netloc != 'creativecommons.org':
+            return None
+
+        for code in ('by', 'by-sa', 'by-nd', 'by-nc', 'by-nc-sa', 'by-nc-nd', 'cc-zero'):
+            if parts.path.startswith(f'/licenses/{code}/'):
+                return code
 
     @staticmethod
     def generate_public_id(db_session):

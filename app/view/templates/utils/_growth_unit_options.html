@@ -1,0 +1,41 @@
+{% macro render_growth_unit_options(selected_units, include_relative=False) %}
+
+  <optgroup label="Cells per volume">
+    <option value="Cells/mL" {{ "selected" if selected_units == 'Cells/mL' }}>
+      Cells/mL
+    </option>
+    <option value="Cells/μL" {{ "selected" if selected_units == 'Cells/μL' }}>
+      Cells/μL
+    </option>
+  </optgroup>
+
+  <optgroup label="CFUs per volume">
+    <option value="CFUs/mL" {{ "selected" if selected_units == 'CFUs/mL' }}>
+      CFUs/mL
+    </option>
+    <option value="CFUs/μL" {{ "selected" if selected_units == 'CFUs/μL' }}>
+      CFUs/μL
+    </option>
+  </optgroup>
+
+  <optgroup label="Biomass concentration">
+    <option value="g/L" {{ "selected" if selected_units == 'g/L' }}>
+      g/L
+    </option>
+  </optgroup>
+
+  {% if include_relative: %}
+    <optgroup label="Indirect measurements">
+      <option value="reads" {{ "selected" if selected_units == 'reads' }}>
+      Reads
+      </option>
+    </optgroup>
+  {% endif %}
+
+  <optgroup label="Unitless/unknown">
+    <option value="" {{ "selected" if selected_units == '' }}>
+      N/A
+    </option>
+  </optgroup>
+
+{% endmacro %}

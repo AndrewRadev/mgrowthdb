@@ -1,0 +1,79 @@
+{% from 'utils/_time_tag.html' import time_tag %}
+
+{% extends '_layout.html' %}
+
+{% block title %}: Study {{ study.publicId }}{% endblock %}
+
+{% block content %}
+  <div class="container study-page">
+    {% include 'pages/studies/_header.html' %}
+
+    <article>
+      <h1 class="flex-row flex-gap-10">
+        {{ study.name }}
+
+        {% if not study.isPublished: %}
+          <span
+              class="icon icon-invisible"
+              data-tooltip="This study is not published yet. You're seeing experimental details on this page because you uploaded it, you have permission to manage it, or you're an admin.">
+          </span>
+        {% endif %}
+      </h1>
+
+      {% include 'pages/studies/_navigation_buttons.html' %}
+
+      <h2>History of Submissions</h2>
+
+      <ul style="line-height: 1.8;">
+        {% for submission in study_submissions: %}
+          <li>
+            <p>
+              {% if submission.id == study.lastSubmissionId: %}
+                <strong>[Current]</strong>
+              {% endif %}
+              Submission {{ study_submissions|length - loop.index0 }}
+            </p>
+
+            <ul>
+              <li>
+                Last updated <strong>{{ time_tag(submission.updatedAt, relative=True) }}</strong>
+              </li>
+              <li>
+                Started <strong>{{ time_tag(submission.createdAt, relative=True) }}</strong>
+              </li>
+
+              <li>
+                Metadata JSON:
+                <a
+                    class="white-button small-button small"
+                    href="{{ url_for('download_submission_metadata', id=submission.id) }}">
+                  <span class="icon icon-inline icon-download-black"></span>
+                  Download
+                </a>
+              </li>
+
+              {% if submission.dataFile: %}
+                <li>
+                  Data spreadsheet:
+                  <a
+                      class="white-button small-button small"
+                      href="{{ url_for('download_excel_file', id=submission.dataFile.id) }}">
+                    <span class="icon icon-inline icon-download-black"></span>
+                    Download
+                  </a>
+                </li>
+              {% endif %}
+
+              {% if submission.changelogText: %}
+                <li>
+                  <strong>Changes:</strong>
+                  {{ submission.changelogText }}
+                </li>
+              {% endif %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ul>
+    </article>
+  </div>
+{% endblock %}

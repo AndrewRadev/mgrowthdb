@@ -1,73 +1,102 @@
+import os
+from pathlib import Path
 import flask_assets
 
 
 def init_assets(app):
+    """
+    Main entry point of the module.
+
+    Initializes Flask-Assets for the Flask app by collecting JavaScript and CSS
+    files for compilation and bundling.
+
+    The source JS and CSS files are in app/view, so all paths in this function
+    are described relative to the "static/" directory at the root, which holds
+    the compiled CSS and JS bundles.
+    """
+
     assets = flask_assets.Environment(app)
+
+    # Minify in production, not in development:
+    app_env = os.getenv('APP_ENV', 'development')
+
+    if app_env == 'production':
+        js_filters = dict(filters='rjsmin')
+        css_filters = dict(filters='cssmin')
+    else:
+        js_filters = {}
+        css_filters = {}
 
     assets.register('app_js', flask_assets.Bundle(
         # External libraries:
-        'js/vendor/jquery-3.7.1.js',
-        'js/vendor/jquery.scrollTo-2.1.3.js',
-        'js/vendor/jquery-throttle-debounce-1.1.js',
-        'js/vendor/select2-4.0.13.js',
-        'js/vendor/popper-core-2.11.8.js',
-        'js/vendor/tippy-6.3.7.js',
+        '../app/view/js/vendor/jquery-3.7.1.js',
+        '../app/view/js/vendor/jquery.scrollTo-2.1.3.js',
+        '../app/view/js/vendor/select2-4.0.13.js',
+        '../app/view/js/vendor/popper-core-2.11.8.js',
+        '../app/view/js/vendor/tippy-6.3.7.js',
+        '../app/view/js/vendor/js-cookie-3.0.5.js',
+        '../app/view/js/vendor/underscore-umd-1.13.7.js',
         # Internal libraries:
-        'js/lib/forms.js',
-        'js/lib/util.js',
-        'js/lib/page.js',
-        'js/lib/tooltips.js',
+        '../app/view/js/lib/forms.js',
+        '../app/view/js/lib/util.js',
+        '../app/view/js/lib/page.js',
+        '../app/view/js/lib/tooltips.js',
+        '../app/view/js/lib/animations.js',
+        '../app/view/js/lib/compare_buttons.js',
+        '../app/view/js/lib/custom_file_input.js',
         # Pages:
-        'js/upload/step1.js',
-        'js/upload/step2.js',
-        'js/upload/step3.js',
-        'js/upload/step4.js',
-        'js/upload/step5.js',
-        'js/upload/step6.js',
-        'js/main.js',
-        'js/search.js',
-        'js/export.js',
-        'js/study.js',
-        'js/study_visualize.js',
-        'js/study_manage.js',
-        'js/comparison.js',
-        'js/help.js',
-        filters='rjsmin',
+        '../app/view/js/upload/common.js',
+        '../app/view/js/upload/step1.js',
+        '../app/view/js/upload/step2.js',
+        '../app/view/js/upload/step3.js',
+        '../app/view/js/upload/step4.js',
+        '../app/view/js/upload/step5.js',
+        '../app/view/js/upload/step6.js',
+        '../app/view/js/main.js',
+        '../app/view/js/home.js',
+        '../app/view/js/search.js',
+        '../app/view/js/export.js',
+        '../app/view/js/study.js',
+        '../app/view/js/study_visualize.js',
+        '../app/view/js/modeling.js',
+        '../app/view/js/experiment.js',
+        '../app/view/js/comparison.js',
+        '../app/view/js/help.js',
+        '../app/view/js/workspaces_header.js',
+        '../app/view/js/workspaces.js',
+        '../app/view/js/workspaces_visualize.js',
+        '../app/view/js/workspaces_modeling.js',
+        **js_filters,
         output='build/app.js'
     ))
 
+    # Pre-minified, no js_filters:
     assets.register('plotly_js', flask_assets.Bundle(
-        'js/vendor/plotly-2.34.0.min.js',
+        '../app/view/js/vendor/plotly-basic-3.4.0.min.js',
         output='build/plotly.js'
     ))
 
-    assets.register('orcid', flask_assets.Bundle(
-        'js/vendor/orcid-widget.js',
-        output='build/orcid.js'
+    assets.register('katex_js', flask_assets.Bundle(
+        '../app/view/js/vendor/katex-0.16.27.js',
+        '../app/view/js/vendor/katex-0.16.27-auto-render.js',
+        **js_filters,
+        output='build/katex.js'
     ))
 
+    app_css_files = [f"../app/view/css/{p.name}" for p in Path('app/view/css').glob('*.css')]
+
     assets.register('app_css', flask_assets.Bundle(
-        'css/vendor/select2-4.0.13.css',
-        'css/vendor/tippy-fix.css',
-        'css/select2-custom.css',
-        'css/reset.css',
-        'css/utils.css',
-        'css/fonts.css',
-        'css/main.css',
-        'css/sidebar.css',
-        'css/search.css',
-        'css/upload.css',
-        'css/export.css',
-        'css/login.css',
-        'css/profile.css',
-        'css/study.css',
-        'css/study-visualize.css',
-        'css/study-manage.css',
-        'css/experiment.css',
-        'css/comparison.css',
-        'css/help.css',
-        filters='cssmin',
+        '../app/view/css/vendor/select2-4.0.13.css',
+        '../app/view/css/vendor/tippy-fix.css',
+        *app_css_files,
+        **css_filters,
         output='build/app.css'
+    ))
+
+    assets.register('katex_css', flask_assets.Bundle(
+        '../app/view/css/vendor/katex-0.16.27.css',
+        **css_filters,
+        output='build/katex.css'
     ))
 
     return app

@@ -3,17 +3,22 @@ from flask import (
     session,
     redirect,
     url_for,
+    request,
 )
 import sqlalchemy as sql
+from werkzeug.exceptions import Forbidden
 
 from app.model.orm import Submission
+from app.model.lib.errors import LoginRequired
+from app.view.forms.submission_form import SubmissionForm
 
 
-def new_submission_action():
-    if 'submission_id' in session:
-        del session['submission_id']
+def download_submission_metadata(id):
+    submission = g.db_session.get(Submission, id)
+    if not submission.isPublished:
+        raise Forbidden
 
-    return redirect(url_for('upload_step1_page'))
+    return submission.studyDesign
 
 
 def edit_submission_action(id):
@@ -23,6 +28,14 @@ def edit_submission_action(id):
 
 
 def delete_submission_action(id):
+    if not g.current_user:
+        raise Forbidden
+
+    submission = g.db_session.get(Submission, id)
+
+    if submission.userUniqueID != g.current_user.uuid:
+        raise Forbidden
+
     if 'submission_id' in session and session['submission_id'] == id:
         del session['submission_id']
 

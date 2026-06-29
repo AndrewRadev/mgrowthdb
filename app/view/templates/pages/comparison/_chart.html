@@ -1,3 +1,5 @@
+{% from 'shared/charts/_axis_checkboxes.html' import render_axis_checkboxes %}
+
 <div class="chart-container">
   {{ chart.to_html()|safe }}
 
@@ -27,45 +29,20 @@
     </div>
   </div>
 
-  <div class="contexts-list js-contexts-list">
-    {% for measurement_context in chart_form.measurement_contexts: %}
-      {% set study        = measurement_context.study %}
-      {% set bioreplicate = measurement_context.bioreplicate %}
-      {% set experiment   = bioreplicate.experiment %}
-      {% set compartment  = measurement_context.compartment %}
-      {% set technique    = measurement_context.technique %}
-      {% set subject      = measurement_context.get_subject(g.db_session) %}
+  <div class="traces-list js-contexts-list">
+    {{ render_axis_checkboxes(chart_form, show_experiment_label=True) }}
+  </div>
 
-      <div class="flex-row context-row js-row" data-context-id="{{ measurement_context.id }}">
-        <div class="left flex-row" data-tooltip="Move data trace to the left axis">
-          <span class="icon icon-left"></span>
-          <input
-              type="checkbox"
-              class="js-axis js-axis-left"
-              name="axis|{{ measurement_context.id }}"
-              {{ "checked" if measurement_context.id in chart_form.left_axis_ids }}
-              value="left" />
-        </div>
+  <div class="permalink-container flex-row margin-top-10 copy-button-wrapper">
+    {% set url = request.root_url.removesuffix('/') %}
+    {% set url = url + url_for('comparison_show_page') %}
+    {% set url = url + '?' + chart_form.permalink_query(in_study=False) %}
 
-        {% set right_axis = True if measurement_context.id in chart_form.right_axis_ids else False %}
-        {% set left_axis = not right_axis %}
-
-        <div class="middle {{ "align-right" if right_axis }}">
-          [{{ study.publicId }}: {{ experiment.name }}]
-
-          {{ measurement_context.get_chart_label(g.db_session)|safe }}
-        </div>
-
-        <div class="flex-row right" data-tooltip="Move data trace to the right axis">
-          <input
-              type="checkbox"
-              class="js-axis js-axis-right"
-              name="axis|{{ measurement_context.id }}"
-              {{ "checked" if measurement_context.id in chart_form.right_axis_ids }}
-              value="right" />
-          <span class="icon icon-right"></span>
-        </div>
-      </div>
-    {% endfor %}
+    <button type="button" class="js-copy-button copy-button green-button small-button small">
+      Copy 📋
+    </button>
+    <a href="{{ url }}" class="js-permalink url-box">
+      Link to this page
+    </a>
   </div>
 </div>

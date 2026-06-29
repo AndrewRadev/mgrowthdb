@@ -7,12 +7,14 @@ from wtforms import (
     StringField,
     URLField,
 )
-from wtforms.validators import DataRequired, Optional
+from wtforms.validators import DataRequired, Optional, Length
 
 from app.view.forms.base_form import BaseForm
 
 
 class UploadStep4Form(BaseForm):
+    class Meta:
+        csrf_time_limit = None
 
     class CompartmentForm(BaseForm):
         class Meta:
@@ -20,8 +22,8 @@ class UploadStep4Form(BaseForm):
 
         name = StringField('name', validators=[DataRequired()])
 
-        mediumName = StringField('mediumName')
-        mediumUrl  = URLField('mediumUrl')
+        mediumName = StringField('mediumName', validators=[Length(max=100)])
+        mediumUrl  = URLField('mediumUrl', validators=[Length(max=100)])
 
         volume        = DecimalField('volume',        validators=[Optional()])
         pressure      = DecimalField('pressure',      validators=[Optional()])
@@ -45,6 +47,8 @@ class UploadStep4Form(BaseForm):
         initialPh          = DecimalField('initialPh',          validators=[Optional()])
         initialTemperature = DecimalField('initialTemperature', validators=[Optional()])
 
+        dilutionRate = DecimalField('dilutionRate', validators=[Optional()])
+
     class CommunityForm(BaseForm):
         class Meta:
             csrf = False
@@ -57,8 +61,8 @@ class UploadStep4Form(BaseForm):
 
     def validate_compartments(self, field):
         names = [c['name'] for c in field.data]
-        self._validate_uniqueness("Compartment names are not unique", names)
+        self._validate_uniqueness("compartment_names", "Compartment names are not unique", names)
 
     def validate_communities(self, field):
         names = [c['name'] for c in field.data]
-        self._validate_uniqueness("Community names are not unique", names)
+        self._validate_uniqueness("community_names", "Community names are not unique", names)

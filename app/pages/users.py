@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 from datetime import datetime, UTC
 
 from flask import (
@@ -17,10 +18,11 @@ from werkzeug.exceptions import NotFound
 from app.model.orm import (
     Project,
     ProjectUser,
-    Strain,
     Study,
+    StudyStrain,
     StudyUser,
     User,
+    Workspace,
 )
 from app.model.lib import orcid
 from app.model.lib.errors import LoginRequired
@@ -31,12 +33,13 @@ def user_show_page():
         raise LoginRequired()
 
     custom_strains = g.db_session.scalars(
-        sql.select(Strain)
+        sql.select(StudyStrain)
         .where(
-            Strain.userUniqueID == g.current_user.uuid,
-            Strain.defined.is_(False),
+            StudyStrain.userUniqueID == g.current_user.uuid,
+            StudyStrain.defined.is_(False),
+            StudyStrain.notUnknown,
         )
-        .order_by(Strain.name.desc())
+        .order_by(StudyStrain.name.desc())
     ).all()
 
     return render_template(
@@ -46,10 +49,27 @@ def user_show_page():
 
 
 def user_login_page():
+    orcid_client_id = current_app.config["ORCID_CLIENT_ID"]
+
     if 'code' in request.args:
-        return _user_login_submit(request.args['code'])
+        user_data = orcid.authenticate_user(
+            code=request.args['code'],
+            client_id=orcid_client_id,
+            client_secret=current_app.config["ORCID_SECRET"],
+            app_host=request.host,
+        )
+
+        user = _find_or_create_user(g.db_session, user_data, session['user_uuid'])
+        session['user_uuid'] = user.uuid
+
+        return redirect(url_for('user_show_page'))
     else:
-        return _user_login_show()
+        orcid_url = orcid.get_login_url(orcid_client_id, request.host)
+
+        return render_template(
+            "pages/users/login.html",
+            orcid_url=orcid_url,
+        )
 
 
 def user_backdoor_page():
@@ -71,7 +91,12 @@ def user_claim_project_action():
     project_uuid = request.form['uuid'].strip()
     user_uuid    = g.current_user.uuid
 
-    project = g.db_session.get(Project, project_uuid)
+    project = g.db_session.scalars(
+        sql.select(Project)
+        .where(Project.uuid == project_uuid)
+        .limit(1)
+    ).one_or_none()
+
     if not project:
         flash(f"A project with this UUID couldn't be found: {repr(project_uuid)}", 'error')
         return redirect(request.referrer)
@@ -103,7 +128,12 @@ def user_claim_study_action():
     study_uuid = request.form['uuid'].strip()
     user_uuid  = g.current_user.uuid
 
-    study = g.db_session.get(Study, study_uuid)
+    study = g.db_session.scalars(
+        sql.select(Study)
+        .where(Study.uuid == study_uuid)
+        .limit(1)
+    ).one_or_none()
+
     if not study:
         flash(f"A study with this UUID couldn't be found: {repr(study_uuid)}", 'error')
         return redirect(request.referrer)
@@ -121,8 +151,23 @@ def user_claim_study_action():
     if study_user:
         flash(f"You already have access to this study: [{study.publicId}] {study.name}", "error")
     else:
-        # Create link:
+        # Create link to study:
         g.db_session.add(StudyUser(userUniqueID=user_uuid, studyUniqueID=study_uuid))
+        g.db_session.commit()
+
+    # Check for project link existence:
+    project_user = g.db_session.scalars(
+        sql.select(ProjectUser)
+        .where(
+            ProjectUser.userUniqueID == user_uuid,
+            ProjectUser.projectUniqueID == study.projectUuid,
+        )
+        .limit(1)
+    ).one_or_none()
+
+    if not project_user:
+        # Create link to project:
+        g.db_session.add(ProjectUser(userUniqueID=user_uuid, projectUniqueID=study.projectUuid))
         g.db_session.commit()
 
     return redirect(request.referrer)
@@ -137,23 +182,17 @@ def user_logout_action():
     return redirect(url_for('static_home_page'))
 
 
-def _user_login_show():
-    orcid_client_id = current_app.config["ORCID_CLIENT_ID"]
-    orcid_url       = orcid.get_login_url(orcid_client_id, request.host)
+def user_reset_api_key_action():
+    g.current_user.apiKey = str(uuid4())
 
-    return render_template(
-        "pages/users/login.html",
-        orcid_url=orcid_url,
-    )
+    g.db_session.add(g.current_user)
+    g.db_session.commit()
+
+    return redirect(url_for('user_show_page'))
 
 
-def _user_login_submit(orcid_code):
-    orcid_client_id = current_app.config["ORCID_CLIENT_ID"]
-    orcid_secret    = current_app.config["ORCID_SECRET"]
-
-    user_data = orcid.authenticate_user(orcid_code, orcid_client_id, orcid_secret, request.host)
-
-    user = g.db_session.scalars(
+def _find_or_create_user(db_session, user_data, user_uuid):
+    user = db_session.scalars(
         sql.select(User)
         .where(User.orcidId == user_data['orcid'])
         .limit(1)
@@ -161,17 +200,17 @@ def _user_login_submit(orcid_code):
 
     if not user:
         user = User(
-            uuid=session['user_uuid'],
+            uuid=user_uuid,
             orcidId=user_data['orcid'],
+            apiKey=str(uuid4()),
         )
+        workspace = Workspace(name="default", user=user)
 
     user.name        = user_data['name']
     user.orcidToken  = user_data['access_token']
     user.lastLoginAt = datetime.now(UTC)
 
-    g.db_session.add(user)
-    g.db_session.commit()
+    db_session.add(user)
+    db_session.commit()
 
-    session['user_uuid'] = user.uuid
-
-    return redirect(url_for('user_show_page'))
+    return user

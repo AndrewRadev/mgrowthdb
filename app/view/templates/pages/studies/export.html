@@ -7,25 +7,70 @@
     {% include 'pages/studies/_header.html' %}
 
     <article>
-      <h1>{{ study.studyName }}</h1>
+      <h1 class="flex-row flex-gap-10">
+        {{ study.name }}
+
+        <span
+            class="icon icon-invisible"
+            data-tooltip="This study is not published yet. You're seeing this page because you uploaded it, you have permission to manage it, or you're an admin.">
+        </span>
+      </h1>
 
       {% include 'pages/studies/_navigation_buttons.html' %}
 
-      <p>
-        {{ study.studyDescription }}
-      </p>
+      <p>{{ study.description }}</p>
 
       <form
           class="simple-form"
-          action="{{ url_for('study_download_data_zip', studyId=studyId) }}"
-          method="GET">
+          action="{{ url_for('study_download_data_zip', publicId=studyId) }}"
+          method="POST">
+        <h2 style="margin-bottom: 0">
+          Export options
+        </h2>
+
         <div class="flex-row columns">
-          <div class="column column-left">
-            <h2>Export options</h2>
+          <div class="section-delimiter measurement-inputs">
+            <h4>Measurement units</h4>
 
-            <div class="section-delimiter">
-              <h4>CSV Delimiter</h4>
+            <div class="flex-column margin-top-10 flex-gap-6">
+              <label>
+                <span>Cell count units:</span>
+                <select name="cellCountUnits" class="form-input-blue">
+                  <option>Cells/mL</option>
+                  <option>Cells/μL</option>
+                </select>
+              </label>
 
+              <label>
+                <span>CFU count units:</span>
+                <select name="cfuCountUnits" class="form-input-blue">
+                  <option>CFUs/mL</option>
+                  <option>CFUs/μL</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Metabolite units:</span>
+                <select name="metaboliteUnits" class="form-input-blue">
+                  <optgroup label="Molar concentration">
+                    <option value="mM">Millimolars (mM)</option>
+                    <option value="μM">Micromolars (μM)</option>
+                    <option value="nM">Nanomolars (nM)</option>
+                    <option value="pM">Picomolars (pM)</option>
+                  </optgroup>
+                  <optgroup label="Mass concentration">
+                    <option value="g/L">Grams per Liter (g/L)</option>
+                    <option value="mg/L">Milligrams per Liter (mg/L)</option>
+                  </optgroup>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="section-delimiter">
+            <h4>CSV Delimiter</h4>
+
+            <div class="flex-column margin-top-10">
               <label>
                 <input type="radio" name="delimiter" value="comma" checked />
                 Comma
@@ -49,13 +94,42 @@
                     class="form-input-blue" />
               </label>
             </div>
+          </div>
 
+          <div class="section-delimiter">
+            <h4>Extra information</h4>
+
+            <div class="flex-column margin-top-10">
+              <label>
+                <input type="checkbox" name="includeStd" value="True" />
+                Include STD
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-row columns">
+          <div class="flex-column column-left">
             <div class="section-all-none">
               <h2>Biological replicates</h3>
 
               <div class="form-row">
-                <button type="button" class="js-select-all white-button">Select all</button>
-                <button type="button" class="js-select-none white-button">Select none</button>
+                <button type="submit" class="green-button full">
+                  <span class="icon icon-inline icon-download-white"></span>
+                  Download ZIP file
+                </button>
+              </div>
+
+              <div class="form-row margin-top-10 small flex-row">
+                <button type="button" class="js-select-all white-button flex-1">
+                  Select all
+                </button>
+                <button type="button" class="js-select-none white-button flex-1">
+                  Select none
+                </button>
+                <button type="button" class="js-select-average white-button flex-1">
+                  Select averages
+                </button>
               </div>
             </div>
 
@@ -63,15 +137,14 @@
               <div class="section-experiment">
                 <h4>Experiment: {{ experiment.name }}</h4>
 
-                <p>
-                  {{ experiment.description }}
-                </p>
+                {{ experiment.description|format_text }}
 
                 <div class="section-bioreplicates box">
                   {% for bioreplicate in experiment.bioreplicates: %}
                     <label>
                       <input
                           type="checkbox"
+                          class="{{ 'js-average' if bioreplicate.calculationType == 'average' }}"
                           name="bioreplicates"
                           value="{{ bioreplicate.id }}"
                           checked />
@@ -81,25 +154,21 @@
                 </div>
               </div>
             {% endfor %}
+
+            <div class="form-row submit-row margin-top-10">
+              <button type="submit" class="green-button full">
+                <span class="icon icon-inline icon-download-white"></span>
+                Download ZIP file
+              </button>
+            </div>
           </div>
 
-          <div class="column column-right">
+          <div class="flex-column column-right">
             <h2>Preview (first 5 rows)</h2>
 
             <div class="preview js-preview box">
 
             </div>
-          </div>
-        </div>
-
-        <div class="form-row submit-row">
-          <input type="submit" class="green-button" value="Download ZIP file" />
-
-          <div class="separator">or</div>
-
-          <div class="copy-button-wrapper flex-row flex-grow">
-            <button type="button" class="js-copy-button copy-button green-button">Copy 📋</button>
-            <input type="text" value="" class="js-export-url export-url form-input-blue" readonly />
           </div>
         </div>
       </form>

@@ -2,6 +2,7 @@ from wtforms import (
     BooleanField,
     FieldList,
     FormField,
+    HiddenField,
     IntegerField,
     SelectField,
     SelectMultipleField,
@@ -9,12 +10,14 @@ from wtforms import (
     TextAreaField,
     URLField,
 )
-from wtforms.validators import DataRequired, ValidationError
+from wtforms.validators import DataRequired, ValidationError, Length
 
 from app.view.forms.base_form import BaseForm
 
 
 class UploadStep5Form(BaseForm):
+    class Meta:
+        csrf_time_limit = None
 
     class ExperimentForm(BaseForm):
         class Meta:
@@ -24,26 +27,27 @@ class UploadStep5Form(BaseForm):
             class Meta:
                 csrf = False
 
-            name         = StringField('name', validators=[DataRequired()])
-            position     = StringField('position')
+            name         = StringField('name', validators=[DataRequired(), Length(max=100)])
+            position     = StringField('position', validators=[Length(max=100)])
             biosampleUrl = URLField('biosampleUrl')
-
-            isControl = BooleanField('isControl')
-            isBlank   = BooleanField('isBlank')
 
         class PerturbationForm(BaseForm):
             class Meta:
                 csrf = False
 
-            startTimepoint = IntegerField('startTimepoint', validators=[DataRequired()])
-            description    = TextAreaField('description', validators=[DataRequired()])
+            # Note: converted to seconds when creating perturbation
+            startTime = IntegerField('startTime', validators=[DataRequired()])
+            endTime   = IntegerField('endTime',   validators=[DataRequired()])
+
+            description = TextAreaField('description', validators=[DataRequired()])
 
             removedCompartmentName = SelectField('removedCompartmentName', choices=[], validate_choice=False)
             addedCompartmentName   = SelectField('addedCompartmentName',   choices=[], validate_choice=False)
             oldCommunityName       = SelectField('oldCommunityName',       choices=[], validate_choice=False)
             newCommunityName       = SelectField('newCommunityName',       choices=[], validate_choice=False)
 
-        name           = StringField('name', validators=[DataRequired()])
+        publicId       = HiddenField('publicId')
+        name           = StringField('name', validators=[DataRequired(), Length(max=100)])
         description    = TextAreaField('description', validators=[DataRequired()])
         timepointCount = IntegerField('timepointCount', validators=[DataRequired()])
 
@@ -72,12 +76,13 @@ class UploadStep5Form(BaseForm):
 
         def validate_bioreplicates(self, field):
             names = [b['name'] for b in field.data]
-            self._validate_uniqueness("names are not unique", names)
+            self._validate_uniqueness("name", "names are not unique", names)
 
             if len(names) == 0:
                 raise ValidationError("at least one is required")
 
     timeUnits = SelectField('timeUnits', choices=[
+        ('d', 'Days (d)'),
         ('h', 'Hours (h)'),
         ('m', 'Minutes (m)'),
         ('s', 'Seconds (s)'),
@@ -87,7 +92,14 @@ class UploadStep5Form(BaseForm):
     def validate_experiments(self, field):
         # Local validation:
         names = [e['name'] for e in field.data]
-        self._validate_uniqueness("names are not unique", names)
+
+        try:
+            self._validate_uniqueness("experiment_names", "names are not unique", names)
+        except ValidationError as e:
+            for field in self.experiments:
+                if field.data['name'] in self._duplicated_attributes['experiment_names']:
+                    field.form_errors.append('name: not unique')
+            raise e
 
         # Global bioreplicate validation:
         names = [
@@ -95,4 +107,4 @@ class UploadStep5Form(BaseForm):
             for experiment in field.data
             for bioreplicate in experiment['bioreplicates']
         ]
-        self._validate_uniqueness("bioreplicate names are not globally unique", names)
+        self._validate_uniqueness("bioreplicate_names", "bioreplicate names are not globally unique", names)

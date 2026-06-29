@@ -35,20 +35,28 @@ extensions = [
 
     # Local packages.
     "youtube",
-    "trello",
     "variables",
     "tags",
     "links",
     "hacks"
 ]
 
+maximum_signature_line_length = 150
 
 # -- Options for autoapi -------------------------------------------------------
 
-# NOTE: This pair works good in the RTD
-autoapi_dirs = ['../app', '../initialization']
-autoapi_ignore = []
+autoapi_dirs = ['../initialization', '../app', '../db']
+# autoapi_dirs = ['../initialization']
+autoapi_template_dir = '_templates/autoapi'
 
+autoapi_options =  [
+    'members',
+    'undoc-members',
+    'show-inheritance',
+    'show-module-summary',
+    'special-members',
+    'imported-members',
+]
 
 # Enable typehints
 autodoc_typehints = "signature"
@@ -118,9 +126,6 @@ html_js_files = [
 ]
 
 html_output_encoding = "utf-8"
-
-# -- Options for PDF output --------------------------------------------------
-latex_logo = "_static/logo.png"
 
 # -- Templating --------------------------------------------------------------
 

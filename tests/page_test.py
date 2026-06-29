@@ -1,21 +1,27 @@
 import tests.init  # noqa: F401
 
+from io import BytesIO
+
+import simplejson as json
+import pandas as pd
 from bs4 import BeautifulSoup
 
 from main import create_app
 from tests.database_test import DatabaseTest
 
 TAXON_NAMES = {
-    "818":    "Bacteroides thetaiotaomicron",
-    "53443":  "Blautia hydrogenotrophica",
-    "74426":  "Collinsella aerofaciens",
     "166486": "Roseburia intestinalis",
     "476272": "Blautia hydrogenotrophica DSM 10507",
+    "53443":  "Blautia hydrogenotrophica",
+    "536231": "Roseburia intestinalis L1-82",
     "537011": "Prevotella copri DSM 18205",
+    "74426":  "Collinsella aerofaciens",
+    "818":    "Bacteroides thetaiotaomicron",
+    "226186": "Bacteroides thetaiotaomicron VPI-5482",
 }
 
 METABOLITE_NAMES = {
-    "CHEBI:422":   "(s)-lactic acid",
+    "CHEBI:422":   "(S)-lactic acid",
     "CHEBI:15361": "pyruvate",
     "CHEBI:15366": "acetic acid",
     "CHEBI:15740": "formate",
@@ -46,6 +52,10 @@ class PageTest(DatabaseTest):
         self.app    = create_app()
         self.client = self.app.test_client()
 
+    def _log_in(self, user):
+        with self.client:
+            self.client.post('/backdoor/', data={'user_uuid': user.uuid})
+
     def _bootstrap_taxa(self):
         for ncbi_id, name in TAXON_NAMES.items():
             self.create_taxon(ncbiId=ncbi_id, name=name)
@@ -56,4 +66,10 @@ class PageTest(DatabaseTest):
 
     def _get_text(self, response):
         soup = BeautifulSoup(response.data, 'html.parser')
-        return soup.get_text(' | ', strip=True)
+        return soup.get_text(' ', strip=True)
+
+    def _get_json(self, response):
+        return json.loads(response.data)
+
+    def _get_csv(self, response):
+        return pd.read_csv(BytesIO(response.data))

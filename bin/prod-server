@@ -1,10 +1,41 @@
-#! /bin/sh
+#! /bin/bash
 
 set -e
 
 export APP_ENV=production
+export PYTHONPATH=.
 
-pip install -r requirements.txt
-bin/migrations-run
+export PIDFILE="$(pwd)/var/prod-server.pid"
+echo "PID file: $PIDFILE"
+echo $$ > "$PIDFILE"
 
-gunicorn -w 4 --bind "0.0.0.0:8081" "main:create_app()"
+gunicorn --log-level DEBUG -w 3 --timeout 90 --bind "0.0.0.0:8081" "main:create_app()" &
+export SERVER_PID=$!
+
+celery -A scripts.run_celery worker --concurrency=3 --loglevel INFO &
+export WORKER_PID=$!
+
+celery -A scripts.run_celery beat -s var/celerybeat-schedule --loglevel INFO &
+export SCHEDULER_PID=$!
+
+reload_processes() {
+  echo "> Reloading processes"
+
+  # Reload server by using SIGHUP
+  kill -HUP "$SERVER_PID"
+
+  # Reload celery by killing and restarting:
+  kill -TERM "$WORKER_PID"
+  celery -A scripts.run_celery worker --concurrency=3 --loglevel INFO &
+  export WORKER_PID=$!
+
+  kill -TERM "$SCHEDULER_PID"
+  celery -A scripts.run_celery beat -s var/celerybeat-schedule --loglevel INFO &
+  export SCHEDULER_PID=$!
+}
+
+trap 'reload_processes' SIGHUP
+
+while true; do
+  sleep 1
+done

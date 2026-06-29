@@ -1,0 +1,11 @@
+{% macro render_form_warnings(warnings) %}
+
+  {% if warnings|length > 0: %}
+    <ul class="warning-message-list">
+      {% for message in warnings: %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+{% endmacro %}

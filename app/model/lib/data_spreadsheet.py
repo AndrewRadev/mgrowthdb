@@ -5,36 +5,42 @@ from openpyxl.utils import get_column_letter
 
 from app.model.lib.excel import export_to_xlsx
 
-TIME_UNITS = {
+_TIME_UNITS = {
+    'd': 'days',
     'h': 'hours',
     'm': 'minutes',
     's': 'seconds',
 }
 
-RED   = 'D02631'
-WHITE = 'FFFFFF'
-
-TECHNIQUE_DESCRIPTIONS = {
+_TECHNIQUE_DESCRIPTIONS = {
     'fc':          "Flow-cytometry values per time-point in {units}, use a period (.) as the decimal separator",
     'fc_ps':       "FC counts values per time-point for strain {strain} in {units}, use a period (.) as the decimal separator",
     'od':          "Optical density values per time-point, use a period (.) as the decimal separator",
     'plates':      "Plate count values per time-point, use a period (.) as the decimal separator",
     'plates_ps':   "Plate count values per time-point for strain {strain}, use a period (.) as the decimal separator.",
-    '16s_ps':      "Abundances values per time-point for strain {strain}, use a period (.) as the decimal separator.",
+    '16s_ps':      "Abundance values per time-point for strain {strain} in {units}, use a period (.) as the decimal separator.",
+    'qpcr':        "Abundance values per time-point, use a period (.) as the decimal separator.",
+    'qpcr_ps':     "Abundance values per time-point for strain {strain}, use a period (.) as the decimal separator.",
     'ph':          "pH values per time-point, use a period (.) as the decimal separator",
     'metabolites': "Concentration values per time-point for metabolite {metabolite} in {units}, use a period (.) as the decimal separator",
     'STD':         "Standard deviation if more than 1 technical replicate, use a period (.) as the decimal separator",
 }
 
 
-def create_excel(submission, metabolite_names, strain_names):
+def create_excel(submission_form):
+    "Create a template data file based on the submission's study design"
+
+    submission = submission_form.submission
+
+    strain_names = [t.name for t in submission_form.fetch_taxa()]
+    strain_names += [s['name'] for s in submission.studyDesign['custom_strains']]
+
     workbook = Workbook()
 
     short_time_units = submission.studyDesign['timeUnits']
-    long_time_units = TIME_UNITS[short_time_units]
+    long_time_units = _TIME_UNITS[short_time_units]
 
     headers_common = {
-        # 'Position':           'Predetermine position based on the type of vessel specified before.',
         'Biological Replicate': 'Unique names of individual samples: a bottle, a well in a well-plate, or a mini-bioreactor.',
         'Compartment':          'A compartment within the vessel where growth is measured.',
         'Time':                 f"Measurement time-points in {long_time_units} ({short_time_units}).",
@@ -44,50 +50,58 @@ def create_excel(submission, metabolite_names, strain_names):
     headers_strains       = {**headers_common}
     headers_metabolites   = {**headers_common}
 
-    for technique in submission.build_techniques():
-        subject_type   = technique.subjectType
-        technique_type = technique.type
-        units          = technique.units
+    for index, study_technique in enumerate(submission.build_techniques()):
+        subject_type   = study_technique.subjectType
+        technique_type = study_technique.type
+        units          = study_technique.units
 
-        if subject_type == 'bioreplicate':
-            technique_name = technique.csv_column_name()
-            description = TECHNIQUE_DESCRIPTIONS[technique_type].format(units=technique.units)
+        for measurement_technique in study_technique.measurementTechniques:
+            if subject_type == 'bioreplicate':
+                technique_name = measurement_technique.csv_column_name()
+                description = _TECHNIQUE_DESCRIPTIONS[technique_type].format(units=study_technique.units)
 
-            headers_bioreplicates[technique_name] = description
+                headers_bioreplicates[technique_name] = description
 
-            if technique.includeStd:
-                title = ' '.join([technique_name, 'STD'])
-                headers_bioreplicates[title] = TECHNIQUE_DESCRIPTIONS['STD']
+                if study_technique.includeStd:
+                    title = ' '.join([technique_name, 'STD'])
+                    headers_bioreplicates[title] = _TECHNIQUE_DESCRIPTIONS['STD']
 
-        elif subject_type == 'strain':
-            for strain_name in strain_names:
-                title = technique.csv_column_name(strain_name)
+            elif subject_type == 'strain':
+                if study_technique.includeUnknown:
+                    technique_strain_names = [*strain_names, "Unknown"]
+                else:
+                    technique_strain_names = strain_names
 
-                description = TECHNIQUE_DESCRIPTIONS[f"{technique_type}_ps"].format(
-                    strain=strain_name,
-                    units=units,
-                )
-                headers_strains[title] = description
+                for strain_name in technique_strain_names:
+                    title = measurement_technique.csv_column_name(strain_name)
 
-                if technique.includeStd:
-                    title = ' '.join([title, 'STD'])
-                    headers_strains[title] = TECHNIQUE_DESCRIPTIONS['STD']
+                    description = _TECHNIQUE_DESCRIPTIONS[f"{technique_type}_ps"].format(
+                        strain=strain_name,
+                        units=units,
+                    )
+                    headers_strains[title] = description
 
-        elif subject_type == 'metabolite':
-            for metabolite in metabolite_names:
-                title = technique.csv_column_name(metabolite)
-                description = TECHNIQUE_DESCRIPTIONS['metabolites'].format(
-                    metabolite=metabolite,
-                    units=units,
-                )
-                headers_metabolites[title] = description
+                    if study_technique.includeStd:
+                        title = ' '.join([title, 'STD'])
+                        headers_strains[title] = _TECHNIQUE_DESCRIPTIONS['STD']
 
-                if technique.includeStd:
-                    title = ' '.join([metabolite, 'STD'])
-                    headers_metabolites[title] = TECHNIQUE_DESCRIPTIONS['STD']
+            elif subject_type == 'metabolite':
+                metabolites = submission_form.fetch_metabolites_for_technique(index)
 
-        else:
-            raise ValueError(f"Invalid technique subject_type: {subject_type}")
+                for metabolite in metabolites:
+                    title = measurement_technique.csv_column_name(metabolite.name)
+                    description = _TECHNIQUE_DESCRIPTIONS['metabolites'].format(
+                        metabolite=metabolite.name,
+                        units=units,
+                    )
+                    headers_metabolites[title] = description
+
+                    if study_technique.includeStd:
+                        title = ' '.join([metabolite.name, 'STD'])
+                        headers_metabolites[title] = _TECHNIQUE_DESCRIPTIONS['STD']
+
+            else:
+                raise ValueError(f"Invalid technique subject_type: {subject_type}")
 
     # Create sheets for each category of measurement:
     if len(headers_bioreplicates) > 3:
@@ -102,9 +116,9 @@ def create_excel(submission, metabolite_names, strain_names):
     return export_to_xlsx(workbook)
 
 
-def _add_header(sheet, index, title, description, fill_color):
+def _add_header(sheet, index, title, description):
     cell         = sheet.cell(row=1, column=index, value=title)
-    cell.comment = Comment(description, author="μGrowthDB")
+    cell.comment = Comment(description, author="mGrowthDB")
 
     # Built-in styles:
     # <https://openpyxl.readthedocs.io/en/stable/styles.html#using-builtin-styles>
@@ -127,12 +141,7 @@ def _fill_sheet(workbook, sheet_title, headers, submission):
 
     # Add headers and descriptions to the first row and modify the width of each columns
     for index, (title, description) in enumerate(headers.items(), start=1):
-        if title.endswith(' STD'):
-            fill_color = WHITE
-        else:
-            fill_color = RED
-
-        _add_header(sheet, index, title, description, fill_color=fill_color)
+        _add_header(sheet, index, title, description)
 
     bottom_border = Border(bottom=Side(style="thin", color="000000"))
 

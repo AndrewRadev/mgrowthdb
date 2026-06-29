@@ -12,7 +12,7 @@ import app.model.lib.util as util
 class TestMeasurement(DatabaseTest):
     def test_successful_creation(self):
         study = self.create_study()
-        strain = self.create_strain(studyId=study.publicId)
+        strain = self.create_study_strain(studyId=study.publicId)
         context = self.create_measurement_context(subjectType='strain', subjectId=strain.id, studyId=study.publicId)
 
         measurement = Measurement(
@@ -31,17 +31,15 @@ class TestMeasurement(DatabaseTest):
 
     def test_import_bioreplicate_csv(self):
         study = self.create_study(timeUnits='h')
+        experiment = self.create_experiment(studyId=study.publicId)
 
-        study_id = study.studyId
-        study_uuid = study.studyUniqueID
+        b1 = self.create_bioreplicate(name='b1', experimentId=experiment.publicId)
+        b2 = self.create_bioreplicate(name='b2', experimentId=experiment.publicId)
+        self.create_compartment(studyId=study.publicId, name='c1')
 
-        b1 = self.create_bioreplicate(studyId=study_id, name='b1')
-        b2 = self.create_bioreplicate(studyId=study_id, name='b2')
-        self.create_compartment(studyId=study_id, name='c1')
-
-        t_fc = self.create_measurement_technique(studyUniqueID=study_uuid, subjectType='bioreplicate', type='fc')
-        t_od = self.create_measurement_technique(studyUniqueID=study_uuid, subjectType='bioreplicate', type='od')
-        t_ph = self.create_measurement_technique(studyUniqueID=study_uuid, subjectType='bioreplicate', type='ph')
+        mt_fc = self.create_measurement_technique(subjectType='bioreplicate', type='fc', study_technique={'studyId': study.publicId})
+        mt_od = self.create_measurement_technique(subjectType='bioreplicate', type='od', study_technique={'studyId': study.publicId})
+        mt_ph = self.create_measurement_technique(subjectType='bioreplicate', type='ph', study_technique={'studyId': study.publicId})
 
         growth_data = util.trim_lines("""
             Biological Replicate,Compartment,Time,Community FC,Community OD,Community pH
@@ -51,65 +49,57 @@ class TestMeasurement(DatabaseTest):
             b2,c1,4,4567890.0,0.7,7.6
         """)
 
-        measurements = Measurement.insert_from_csv_string(
-            self.db_session,
-            study,
-            growth_data,
-            subject_type='bioreplicate',
-        )
+        measurements = Measurement.insert_from_csv_string(self.db_session, study, growth_data)
 
         # FC measurement
         self.assertEqual(
-            [(m.timeInHours, m.subjectId, m.value) for m in measurements if m.technique.id == t_fc.id],
+            [(m.timeInHours, m.subjectId, m.value) for m in measurements if m.technique.id == mt_fc.id],
             [
-                (2.0, str(b1.id), Decimal('1234567890.000')),
-                (4.0, str(b1.id), Decimal('234567890.000')),
-                (2.0, str(b2.id), Decimal('4567890.000')),
-                (4.0, str(b2.id), Decimal('4567890.000')),
+                (2.0, b1.id, Decimal('1234567890.000')),
+                (4.0, b1.id, Decimal('234567890.000')),
+                (2.0, b2.id, Decimal('4567890.000')),
+                (4.0, b2.id, Decimal('4567890.000')),
             ]
         )
 
         # OD measurements
         self.assertEqual(
-            [(m.timeInHours, m.subjectId, m.value) for m in measurements if m.technique.id == t_od.id],
+            [(m.timeInHours, m.subjectId, m.value) for m in measurements if m.technique.id == mt_od.id],
             [
-                (2.0, str(b1.id), Decimal('0.900')),
-                (4.0, str(b1.id), Decimal('0.800')),
-                (2.0, str(b2.id), Decimal('0.700')),
-                (4.0, str(b2.id), Decimal('0.700')),
+                (2.0, b1.id, Decimal('0.900')),
+                (4.0, b1.id, Decimal('0.800')),
+                (2.0, b2.id, Decimal('0.700')),
+                (4.0, b2.id, Decimal('0.700')),
             ]
         )
 
         # pH measurements
         self.assertEqual(
-            [m.value for m in measurements if m.technique.id == t_ph.id],
+            [m.value for m in measurements if m.technique.id == mt_ph.id],
             [Decimal('7.400'), Decimal('7.500'), Decimal('7.600'), Decimal('7.600')]
         )
 
     def test_import_metabolite_csv(self):
         study = self.create_study(timeUnits='m')
+        experiment = self.create_experiment(studyId=study.publicId)
 
-        study_id = study.studyId
-        study_uuid = study.studyUniqueID
-
-        self.create_bioreplicate(studyId=study_id, name='b1')
-        self.create_compartment(studyId=study_id, name='c1')
+        self.create_bioreplicate(name='b1', experimentId=experiment.publicId)
+        self.create_compartment(name='c1', studyId=study.publicId)
 
         glucose_id = self.create_study_metabolite(
-            studyId=study_id,
+            studyId=study.publicId,
             metabolite={'name': 'glucose'},
-        ).chebi_id
+        ).metabolite.id
         trehalose_id = self.create_study_metabolite(
-            studyId=study_id,
+            studyId=study.publicId,
             metabolite={'name': 'trehalose'},
-        ).chebi_id
+        ).metabolite.id
 
         self.create_measurement_technique(
-            studyUniqueID=study_uuid,
+            study_technique={'studyId': study.publicId, 'units': 'mM'},
             subjectType='metabolite',
             type='Metabolite',
             metaboliteIds=[glucose_id, trehalose_id],
-            units='mM',
         )
 
         # Note: missing trehalose measurement at t=75
@@ -120,50 +110,39 @@ class TestMeasurement(DatabaseTest):
             b1,c1,90,10.0,10.0
         """)
 
-        measurements = Measurement.insert_from_csv_string(
-            self.db_session,
-            study,
-            metabolite_data,
-            subject_type='metabolite',
-        )
+        measurements = Measurement.insert_from_csv_string(self.db_session, study, metabolite_data)
 
         # Metabolite measurements
         self.assertEqual(
             [(m.timeInSeconds, m.subjectId, m.value) for m in measurements if m.subjectType == "metabolite"],
             [
-                (3600, glucose_id, Decimal('50.0')), (3600, trehalose_id, Decimal('70.0')),
-                (4500, glucose_id, Decimal('30.0')),
-                (5400, glucose_id, Decimal('10.0')), (5400, trehalose_id, Decimal('10.0')),
+                (3600, glucose_id, Decimal('50.000')),
+                (4500, glucose_id, Decimal('30.000')),
+                (5400, glucose_id, Decimal('10.000')),
+                (3600, trehalose_id, Decimal('70.000')),
+                (4500, trehalose_id, None),
+                (5400, trehalose_id, Decimal('10.000')),
             ]
         )
 
     def test_import_strain_csv(self):
-        study = self.create_study()
+        bioreplicate = self.create_bioreplicate(name='b1')
+        study = bioreplicate.experiment.study
 
-        study_id = study.studyId
-        study_uuid = study.studyUniqueID
+        self.create_compartment(name='c1', studyId=study.publicId)
 
-        self.create_bioreplicate(studyId=study_id, name='b1')
-        self.create_compartment(studyId=study_id, name='c1')
+        s1 = self.create_study_strain(name='B. thetaiotaomicron', studyId=study.publicId)
+        s2 = self.create_study_strain(name='R. intestinalis',     studyId=study.publicId)
 
-        s1 = self.create_strain(name='B. thetaiotaomicron', studyId=study_id)
-        s2 = self.create_strain(name='R. intestinalis', studyId=study_id)
-        strain_ids = [s1.id, s2.id]
-
-        t_fc = self.create_measurement_technique(
-            studyUniqueID=study_uuid,
+        mt_fc = self.create_measurement_technique(
+            study_technique={'studyId': study.publicId},
             subjectType='strain',
             type='fc',
-            units='Cells/mL',
-            strainIds=strain_ids,
         )
-        t_16s = self.create_measurement_technique(
-            studyUniqueID=study_uuid,
+        mt_16s = self.create_measurement_technique(
+            study_technique={'studyId': study.publicId},
             subjectType='strain',
             type='16s',
-            units='reads',
-            includeStd=True,
-            strainIds=strain_ids,
         )
 
         header = ",".join([
@@ -187,23 +166,22 @@ class TestMeasurement(DatabaseTest):
             b1,c1,5400,300,600,300.234,30.23,600.456,
         """)
 
-        measurements = Measurement.insert_from_csv_string(
-            self.db_session,
-            study,
-            strain_data,
-            subject_type='strain',
-        )
+        # Needed so that calling `study.<relationship>` makes a fresh query to
+        # fetch the new data:
+        self.db_session.refresh(study)
+
+        measurements = Measurement.insert_from_csv_string(self.db_session, study, strain_data)
 
         # 16s reads
         self.assertEqual(
             [
                 (m.timeInSeconds, int(m.subjectId), m.value)
                 for m in sorted(measurements, key=lambda m: (m.timeInSeconds, m.subjectId))
-                if m.technique.id == t_16s.id
+                if m.technique.id == mt_16s.id
             ],
             [
                 (3600, s1.id, Decimal('100.234')), (3600, s2.id, Decimal('200.456')),
-                (4500, s2.id, Decimal('400.456')),
+                (4500, s1.id, None),               (4500, s2.id, Decimal('400.456')),
                 (5400, s1.id, Decimal('300.234')), (5400, s2.id, Decimal('600.456')),
             ]
         )
@@ -213,12 +191,112 @@ class TestMeasurement(DatabaseTest):
             [
                 (m.timeInSeconds, int(m.subjectId), m.value)
                 for m in sorted(measurements, key=lambda m: (m.timeInHours, m.subjectId))
-                if m.technique.id == t_fc.id
+                if m.technique.id == mt_fc.id
             ],
             [
                 (3600, s1.id, Decimal('100.00')), (3600, s2.id, Decimal('200.00')),
                 (4500, s1.id, Decimal('200.00')), (4500, s2.id, Decimal('400.00')),
                 (5400, s1.id, Decimal('300.00')), (5400, s2.id, Decimal('600.00')),
+            ]
+        )
+
+    def test_import_bioreplicate_csv_with_no_values(self):
+        study = self.create_study(timeUnits='h')
+        experiment = self.create_experiment(studyId=study.publicId)
+
+        b1 = self.create_bioreplicate(name='b1', experimentId=experiment.publicId)
+        b2 = self.create_bioreplicate(name='b2', experimentId=experiment.publicId)
+        b3 = self.create_bioreplicate(name='b3', experimentId=experiment.publicId)
+        self.create_compartment(studyId=study.publicId, name='c1')
+        mt_fc = self.create_measurement_technique(subjectType='bioreplicate', type='fc', study_technique={'studyId': study.publicId})
+
+        growth_data = util.trim_lines("""
+            Biological Replicate,Compartment,Time,Community FC
+            b1,c1,2,1234567890.0
+            b1,c1,4,
+            b2,c1,2,
+            b2,c1,4,
+            b3,c1,2,
+            b3,c1,4,1234567890.0
+        """)
+
+        measurements = Measurement.insert_from_csv_string(self.db_session, study, growth_data)
+
+        self.assertEqual(
+            [(m.timeInHours, m.bioreplicate.name, m.value) for m in measurements if m.technique.id == mt_fc.id],
+            [
+                # Second point is present with a None value, because the previous one is present as well:
+                (2.0, 'b1', Decimal('1234567890.000')),
+                (4.0, 'b1', None),
+                # Both are missing, because the entire context is blank:
+                # (2.0, 'b2', None),
+                # (4.0, 'b2', None),
+                # First point is present with a None value, because the second one is present:
+                (2.0, 'b3', None),
+                (4.0, 'b3', Decimal('1234567890.000')),
+            ]
+        )
+
+    def test_import_mixed_csv(self):
+        study = self.create_study(timeUnits='m')
+        experiment = self.create_experiment(studyId=study.publicId)
+
+        self.create_bioreplicate(name='b1', experimentId=experiment.publicId)
+        self.create_compartment(name='c1', studyId=study.publicId)
+
+        glucose_id = self.create_study_metabolite(
+            studyId=study.publicId,
+            metabolite={'name': 'glucose'},
+        ).metabolite.id
+        trehalose_id = self.create_study_metabolite(
+            studyId=study.publicId,
+            metabolite={'name': 'trehalose'},
+        ).metabolite.id
+        s1 = self.create_study_strain(name='B. thetaiotaomicron', studyId=study.publicId)
+
+        self.create_measurement_technique(
+            study_technique={'studyId': study.publicId, 'units': 'mM'},
+            subjectType='metabolite',
+            type='Metabolite',
+            metaboliteIds=[glucose_id, trehalose_id],
+        )
+        self.create_measurement_technique(
+            study_technique={'studyId': study.publicId, 'includeStd': True, 'units': 'reads'},
+            subjectType='strain',
+            type='16s',
+        )
+
+        self.db_session.commit()
+
+        mixed_data = util.trim_lines("""
+            Biological Replicate,Compartment,Time,glucose,trehalose,B. thetaiotaomicron rRNA reads
+            b1,c1,60,50.0,70.0,1234567890.0
+            b1,c1,75,30.0,40.0,1234567890.0
+            b1,c1,90,10.0,10.0,1234567890.0
+        """)
+
+        measurements = Measurement.insert_from_csv_string(self.db_session, study, mixed_data)
+
+        # Metabolite measurements
+        self.assertEqual(
+            [(m.timeInSeconds, m.subjectId, m.value) for m in measurements if m.subjectType == "metabolite"],
+            [
+                (3600, glucose_id, Decimal('50.000')),
+                (4500, glucose_id, Decimal('30.000')),
+                (5400, glucose_id, Decimal('10.000')),
+                (3600, trehalose_id, Decimal('70.000')),
+                (4500, trehalose_id, Decimal('40.000')),
+                (5400, trehalose_id, Decimal('10.000')),
+            ]
+        )
+
+        # Strain measurements
+        self.assertEqual(
+            [(m.timeInSeconds, m.subjectId, m.value) for m in measurements if m.subjectType == "strain"],
+            [
+                (3600, s1.id, Decimal('1234567890.0')),
+                (4500, s1.id, Decimal('1234567890.0')),
+                (5400, s1.id, Decimal('1234567890.0')),
             ]
         )
 

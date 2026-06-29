@@ -13,29 +13,50 @@ class TestSearch(PageTest):
         self._bootstrap_taxa()
         self._bootstrap_metabolites()
 
-    def test_no_query(self):
-        bootstrap_study(self.db_session, 'synthetic_gut', 'test_user')
-        bootstrap_study(self.db_session, 'ri_bt_bh_in_chemostat_controls', 'test_user')
+    def test_main_search_page(self):
+        s1 = bootstrap_study(self.db_session, 'synthetic_gut', 'test_user')
+        s2 = bootstrap_study(self.db_session, 'ri_bt_bh_in_chemostat_controls', 'test_user')
+
+        response = self.client.get('/search/', query_string={'q': 'thet'})
+        response_text = self._get_text(response)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Syn thet ic human gut bacterial community", response_text)
+        self.assertNotIn("RI, BT and BH in chemostat: Controls", response_text)
+
+        # By ncbiId:
+        response = self.client.get('/search/', query_string={'ncbiIds': 476272})
+        response_text = self._get_text(response)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Syn thet ic human gut bacterial community", response_text)
+        self.assertIn("RI, BT and BH in chemostat: Controls", response_text)
+
+        # By metabolite (valeric acid):
+        response = self.client.get('/search/', query_string={'chebiIds': 'CHEBI:17418'})
+        response_text = self._get_text(response)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Synthetic human gut bacterial community", response_text)
+        self.assertNotIn("RI, BT and BH in chemostat: Controls", response_text)
+
+        # Only published ones should be shown:
+        s1.publishedAt = None
+        self.db_session.add(s1)
+        self.db_session.commit()
 
         response = self.client.get('/search/')
         response_text = self._get_text(response)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Synthetic human gut bacterial community", response_text)
+        self.assertNotIn("Synthetic human gut bacterial community", response_text)
         self.assertIn("RI, BT and BH in chemostat: Controls", response_text)
 
-        response = self.client.get('/search/', query_string={'clauses-0-value': ''})
-        response_text = self._get_text(response)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("Synthetic human gut bacterial community", response_text)
-        self.assertIn("RI, BT and BH in chemostat: Controls", response_text)
-
-    def test_basic_query(self):
+    def test_advanced_search_basic_query(self):
         s1 = bootstrap_study(self.db_session, 'synthetic_gut', 'test_user')
         s2 = bootstrap_study(self.db_session, 'ri_bt_bh_in_chemostat_controls', 'test_user')
 
-        response = self.client.get('/search/', query_string={
+        response = self.client.get('/advanced-search/', query_string={
             'clauses-0-option': 'Study Name',
             'clauses-0-value': 'Synthetic human gut',
         })
@@ -45,7 +66,7 @@ class TestSearch(PageTest):
         self.assertIn("Synthetic human gut bacterial community", response_text)
         self.assertNotIn("RI, BT and BH in chemostat: Controls", response_text)
 
-        response = self.client.get('/search/', query_string={
+        response = self.client.get('/advanced-search/', query_string={
             'clauses-0-option': 'Study Name',
             'clauses-0-value': 'chemostat',
         })
@@ -60,13 +81,15 @@ class TestSearch(PageTest):
         self.db_session.add(s1)
         self.db_session.commit()
 
-        response = self.client.get('/search/')
+        response = self.client.get('/advanced-search/', query_string={
+            'clauses-0-option': 'Study Name',
+            'clauses-0-value': 'a',
+        })
         response_text = self._get_text(response)
 
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("Synthetic human gut bacterial community", response_text)
         self.assertIn("RI, BT and BH in chemostat: Controls", response_text)
-
 
 
 if __name__ == '__main__':

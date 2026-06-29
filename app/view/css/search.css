@@ -1,0 +1,44 @@
+.search-page {
+  .strain-select, .metabolite-select {
+    display: none;
+  }
+
+  .strain-select + .select2-container .select2-selection {
+    background: no-repeat top right url(/static/images/large-icons/bacteria_search.png);
+    background-size: 100px;
+    background-color: var(--light-blue);
+  }
+
+  .metabolite-select + .select2-container .select2-selection {
+    background: no-repeat top right url(/static/images/large-icons/trehalose_transparent.png);
+    background-size: 100px;
+    background-color: var(--light-blue);
+  }
+
+  .results-list {
+    transition: opacity var(--transition-length);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding-right: 40px;
+    padding-bottom: 40px;
+
+    .simple-table {
+      width: 100%;
+    }
+
+    .highlight {
+      background-color: var(--light-blue);
+    }
+  }
+
+  .load-more {
+    margin-top: 20px;
+    width: 100%;
+    text-align: center;
+
+    &.loading {
+      background: url(/static/images/loader.svg) no-repeat right 10px center;
+      pointer-events: none;
+    }
+  }
+}

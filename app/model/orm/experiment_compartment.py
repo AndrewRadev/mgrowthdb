@@ -9,15 +9,14 @@ from app.model.orm.orm_base import OrmBase
 
 
 class ExperimentCompartment(OrmBase):
+    "Join table between Experiments and Compartments"
+
     __tablename__ = 'ExperimentCompartments'
 
     id: Mapped[int] = mapped_column(sql.Integer, primary_key=True)
 
-    studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.studyId'))
-
-    experimentId:  Mapped[int] = mapped_column(sql.ForeignKey('Experiments.id'))
+    experimentId:  Mapped[str] = mapped_column(sql.ForeignKey('Experiments.publicId'))
     compartmentId: Mapped[int] = mapped_column(sql.ForeignKey('Compartments.id'))
 
-    study:       Mapped['Study']       = relationship(back_populates="experimentCompartments")
     experiment:  Mapped['Experiment']  = relationship(back_populates="experimentCompartments")
     compartment: Mapped['Compartment'] = relationship(back_populates="experimentCompartments")

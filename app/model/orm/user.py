@@ -14,6 +14,14 @@ from app.model.lib import orcid
 
 
 class User(OrmBase):
+    """
+    A visitor to the site that is identified by ORCID.
+
+    Every project and study need to be owned by a specific user and may be
+    editable by other users. This ensures a trace for who uploaded a particular
+    study in case moderation or editing is needed.
+    """
+
     __tablename__ = 'Users'
 
     # A relationship representing ownership of these records. Clearing them out
@@ -27,7 +35,8 @@ class User(OrmBase):
 
     uuid:       Mapped[str] = mapped_column(sql.String(100), nullable=False)
     orcidId:    Mapped[str] = mapped_column(sql.String(100), nullable=False)
-    orcidToken: Mapped[str] = mapped_column(sql.String(100), nullable=False)
+    orcidToken: Mapped[str] = mapped_column(sql.String(100), nullable=True)
+    apiKey:     Mapped[str] = mapped_column(sql.String(100), nullable=True)
 
     name:    Mapped[str]  = mapped_column(sql.String(255), nullable=False)
     isAdmin: Mapped[bool] = mapped_column(sql.Boolean, nullable=False, default=False)
@@ -55,6 +64,11 @@ class User(OrmBase):
         viewonly=True,
     )
 
+    workspaces: Mapped[List['Workspace']] = owner_relationship()
+
     @property
     def orcidUrl(self):
         return orcid.get_user_url(self)
+
+    def __str__(self):
+        return f"<User id={self.id} name={self.name}>"

@@ -17,13 +17,16 @@ Flask-Assets
 Flask-WTF
 Flask-SQLAlchemy
 cssmin
-plotly
+plotly==6.5.0
 celery[redis]
 gunicorn
 requests
 watchdog
 markdown-it-py
 beautifulsoup4
+crawlerdetect
+maxminddb
+werkzeug==3.1.3
 
 # Database
 sqlalchemy
@@ -36,8 +39,7 @@ pytest
 pytest-env
 pytest-cov
 freezegun
+requests_mock
 
-# Streamlit app:
-# matplotlib
-# mysql-connector-python
-# prettytable
+# Development
+long_task_printer

@@ -1,0 +1,29 @@
+{% from 'pages/workspaces/_chart.html' import render_chart %}
+{% from 'pages/workspaces/_form.html' import render_form %}
+
+{% extends '_layout.html' %}
+
+{% block title %}: User dashboard{% endblock %}
+
+{% block head %}
+  {% assets "plotly_js" %}
+  <script src="{{ ASSET_URL }}" type="text/javascript"></script>
+  {% endassets %}
+{% endblock %}
+
+{% block content %}
+  <div class="container workspaces-page">
+    <h1>
+      <span class="icon icon-emoji">📊</span>
+      User dashboard
+    </h1>
+
+    <article>
+      <p class="help">
+        WIP: Data from the API can be seen here
+      </p>
+    </article>
+
+    {{ render_chart(chart) }}
+  </div>
+{% endblock %}

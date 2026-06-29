@@ -5,7 +5,14 @@ from dotenv import load_dotenv
 
 def init_config(app):
     """
-    Configuration reference: <https://flask.palletsprojects.com/en/stable/config/>
+    Main entry point of the module.
+
+    Some configuration comes from the ``.env`` file at the root of the
+    application. The hardcoded config in this file is mostly configuration that
+    will not vary across installations like turning on DEBUG mode in
+    development.
+
+    Full configuration reference: https://flask.palletsprojects.com/en/stable/config/
     """
     app_env   = os.getenv('APP_ENV', 'development')
     log_level = os.getenv('LOG_LEVEL', None)
@@ -21,11 +28,15 @@ def init_config(app):
     # 200MiB max size
     app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024
 
+    # Render JSON in the given order, instead of sorting:
+    app.json_provider_class.sort_keys = False
+    # Render μ correctly:
+    app.json_provider_class.ensure_ascii = False
+
     if app_env == 'development':
         app.config.update(
             DEBUG=True,
             ASSETS_DEBUG=False,
-            SQLALCHEMY_RECORD_QUERIES=False,
             TEMPLATES_AUTO_RELOAD=True,
             EXPLAIN_TEMPLATE_LOADING=False,
         )
@@ -56,5 +67,11 @@ def init_config(app):
 
     if timing:
         app.logger.getChild('timing').setLevel('INFO')
+
+    if ip_forwarding_levels := int(app.config.get('IP_FORWARDING', '0')):
+        # In prod, we'd expect to run behind proxies, so we need to set the
+        # number of these in the .env file.
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=ip_forwarding_levels)
 
     return app

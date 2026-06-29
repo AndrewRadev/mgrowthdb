@@ -1,7 +1,7 @@
 import io
 import copy
 import itertools
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, time, UTC
 from db import get_session, get_transaction
 
 import pandas as pd
@@ -10,6 +10,7 @@ import sqlalchemy as sql
 from app.model.orm import (
     Bioreplicate,
     Community,
+    CommunityStrain,
     Compartment,
     Experiment,
     ExperimentCompartment,
@@ -18,13 +19,15 @@ from app.model.orm import (
     Perturbation,
     Project,
     ProjectUser,
-    Strain,
     Study,
     StudyMetabolite,
+    StudyStrain,
     StudyUser,
     Taxon,
 )
-from app.model.lib.util import group_by_unique_name, is_non_negative_float
+from app.model.lib.util import group_by_unique_name, is_non_negative_float, find_duplicates
+from app.model.lib.conversion import convert_time
+from app.model.tasks.submissions import export_submission_data
 
 
 def persist_submission_to_database(submission_form):
@@ -41,36 +44,29 @@ def persist_submission_to_database(submission_form):
     with get_transaction() as db_transaction:
         db_trans_session = get_session(db_transaction)
 
-        _save_project(db_trans_session, submission_form)
+        project = _save_project(db_trans_session, submission_form, user_uuid)
+        study   = _save_study(db_trans_session, submission_form, user_uuid)
 
-        study = _save_study(db_trans_session, submission_form)
+        _clear_study(study)
 
-        # First, clear out existing relationships
-        study.measurements           = []
-        study.measurementContexts    = []
-        study.measurementTechniques  = []
-        study.strains                = []
-        study.experimentCompartments = []
-        study.compartments           = []
-        study.communities            = []
-        study.experiments            = []
-        study.bioreplicates          = []
-        study.perturbations          = []
-        study.studyMetabolites       = []
-
+        _save_study_techniques(db_trans_session, submission_form, study)
         _save_compartments(db_trans_session, submission_form, study)
         _save_communities(db_trans_session, submission_form, study, user_uuid)
         _save_experiments(db_trans_session, submission_form, study)
-        _save_measurement_techniques(db_trans_session, submission_form, study)
 
         db_trans_session.flush()
-        _save_measurements(db_trans_session, study, submission)
+
+        _save_measurements(db_trans_session, study, submission_form)
 
         for experiment in study.experiments:
             _create_average_measurements(db_trans_session, study, experiment)
 
-        submission_form.save()
+        _finalize_submission(db_trans_session, submission_form, study, project)
+
         db_trans_session.commit()
+
+        if study.isPublished:
+            export_submission_data.delay(submission.id)
 
         return []
 
@@ -82,6 +78,10 @@ def validate_data_file(submission_form, data_file=None):
     data_file = data_file or submission.dataFile
     errors = []
 
+    # TODO (2025-10-01) Show warnings that don't stop the upload
+    # process:
+    warnings = []
+
     if not data_file:
         return []
 
@@ -89,18 +89,26 @@ def validate_data_file(submission_form, data_file=None):
     sheets = pd.read_excel(io.BytesIO(data_xls), sheet_name=None)
 
     # Validate columns:
-    expected_value_columns = _get_expected_column_names(submission_form)
+    community_columns, strain_columns, metabolite_columns = _get_expected_column_names(submission_form)
+    expected_value_columns = {*community_columns, *strain_columns, *metabolite_columns}
+    mandatory_columns = ['Biological Replicate', 'Compartment', 'Time']
 
-    for sheet_name, column_set in expected_value_columns.items():
-        if sheet_name in sheets:
-            df = sheets[sheet_name]
+    expected_columns = {*mandatory_columns, *expected_value_columns}
+    found_columns = set()
 
-            column_set = {*column_set, 'Biological Replicate', 'Compartment', 'Time'}
+    for sheet_name in sheets:
+        df = sheets[sheet_name]
+        found_columns |= set(df.columns)
 
-            for missing_column in column_set.difference(set(df.columns)):
-                errors.append(f"{sheet_name}: Missing column {missing_column}")
-        else:
-            errors.append(f"Missing data sheet: {sheet_name}")
+    missing_columns = expected_columns.difference(found_columns)
+    for missing_column in missing_columns:
+        errors.append(f"Missing column: {missing_column}")
+
+    # Do not continue if the required columns are missing, since we'll index
+    # them later in the function:
+    for mandatory_column in mandatory_columns:
+        if mandatory_column in missing_columns:
+            return errors
 
     # Validate row keys:
     expected_bioreplicates = {
@@ -110,10 +118,7 @@ def validate_data_file(submission_form, data_file=None):
     }
     expected_compartments = {c['name'] for c in submission.studyDesign['compartments']}
 
-    for sheet_name in expected_value_columns.keys():
-        if sheet_name not in sheets:
-            continue
-
+    for sheet_name in sheets:
         df = sheets[sheet_name]
 
         if 'Biological Replicate' in df:
@@ -130,34 +135,28 @@ def validate_data_file(submission_form, data_file=None):
         if 'Compartment' in df:
             uploaded_compartments = set(df['Compartment'])
 
-            if missing_compartments := expected_compartments.difference(set(df['Compartment'])):
-                compartment_description = ', '.join(missing_compartments)
-                errors.append(f"{sheet_name}: Missing compartment(s): {compartment_description}")
-
             if extra_compartments := uploaded_compartments.difference(expected_compartments):
                 compartment_description = ', '.join(extra_compartments)
                 errors.append(f"{sheet_name}: Unexpected compartment(s): {compartment_description}")
 
     # Validate values:
     for sheet_name, df in sheets.items():
-        if sheet_name not in expected_value_columns.keys():
-            continue
-
         missing_time_rows = []
-        missing_values = {}
+        missing_values    = {}
 
-        # Time must be present
+        # Check for missing Time values:
         if 'Time' in df:
-            for index, time in enumerate(df['Time']):
-                if not is_non_negative_float(time, isnan_check=True):
+            for index, value in enumerate(df['Time']):
+                if not is_non_negative_float(value, isnan_check=True):
                     missing_time_rows.append(str(index + 1))
 
         if missing_time_rows:
             row_description = _format_row_list_error(missing_time_rows)
-            errors.append(f"{sheet_name}: Missing or invalid time values on row(s) {row_description}")
+            # TODO (2025-10-01) Show warnings in UI
+            warnings.append(f"{sheet_name}: Missing or invalid time values on row(s) {row_description}")
 
         # For the other rows, we're looking for non-negative numbers or blanks
-        value_columns = expected_value_columns[sheet_name].intersection(set(df.columns))
+        value_columns = expected_value_columns.intersection(set(df.columns))
 
         for column in value_columns:
             for index, value in enumerate(df[column]):
@@ -170,65 +169,117 @@ def validate_data_file(submission_form, data_file=None):
                 row_description = _format_row_list_error(missing_values[column])
                 errors.append(f"{sheet_name}: Invalid values in column \"{column}\" on row(s) {row_description}")
 
+        # Check for unique timepoints
+        grouped_timepoints = {}
+        time_data = df[['Biological Replicate', 'Compartment', 'Time']]
+
+        for _, row in time_data.iterrows():
+            key = (row['Biological Replicate'], row['Compartment'])
+
+            if row['Time']:
+                if key not in grouped_timepoints:
+                    grouped_timepoints[key] = []
+                grouped_timepoints[key].append(row['Time'])
+
+        for (b, c), timepoints in grouped_timepoints.items():
+            if duplicates := find_duplicates(timepoints):
+                duplicates_description = ', '.join([str(d) for d in duplicates])
+                errors.append(f"{sheet_name}: Time points are not unique for bioreplicate {b}, compartment {c}: {duplicates_description}")
+
     return errors
 
 
-def _save_study(db_session, submission_form):
+def _save_study(db_session, submission_form, user_uuid=None):
     submission = submission_form.submission
 
+    if embargo_string := submission.studyDesign['study'].get('embargoExpiresAt', None):
+        embargo_date     = datetime.fromisoformat(embargo_string)
+        embargo_datetime = datetime.combine(embargo_date, time(hour=23, minute=59, tzinfo=UTC))
+    else:
+        embargo_datetime = None
+
     params = {
-        'studyId':          submission_form.study_id,
-        'studyName':        submission.studyDesign['study']['name'],
-        'studyDescription': submission.studyDesign['study'].get('description', ''),
-        'studyURL':         submission.studyDesign['study'].get('url', ''),
-        'studyUniqueID':    submission.studyUniqueID,
-        'projectUniqueID':  submission.projectUniqueID,
+        'publicId':         submission_form.study_id,
+        'name':             submission.studyDesign['study']['name'].strip(),
+        'description':      submission.studyDesign['study'].get('description', '').strip(),
+        'url':              submission.studyDesign['study'].get('url', '').strip(),
+        'authors':          submission.studyDesign['study'].get('authors', []),
+        'authorCache':      submission.studyDesign['study'].get('authorCache', ''),
+        'licenseUrl':       submission.studyDesign['study'].get('licenseUrl', ''),
+        'publicationDate':  submission.studyDesign['study'].get('publicationDate'),
+        'publicationType':  submission.studyDesign['study'].get('publicationType'),
+        'uuid':             submission.studyUniqueID,
+        'projectUuid':      submission.projectUniqueID,
         'timeUnits':        submission.studyDesign['timeUnits'],
+        'embargoExpiresAt': embargo_datetime,
     }
 
-    if submission_form.type != 'update_study':
-        study = Study(**Study.filter_keys(params))
+    if submission_form.study_id is None:
+        params['ownerUuid'] = user_uuid
 
-        study.studyId = Study.generate_public_id(db_session)
-        study.publishableAt = datetime.now(UTC) + timedelta(hours=24)
+        study = Study(**Study.filter_keys(params))
+        study.publicId = Study.generate_public_id(db_session)
 
         db_session.add(StudyUser(
             studyUniqueID=submission.studyUniqueID,
             userUniqueID=submission.userUniqueID,
         ))
     else:
-        study = db_session.get(Study, submission.studyUniqueID)
+        study = db_session.get(Study, submission_form.study_id)
         study.update(**Study.filter_keys(params))
+
+    tomorrow = datetime.now(UTC) + timedelta(hours=24)
+    if embargo_datetime and embargo_datetime > tomorrow:
+        study.publishableAt = embargo_datetime
+    else:
+        study.publishableAt = tomorrow
 
     db_session.add(study)
 
     return study
 
 
-def _save_project(db_session, submission_form):
+def _save_project(db_session, submission_form, user_uuid=None):
     submission = submission_form.submission
 
     params = {
-        'projectId':          submission_form.project_id,
-        'projectName':        submission.studyDesign['project']['name'],
-        'projectDescription': submission.studyDesign['project'].get('description', ''),
-        'projectUniqueID':    submission.projectUniqueID,
+        'publicId':    submission_form.project_id,
+        'name':        submission.studyDesign['project']['name'].strip(),
+        'description': submission.studyDesign['project'].get('description', '').strip(),
+        'uuid':        submission.projectUniqueID,
     }
 
-    if submission_form.type == 'new_project':
+    if submission_form.project_id is None:
+        params['ownerUuid'] = user_uuid
+
         project = Project(**Project.filter_keys(params))
-        project.projectId = Project.generate_public_id(db_session)
+        project.publicId = Project.generate_public_id(db_session)
         db_session.add(ProjectUser(
             projectUniqueID=submission.projectUniqueID,
             userUniqueID=submission.userUniqueID,
         ))
     else:
-        project = db_session.get(Project, submission.projectUniqueID)
+        project = db_session.get(Project, submission_form.project_id)
         project.update(**Project.filter_keys(params))
 
     db_session.add(project)
 
     return project
+
+
+def _clear_study(study):
+    for experiment in study.experiments:
+        experiment.experimentCompartments = []
+        experiment.perturbations          = []
+        experiment.bioreplicates          = []
+
+    study.measurements        = []
+    study.measurementContexts = []
+    study.studyTechniques     = []
+    study.strains             = []
+    study.compartments        = []
+    study.communities         = []
+    study.studyMetabolites    = []
 
 
 def _save_compartments(db_session, submission_form, study):
@@ -255,21 +306,33 @@ def _save_communities(db_session, submission_form, study, user_uuid):
         strain_identifiers = community_data.pop('strainIdentifiers')
 
         community = Community(**Community.filter_keys(community_data))
-        community.strainIds = []
+        db_session.add(community)
+        db_session.flush()
 
         for identifier in strain_identifiers:
             if identifier not in identifier_cache:
-                strain = _build_strain(db_session, identifier, submission, study, user_uuid)
-                identifier_cache[identifier] = strain
-                db_session.add(strain)
-                db_session.flush()
+                if strain := _build_strain(db_session, identifier, submission, study, user_uuid):
+                    identifier_cache[identifier] = strain
+                    db_session.add(strain)
+                    db_session.flush()
 
-            community.strainIds.append(identifier_cache[identifier].id)
+            if identifier in identifier_cache:
+                community_strain = CommunityStrain(
+                    community=community,
+                    strain=identifier_cache[identifier],
+                )
+                db_session.add(community_strain)
 
         communities.append(community)
 
     study.communities = communities
-    db_session.add_all(communities)
+
+    # If any of the techniques have an "unknown" column, create an appropriate
+    # strain:
+    if any([st.includeUnknown for st in study.studyTechniques]):
+        strain = _build_strain(db_session, "unknown", submission, study, user_uuid)
+        db_session.add(strain)
+        db_session.flush()
 
     return communities
 
@@ -277,28 +340,36 @@ def _save_communities(db_session, submission_form, study, user_uuid):
 def _save_experiments(db_session, submission_form, study):
     submission = submission_form.submission
     experiments = []
+    time_units = submission.studyDesign['timeUnits']
 
     communities_by_name  = group_by_unique_name(study.communities)
     compartments_by_name = group_by_unique_name(study.compartments)
 
     for experiment_data in submission.studyDesign['experiments']:
-        experiment_data = copy.deepcopy(experiment_data)
+        experiment_params = copy.deepcopy(experiment_data)
 
-        community_name    = experiment_data.pop('communityName')
-        compartment_names = experiment_data.pop('compartmentNames')
-        bioreplicates     = experiment_data.pop('bioreplicates')
-        perturbations     = experiment_data.pop('perturbations')
+        community_name    = experiment_params.pop('communityName')
+        compartment_names = experiment_params.pop('compartmentNames')
+        bioreplicates     = experiment_params.pop('bioreplicates')
+        perturbations     = experiment_params.pop('perturbations')
 
-        experiment = Experiment(
-            **Experiment.filter_keys(experiment_data),
+        if publicId := experiment_params.pop('publicId', None):
+            experiment = db_session.get(Experiment, publicId)
+
+            if experiment.studyId != study.publicId:
+                raise ValueError(f"Experiment with ID {publicId} does not belong to study {study.publicId}")
+        else:
+            experiment = Experiment(publicId=Experiment.generate_public_id(db_session))
+            experiment_data['publicId'] = experiment.publicId
+
+        experiment.update(
+            **Experiment.filter_keys(experiment_params),
             community=communities_by_name[community_name],
-            publicId=Experiment.generate_public_id(db_session),
         )
         db_session.add(experiment)
 
         for compartment_name in compartment_names:
             experiment_compartment = ExperimentCompartment(
-                study=study,
                 experiment=experiment,
                 compartment=compartments_by_name[compartment_name],
             )
@@ -307,7 +378,6 @@ def _save_experiments(db_session, submission_form, study):
         for bioreplicate_data in bioreplicates:
             bioreplicate = Bioreplicate(
                 **Bioreplicate.filter_keys(bioreplicate_data),
-                study=study,
                 experiment=experiment,
             )
 
@@ -316,10 +386,19 @@ def _save_experiments(db_session, submission_form, study):
         for perturbation_data in perturbations:
             perturbation_data = copy.deepcopy(perturbation_data)
 
+            start_time = perturbation_data.pop('startTime', '0')
+            start_time_in_seconds = convert_time(int(start_time), time_units, 's')
+
+            end_time = perturbation_data.pop('endTime', None)
+            if end_time:
+                end_time_in_seconds = convert_time(int(end_time), time_units, 's')
+            else:
+                end_time_in_seconds = None
+
             perturbation = Perturbation(
-                study=study,
                 experiment=experiment,
-                startTimepoint=perturbation_data.pop('startTimepoint'),
+                startTimeInSeconds=start_time_in_seconds,
+                endTimeInSeconds=end_time_in_seconds,
                 description=perturbation_data.pop('description'),
             )
 
@@ -349,54 +428,48 @@ def _save_experiments(db_session, submission_form, study):
     return experiments
 
 
-def _save_measurement_techniques(db_session, submission_form, study):
+def _save_study_techniques(db_session, submission_form, study):
     submission = submission_form.submission
     techniques = []
 
-    for technique in submission.build_techniques():
-        technique.study = study
+    for study_technique in submission.build_techniques():
+        study_technique.study = study
 
-        if technique.metaboliteIds:
-            for chebiId in technique.metaboliteIds:
-                db_session.add(StudyMetabolite(
-                    chebi_id=chebiId,
-                    study=study,
-                ))
-        techniques.append(technique)
+        for measurement_technique in study_technique.measurementTechniques:
+            if measurement_technique.metaboliteIds:
+                for chebiId in measurement_technique.metaboliteIds:
+                    db_session.add(StudyMetabolite(
+                        chebiId=chebiId,
+                        study=study,
+                    ))
+        techniques.append(study_technique)
 
     db_session.add_all(techniques)
     return techniques
 
 
-def _save_measurements(db_session, study, submission):
+def _save_measurements(db_session, study, submission_form):
+    submission = submission_form.submission
+
     data_xls = submission.dataFile.content
     sheets = pd.read_excel(io.BytesIO(data_xls), sheet_name=None)
 
-    if 'Growth data per community' in sheets:
-        df = sheets['Growth data per community']
-        Measurement.insert_from_csv_string(db_session, study, df.to_csv(index=False), subject_type='bioreplicate')
-
-    if 'Growth data per strain' in sheets:
-        df = sheets['Growth data per strain']
-        Measurement.insert_from_csv_string(db_session, study, df.to_csv(index=False), subject_type='strain')
-
-    if 'Growth data per metabolite' in sheets:
-        df = sheets['Growth data per metabolite']
-        Measurement.insert_from_csv_string(db_session, study, df.to_csv(index=False), subject_type='metabolite')
+    for _, df in sheets.items():
+        Measurement.insert_from_csv_string(db_session, study, df.to_csv(index=False))
 
 
 def _create_average_measurements(db_session, study, experiment):
-    bioreplicate_ids = [b.id for b in experiment.bioreplicates]
+    bioreplicate_ids = [b.id for b in experiment.bioreplicates if not b.calculationType]
 
     # The averaged measurements will be parented by a custom-generated bioreplicate:
-    # Note: This always gets created, unfortunately
     average_bioreplicate = Bioreplicate(
         name=f"Average({experiment.name})",
         calculationType='average',
         experiment=experiment,
-        study=study,
     )
     db_session.add(average_bioreplicate)
+
+    has_measurements = False
 
     for technique in study.measurementTechniques:
         for compartment in experiment.compartments:
@@ -418,38 +491,85 @@ def _create_average_measurements(db_session, study, experiment):
             if len(measurement_contexts) <= 1:
                 continue
 
+            # Only average the shared time points, if any
+            common_time_points = None
+            max_time_point_count = 0
+
+            for measurement_context in measurement_contexts:
+                time_points = [m.timeInSeconds for m in measurement_context.measurements]
+                if len(time_points) > max_time_point_count:
+                    max_time_point_count = len(time_points)
+
+                if common_time_points is None:
+                    common_time_points = frozenset(time_points)
+                else:
+                    common_time_points = common_time_points.intersection(time_points)
+
+            if common_time_points is None or len(common_time_points) <= (max_time_point_count // 2):
+                continue
+
             if technique.subjectType == 'bioreplicate':
                 # A single context for a group of bioreplicates
                 _create_average_measurement_context(
                     db_session,
+                    common_time_points=common_time_points,
                     parent_records=(study, technique, compartment),
                     measurement_contexts=measurement_contexts,
                     average_bioreplicate=average_bioreplicate,
                     subject_id=average_bioreplicate.id,
                     subject_type='bioreplicate',
+                    subject_name=average_bioreplicate.name,
+                    subject_external_id=None,
                 )
+                has_measurements = True
             else:
-                grouped_contexts = itertools.groupby(measurement_contexts, lambda mc: (mc.subjectId, mc.subjectType))
+                grouped_contexts = itertools.groupby(
+                    measurement_contexts,
+                    lambda mc: (mc.subjectId, mc.subjectType, mc.subjectName, mc.subjectExternalId),
+                )
 
-                for (subject_id, subject_type), subject_contexts in grouped_contexts:
+                for key, subject_contexts in grouped_contexts:
+                    subject_contexts = list(subject_contexts)
+                    (
+                        subject_id,
+                        subject_type,
+                        subject_name,
+                        subject_external_id,
+                    ) = key
+
+                    # If there is a single context for this cluster of
+                    # measurements, there is nothing to average:
+                    if len(subject_contexts) <= 1:
+                        continue
+
                     # One context for each subject:
                     _create_average_measurement_context(
                         db_session,
+                        common_time_points=common_time_points,
                         parent_records=(study, technique, compartment),
                         measurement_contexts=list(subject_contexts),
                         average_bioreplicate=average_bioreplicate,
                         subject_id=subject_id,
-                        subject_type=subject_type
+                        subject_type=subject_type,
+                        subject_name=subject_name,
+                        subject_external_id=subject_external_id,
                     )
+                    has_measurements = True
+
+    if not has_measurements:
+        db_session.delete(average_bioreplicate)
 
 
 def _create_average_measurement_context(
     db_session,
+    common_time_points,
     parent_records,
     measurement_contexts,
     average_bioreplicate,
     subject_id,
     subject_type,
+    subject_name,
+    subject_external_id=None,
 ):
     (study, technique, compartment) = parent_records
 
@@ -460,7 +580,10 @@ def _create_average_measurement_context(
             sql.func.avg(Measurement.value),
             sql.func.std(Measurement.value),
         )
-        .where(Measurement.contextId.in_([mc.id for mc in measurement_contexts]))
+        .where(
+            Measurement.contextId.in_([mc.id for mc in measurement_contexts]),
+            Measurement.timeInSeconds.in_(common_time_points),
+        )
         .group_by(Measurement.timeInSeconds)
         .order_by(Measurement.timeInSeconds)
     ).all()
@@ -476,15 +599,17 @@ def _create_average_measurement_context(
         compartment=compartment,
         subjectId=subject_id,
         subjectType=subject_type,
+        subjectName=subject_name,
+        subjectExternalId=subject_external_id,
         technique=technique,
         calculationType='average',
     )
     db_session.add(average_context)
 
     # Create individual measurements
-    for (time, value, std) in measurement_rows:
+    for (t, value, std) in measurement_rows:
         measurement = Measurement(
-            timeInSeconds=time,
+            timeInSeconds=t,
             value=value,
             std=std,
             context=average_context,
@@ -493,12 +618,21 @@ def _create_average_measurement_context(
         db_session.add(measurement)
 
 
+def _finalize_submission(db_session, submission_form, study, project):
+    study.lastSubmissionId = submission_form.submission.id
+    if study.isPublished:
+        submission_form.submission.publishedAt = study.publishedAt
+
+    submission_form.save()
+    submission_form.save_backup(study_id=study.publicId, project_id=project.publicId)
+
+
 def _find_custom_strain(submission, identifier):
     for custom_strain_data in submission.studyDesign['custom_strains']:
         if custom_strain_data['name'] == identifier:
             return custom_strain_data
     else:
-        raise IndexError(f"New strain with name {repr(identifier)} not found in submission")
+        return None
 
 
 def _get_expected_column_names(submission_form):
@@ -509,41 +643,44 @@ def _get_expected_column_names(submission_form):
     metabolite_columns = set()
 
     # Validate column presence:
-    for technique in submission.build_techniques():
-        if technique.subjectType == 'bioreplicate':
-            column = technique.csv_column_name()
-            community_columns.add(column)
-            if technique.includeStd:
-                community_columns.add(f"{column} STD")
+    for index, study_technique in enumerate(submission.build_techniques()):
+        for measurement_technique in study_technique.measurementTechniques:
+            if measurement_technique.subjectType == 'bioreplicate':
+                column = measurement_technique.csv_column_name()
+                community_columns.add(column)
+                if study_technique.includeStd:
+                    community_columns.add(f"{column} STD")
 
-        elif technique.subjectType == 'strain':
-            for taxon in submission_form.fetch_taxa():
-                column = technique.csv_column_name(taxon.name)
-                strain_columns.add(column)
-                if technique.includeStd:
-                    strain_columns.add(f"{column} STD")
+            elif measurement_technique.subjectType == 'strain':
+                for taxon in submission_form.fetch_taxa():
+                    column = measurement_technique.csv_column_name(taxon.name)
+                    strain_columns.add(column)
+                    if study_technique.includeStd:
+                        strain_columns.add(f"{column} STD")
 
-            for strain in submission.studyDesign['custom_strains']:
-                column = technique.csv_column_name(strain['name'])
-                strain_columns.add(column)
-                if technique.includeStd:
-                    strain_columns.add(f"{column} STD")
+                if study_technique.includeUnknown:
+                    column = measurement_technique.csv_column_name("Unknown")
+                    strain_columns.add(column)
+                    if study_technique.includeStd:
+                        strain_columns.add(f"{column} STD")
 
-        elif technique.subjectType == 'metabolite':
-            for metabolite in submission_form.fetch_all_metabolites():
-                column = technique.csv_column_name(metabolite.name)
-                metabolite_columns.add(column)
-                if technique.includeStd:
-                    metabolite_columns.add(f"{column} STD")
+                for strain in submission.studyDesign['custom_strains']:
+                    column = measurement_technique.csv_column_name(strain['name'])
+                    strain_columns.add(column)
+                    if study_technique.includeStd:
+                        strain_columns.add(f"{column} STD")
 
-        else:
-            raise ValueError(f"Unexpected technique subjectType: {technique.subjectType}")
+            elif measurement_technique.subjectType == 'metabolite':
+                for metabolite in submission_form.fetch_metabolites_for_technique(index):
+                    column = measurement_technique.csv_column_name(metabolite.name)
+                    metabolite_columns.add(column)
+                    if study_technique.includeStd:
+                        metabolite_columns.add(f"{column} STD")
 
-    return {
-        'Growth data per community':  community_columns,
-        'Growth data per strain':     strain_columns,
-        'Growth data per metabolite': metabolite_columns,
-    }
+            else:
+                raise ValueError(f"Unexpected measurement_technique subjectType: {measurement_technique.subjectType}")
+
+    return community_columns, strain_columns, metabolite_columns
 
 
 def _build_strain(db_session, identifier, submission, study, user_uuid):
@@ -559,7 +696,7 @@ def _build_strain(db_session, identifier, submission, study, user_uuid):
 
         strain_params = {
             'name':    taxon.name,
-            'NCBId':   taxon.ncbiId,
+            'ncbiId':  taxon.ncbiId,
             'defined': True,
             **strain_params,
         }
@@ -568,17 +705,29 @@ def _build_strain(db_session, identifier, submission, study, user_uuid):
         identifier = identifier.removeprefix('custom|')
         custom_strain_data = _find_custom_strain(submission, identifier)
 
+        if custom_strain_data is None:
+            # Missing strain due to renames
+            return None
+
         strain_params = {
             'name':        custom_strain_data['name'],
-            'NCBId':       custom_strain_data['species'],
+            'ncbiId':      custom_strain_data['species'],
             'description': custom_strain_data['description'],
+            'defined':     False,
+            **strain_params,
+        }
+    elif identifier == 'unknown':
+        strain_params = {
+            'name':        "Unknown",
+            'ncbiId':      0,
+            'description': "Unknown measurements",
             'defined':     False,
             **strain_params,
         }
     else:
         raise ValueError(f"Strain identifier {repr(identifier)} has an unexpected prefix")
 
-    return Strain(**strain_params)
+    return StudyStrain(**strain_params)
 
 
 def _format_row_list_error(row_list):

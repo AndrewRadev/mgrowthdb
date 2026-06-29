@@ -5,6 +5,7 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
     relationship,
+    column_property,
 )
 
 from app.model.orm.orm_base import OrmBase
@@ -12,6 +13,14 @@ from app.model.lib.db import execute_into_df
 
 
 class MeasurementContext(OrmBase):
+    """
+    A collection of measurements of a particular subject with a particular technique.
+
+    All connections between measurements and other entities are encapsulated
+    here, so the individual ``Measurement`` objects can be packages of time and
+    value alone.
+    """
+
     __tablename__ = "MeasurementContexts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -19,10 +28,15 @@ class MeasurementContext(OrmBase):
     bioreplicateId: Mapped[int] = mapped_column(sql.ForeignKey('Bioreplicates.id'))
     bioreplicate: Mapped['Bioreplicate'] = relationship(back_populates='measurementContexts')
 
+    experiment: Mapped['Experiment'] = relationship(
+        secondary='Bioreplicates',
+        viewonly=True,
+    )
+
     compartmentId: Mapped[int] = mapped_column(sql.ForeignKey('Compartments.id'))
     compartment: Mapped['Compartment'] = relationship(back_populates='measurementContexts')
 
-    studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.studyId'), nullable=False)
+    studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.publicId'), nullable=False)
     study: Mapped['Study'] = relationship(back_populates='measurementContexts')
 
     techniqueId: Mapped[int] = mapped_column(sql.ForeignKey("MeasurementTechniques.id"))
@@ -41,8 +55,29 @@ class MeasurementContext(OrmBase):
 
     calculationType: Mapped[str] = mapped_column(sql.String(50))
 
-    subjectId:   Mapped[str] = mapped_column(sql.String(100), nullable=False)
+    subjectId:   Mapped[int] = mapped_column(sql.Integer,     nullable=False)
     subjectType: Mapped[str] = mapped_column(sql.String(100), nullable=False)
+
+    # Denormalized name and external id for sorting and displaying purposes
+    subjectName:       Mapped[str] = mapped_column(sql.String(1024), nullable=False)
+    subjectExternalId: Mapped[str] = mapped_column(sql.String(100), nullable=False)
+
+    subjectTypeOrdering = column_property(OrmBase.list_ordering(
+        subjectType,
+        ('bioreplicate', 'strain', 'metabolite'),
+    ), deferred=True)
+
+    @property
+    def readyModelingResults(self):
+        return [mr for mr in self.modelingResults if mr.state == 'ready']
+
+    @property
+    def publishedModelingResults(self):
+        return [mr for mr in self.readyModelingResults if mr.isPublished]
+
+    @property
+    def units(self):
+        return self.technique.units
 
     def get_df(self, db_session):
         from app.model.orm import Measurement
@@ -63,22 +98,28 @@ class MeasurementContext(OrmBase):
 
         return execute_into_df(db_session, query)
 
-    def get_chart_label(self, db_session):
-        subject      = self.get_subject(db_session)
+    def get_chart_label(self, model_name=None):
+        from markupsafe import Markup, escape
+
         technique    = self.technique
         bioreplicate = self.bioreplicate
         compartment  = self.compartment
         experiment   = bioreplicate.experiment
 
         if technique.subjectType == 'metabolite':
-            label_parts = [f"<b>{subject.name}</b>"]
+            label_parts = [f"<b>{escape(self.subjectName)}</b>"]
+            if self.technique.studyTechnique.label:
+                label_parts.append(f"<b>({escape(self.technique.studyTechnique.label)})</b>")
         else:
-            label_parts = [technique.short_name]
+            label_parts = [escape(technique.short_name)]
 
-        if len(experiment.compartments) <= 1:
-            bioreplicate_label = f"<b>{bioreplicate.name}</b>"
-        else:
-            bioreplicate_label = f"<b>{bioreplicate.name}<sub>{compartment.name}</sub></b>"
+        if model_name:
+            label_parts.append(f"({escape(model_name)} fit)")
+
+        bioreplicate_label = f"<b>{escape(bioreplicate.name)}</b>"
+
+        if len(experiment.compartments) > 1:
+            bioreplicate_label = f"{bioreplicate_label}<sub>{escape(compartment.name)}</sub></b>"
 
         if technique.subjectType == 'bioreplicate':
             label_parts.append('of the')
@@ -89,13 +130,13 @@ class MeasurementContext(OrmBase):
             label_parts.append(bioreplicate_label)
         else:
             label_parts.append('of')
-            label_parts.append(f"<b>{subject.name}</b>")
+            label_parts.append(f"<b>{self.subjectName}</b>")
             label_parts.append('in')
             label_parts.append(bioreplicate_label)
 
         label = ' '.join(label_parts)
 
-        return label
+        return Markup(label)
 
     def get_subject(self, db_session):
         if not hasattr(db_session, '_measurement_subject_cache'):
@@ -105,20 +146,18 @@ class MeasurementContext(OrmBase):
         if cache_key in db_session._measurement_subject_cache:
             return db_session._measurement_subject_cache[cache_key]
 
-        from app.model.orm import Metabolite, Strain, Bioreplicate
+        from app.model.orm import Metabolite, StudyStrain, Bioreplicate
 
         if self.subjectType == 'metabolite':
-            subject = db_session.scalars(
-                sql.select(Metabolite)
-                .where(Metabolite.chebiId == self.subjectId)
-                .limit(1)
-            ).one_or_none()
+            SubjectClass = Metabolite
         elif self.subjectType == 'strain':
-            subject = db_session.get(Strain, self.subjectId)
+            SubjectClass = StudyStrain
         elif self.subjectType == 'bioreplicate':
-            subject = db_session.get(Bioreplicate, self.subjectId)
+            SubjectClass = Bioreplicate
         else:
             raise ValueError(f"Unknown subject type: {self.subjectType}")
 
+        subject = db_session.get(SubjectClass, self.subjectId)
         db_session._measurement_subject_cache[cache_key] = subject
+
         return db_session._measurement_subject_cache[cache_key]

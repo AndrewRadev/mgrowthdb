@@ -7,68 +7,79 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
     relationship,
+    column_property,
 )
-from sqlalchemy.schema import FetchedValue
 from sqlalchemy_utc.sqltypes import UtcDateTime
 
 from app.model.orm.orm_base import OrmBase
-
-TECHNIQUE_SHORT_NAMES = {
-    'ph':         'pH',
-    'fc':         'FC',
-    'od':         'OD',
-    'plates':     'PC',
-    '16s':        '16S-rRNA reads',
-    'metabolite': 'Metabolite',
-}
-
-TECHNIQUE_LONG_NAMES = {
-    'ph':         'pH',
-    'fc':         'Flow Cytometry',
-    'od':         'Optical Density',
-    'plates':     'Plate Counts',
-    '16s':        '16S-rRNA reads',
-    'metabolite': 'Metabolites',
-}
+from app.model.lib.techniques import (
+    TECHNIQUE_SHORT_NAMES,
+    TECHNIQUE_LONG_NAMES,
+    TECHNIQUE_SUBJECT_NAMES,
+)
 
 
 class MeasurementTechnique(OrmBase):
+    "The technique used for a particular set of measurements."
+
     __tablename__ = "MeasurementTechniques"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    type:  Mapped[str] = mapped_column(sql.String(100), nullable=False)
-    units: Mapped[str] = mapped_column(sql.String(100), nullable=False)
-
+    type:        Mapped[str] = mapped_column(sql.String(100), nullable=False)
+    cellType:    Mapped[str] = mapped_column(sql.String(100), nullable=True)
     subjectType: Mapped[str] = mapped_column(sql.String(100), nullable=False)
 
-    description: Mapped[str]  = mapped_column(sql.String)
-    includeStd:  Mapped[bool] = mapped_column(sql.Boolean, nullable=False, default=False)
-
     metaboliteIds: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
-    strainIds:     Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
 
-    studyUniqueID: Mapped[str] = mapped_column(sql.ForeignKey('Studies.studyUniqueID'), nullable=False)
-    study: Mapped['Study'] = relationship(back_populates="measurementTechniques")
+    createdAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    updatedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
 
-    createdAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=FetchedValue())
-    updatedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=FetchedValue())
+    studyTechniqueId: Mapped[int] = mapped_column(sql.ForeignKey('StudyTechniques.id'))
+    studyTechnique: Mapped['StudyTechnique'] = relationship(
+        back_populates="measurementTechniques"
+    )
 
     measurementContexts: Mapped[List['MeasurementContext']] = relationship(
         back_populates="technique",
-        order_by='MeasurementContext.calculationType.is_(None), MeasurementContext.bioreplicateId, MeasurementContext.compartmentId',
+        order_by='MeasurementContext.calculationType.is_(None), MeasurementContext.bioreplicateId, MeasurementContext.compartmentId, MeasurementContext.subjectTypeOrdering, MeasurementContext.subjectName',
     )
     measurements: Mapped[List['Measurement']] = relationship(
         secondary='MeasurementContexts',
         viewonly=True,
     )
 
+    connectedBioreplicates: Mapped[List['Bioreplicate']] = relationship(
+        secondary='MeasurementContexts',
+        viewonly=True
+    )
+
+    # Order techniques based on their type, according to the way they're
+    # defined in the name index: FC first, then OD, etc.
+    typeOrdering = column_property(OrmBase.list_ordering(
+        type,
+        TECHNIQUE_SHORT_NAMES.keys(),
+    ), deferred=True)
+
+    # Order records based on their subject type
+    subjectTypeOrdering = column_property(OrmBase.list_ordering(
+        subjectType,
+        ('bioreplicate', 'strain', 'metabolite'),
+    ), deferred=True)
+
     def __lt__(self, other):
         return self.id < other.id
 
     @property
+    def units(self):
+        return self.studyTechnique.units
+
+    @property
     def short_name(self):
-        return TECHNIQUE_SHORT_NAMES[self.type]
+        cell_type = f" {self.cellType}" if self.cellType else ""
+        label = f" ({self.studyTechnique.label})" if self.studyTechnique.label else ""
+
+        return f"{TECHNIQUE_SHORT_NAMES[self.type]}{label}{cell_type}"
 
     @property
     def long_name(self):
@@ -78,21 +89,21 @@ class MeasurementTechnique(OrmBase):
     def long_name_with_subject_type(self):
         parts = [self.long_name]
 
+        if self.studyTechnique.label:
+            parts.append(f"({self.studyTechnique.label})")
+
         if self.subjectType != 'metabolite':
-            parts.append(self.subject_short_name)
+            parts.append(f"per {TECHNIQUE_SUBJECT_NAMES[self.subjectType]}")
 
-        return ' per '.join(parts)
-
-    @property
-    def subject_short_name(self):
-        match self.subjectType:
-            case 'bioreplicate': return 'community'
-            case 'strain': return 'strain'
-            case 'metabolite': return 'metabolite'
+        return ' '.join(parts)
 
     @property
     def is_growth(self):
         return self.type not in ('ph', 'metabolite')
+
+    @property
+    def connectedExperimentIds(self):
+        return sorted({b.experimentId for b in self.connectedBioreplicates})
 
     def get_bioreplicates(self, db_session):
         from app.model.orm import Bioreplicate, MeasurementContext
@@ -104,44 +115,21 @@ class MeasurementTechnique(OrmBase):
             .where(MeasurementContext.techniqueId == self.id)
         ).all()
 
-    def get_subjects_for_bioreplicate(self, db_session, bioreplicate):
-        from app.model.orm import MeasurementContext, Measurement
-
-        match self.subjectType:
-            case 'bioreplicate':
-                from app.model.orm import Bioreplicate
-                subject_class = Bioreplicate
-            case 'strain':
-                from app.model.orm import Strain
-                subject_class = Strain
-            case 'metabolite':
-                from app.model.orm import Metabolite
-                subject_class = Metabolite
-
-        return db_session.scalars(
-            sql.select(subject_class)
-            .where(subject_class.id.in_(
-                sql.select(MeasurementContext.subjectId)
-                .join(Measurement)
-                .distinct()
-                .where(
-                    MeasurementContext.techniqueId == self.id,
-                    MeasurementContext.bioreplicateId == bioreplicate.id,
-                    Measurement.value.is_not(None),
-                )
-            ))
-        ).all()
-
     def csv_column_name(self, subject_name=None):
+        cell_type = f"{self.cellType} " if self.cellType else ""
+        label = f" ({self.studyTechnique.label})" if self.studyTechnique.label else ""
+
         if self.subjectType == 'bioreplicate':
-            return f"Community {TECHNIQUE_SHORT_NAMES[self.type]}"
+            return f"Community {cell_type}{TECHNIQUE_SHORT_NAMES[self.type]}{label}"
 
         elif self.subjectType == 'metabolite':
-            return subject_name
+            return f"{subject_name}{label}"
 
         elif self.subjectType == 'strain':
             if self.type == '16s':
                 suffix = 'rRNA reads'
+            elif self.type == 'qpcr':
+                suffix = 'qPCR counts'
             elif self.type == 'fc':
                 suffix = 'FC counts'
             elif self.type == 'plates':
@@ -149,7 +137,7 @@ class MeasurementTechnique(OrmBase):
             else:
                 raise ValueError(f"Incompatible type and subjectType: {self.type}, {self.subjectType}")
 
-            return f"{subject_name} {suffix}"
+            return f"{subject_name} {cell_type}{suffix}{label}"
 
     def get_grouped_contexts(self):
         grouper = lambda mc: (mc.bioreplicate, mc.compartment)

@@ -5,13 +5,15 @@ from flask import Flask
 from initialization.config import init_config
 from initialization.flask_db import init_flask_db
 from initialization.assets import init_assets
-from initialization.routes import init_routes, dump_routes
+from initialization.routes import init_routes
 from initialization.plotly import init_plotly
 from initialization.timing import init_timing
+from initialization.maxminddb import init_maxminddb
 from initialization.global_handlers import init_global_handlers
 from initialization.template_filters import init_template_filters
 from initialization.admin import init_admin
 from initialization.celery import init_celery
+from initialization.dev import dump_project_metadata
 
 
 def create_app():
@@ -19,13 +21,14 @@ def create_app():
     app = Flask(
         __name__,
         template_folder="app/view/templates",
-        static_folder="app/view/static"
+        static_folder="static"
     )
 
     app = init_config(app)
     app = init_flask_db(app)
     app = init_assets(app)
     app = init_routes(app)
+    app = init_maxminddb(app)
     app = init_global_handlers(app)
     app = init_template_filters(app)
     app = init_admin(app)
@@ -37,7 +40,7 @@ def create_app():
         app = init_timing(app)
 
     if env == 'development':
-        dump_routes(app.url_map.iter_rules(), '.routes.json')
+        dump_project_metadata(app)
 
     return app
 

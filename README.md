@@ -1,68 +1,137 @@
-# μGrowthDB
+# mGrowthDB
 
-[μGrowthDB](https://mgrowthdb.gbiomed.kuleuven.be) is the first crowd-sourced database for microbial growth data. It supports a range of measurement techniques: Colony Forming Units (CFU), Flow Cytometry, Optical Density, 16S sequencing. It also supports storage of accompanying metabolic data.
+[mGrowthDB](https://mgrowthdb.gbiomed.kuleuven.be) is the first crowd-sourced database for microbial growth data. It supports a range of measurement techniques: Colony Forming Units (CFU), Flow Cytometry, Optical Density, 16S sequencing, qPCR. It also supports storage of accompanying metabolic data.
 
 In this repo, you can find the code of the resource, known issues and discussions, while you are more than welcome to share your thoughts on the resource and of course [contribute](./CONTRIBUTING.md).
 
-## To use μGrowthDB
+## To use mGrowthDB
 
 If you'd like to explore studies and their data, these two documentation resources explain how to do that:
 
 - Searching: <https://mgrowthdb.gbiomed.kuleuven.be/help/searching/>
-- Data analysis: <https://mgrowthdb.gbiomed.kuleuven.be/help/data-analysis/>
+- Study pages: <https://mgrowthdb.gbiomed.kuleuven.be/help/study-pages/>
 
 To upload your own data, you need to authenticate by using [ORCID](https://orcid.org/). Documentation on how to proceed can be found here:
 
 - Upload process: <https://mgrowthdb.gbiomed.kuleuven.be/help/upload-process/>
 
-## Local installation
+## Local installation inside a docker container
+
+If you'd like to get the app running to use in a local environment, a docker container can be a working cross-platform choice. The provided Dockerfile is meant for launching the app in production mode and not for development purposes.
+
+First, copy the `.env.example` file to an `.env` file and fill in the environment variables. Ideally, you should set a random string for session encryption in `MGROWTHDB_SECRET_KEY`. An example of how to generate it can be found in the [flask documentation](https://flask.palletsprojects.com/en/stable/config/#SECRET_KEY):
+
+``` .sh-session
+$ python -c 'import secrets; print(secrets.token_hex())'
+'192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc987d54727823bcbf'
+```
+
+If you want to be able to log in with a user, you'll need to follow [the ORCID documentation](https://info.orcid.org/documentation/integration-guide/) to create an ORCID app and fill in the relevant information information. The particular tutorial that goes over the process is this one: <https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/>, under "How do I register a Public API client?".
+
+If you skip that part, you'll only have read access to the data. You can leave the "ORCID" environment variables as they are in the config and use the several studies that are imported in the bootstrap process below.
+
+To start the application, you can run the following docker-compose command in the root of the application:
+
+``` bash
+docker compose -f docker-compose-full.yml up --build
+```
+
+The file `docker-compose-full.yml` starts a complete app with a mysql server and a redis server. You can "detach" it by adding `-d` to the command-line, or you can keep it running in a terminal or in a systemd service to see the app's logs.
+
+At this point in time, the app is **not yet ready** to be used. You may see errors in the console about the user not having access to the database "BacterialGrowth". To create the database and bootstrap the data the application needs, you need to run bash inside the running compartment with `docker compose exec`:
+
+``` bash
+docker compose -f docker-compose-full.yml exec -it mgrowthdb_app bash
+```
+
+While inside the container, you can run the script `./scripts/init.sh` that will create the initial structure, download ontology data from ChEBI and [JensenLab](https://jensenlab.org/), and create a few initial studies:
+
+``` bash
+ADMIN_ORCID="1234-1234-1234-1234" ./scripts/init.sh
+```
+
+Note the variable `$ADMIN_ORCID`, which is set to the ORCID identifier of the first admin user to be created. If you omit it, the id will be set to `0000-0000-0000-0000`, and you can change it later by manipulating the database. If you provide your own ORCID identifier, you can log in with that and automatically be granted ownership of the initial studies and admin permissions to your local copy of the site. Note, however, that logging in requires setting up an ORCID app as described above.
+
+When updating the application from git, make sure to run migrations (inside the "app" container) to apply database changes before taking the docker container down and then back up:
+
+``` bash
+bin/migrations-run
+```
+
+## Local installation for development (on Linux or macOS)
+
+First, you should copy the `.env.example` file to `.env` and fill in the environment variables.
 
 To set up a working python environment, it's recommended to use [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) with the given environment file:
 
-```
+``` bash
 micromamba create -f micromamba_env.yml
 micromamba activate mgrowthdb
 ```
 
 This will install python version 3.12 and R and activate the environment by name in the current shell. Python dependencies can now be installed using:
 
-```
+``` bash
 pip install -r requirements.txt
 ```
 
 There are a few R dependencies, most notably the package [growthrates](https://cran.r-project.org/package=growthrates), which you can install using `Rscript`:
 
-```
+``` bash
 Rscript -e 'install.packages(c("growthrates", "jsonlite"), repos="https://cloud.r-project.org")'
 ```
 
 In the root of the repository, there is an `.env.example` file that contains environment variables the app needs. You can copy that to `.env` and fill them in with your own values.
 
-In the database config directory, the file [`db/config.toml.example`](db/config.toml.example) contains a template for the database configuration. Copy this file to `db/config.toml` and update it with the correct credentials to access a running mysql database. On linux, you may have to add a `unix_socket = ` field as well.
+In the database config directory, the file [`db/config.toml.example`](db/config.toml.example) contains a template for the database configuration. Copy this file to `db/config.toml` and update it with the correct credentials to access a running mysql database. You can launch one by using the provided "services" dockerfile:
 
-The database structure can be created by running migrations:
-
-```
-bin/migrations-run
+``` bash
+docker-compose -f docker-compose-services.yml up --build -d
 ```
 
-You can also manually interact with the configured database using:
+In case you decide to use this, take a look at the file to see the mysql usernames, passwords, etc, for your configuration. If you already have running mysql and redis servers, you won't need docker.
 
-```
+You can manually interact with the configured database using:
+
+``` bash
 bin/dbconsole
+```
+
+To load the full database structure, you can pipe the schema file into that command:
+
+``` bash
+bin/dbconsole < db/schema.sql
+```
+
+To make changes to the database, you can create a new migration with an "up" function that makes the change in the forward direction and a "down" function that reverses it:
+
+``` bash
+# Bootstrap a new migration file:
+bin/migrations-new some_name_for_my_migration
+
+# Edit the migration, created with a timestamp under db/migrations/
+
+# Execute the new migration forward:
+bin/migrations-run
+
+# Roll it back and then execute it again to check if your reversal works:
+bin/migrations-run down
+bin/migrations-run up
 ```
 
 To launch the application in development mode on <http://localhost:8081>, run:
 
-```
+``` bash
 bin/server
 ```
 
 To launch a background job worker that processes growth modeling requests, run (in another terminal):
 
-```
+``` bash
 bin/worker
 ```
+
+The worker uses redis to coordinate with the app. A redis server is included in the "services" docker-compose config file that should "just work", but you can launch your own and start the server with `REDIS_HOST` and `REDIS_PORT` set to whatever you need.
 
 ## Code structure
 
@@ -74,7 +143,7 @@ The application starts from `main.py`, which imports and runs code from the "ini
 
 The application loosely follows the model-view-controller (MVC) architecture with these three folders holding the three layers. Inside `model`, we keep domain logic dedicated to a specific unit of data. This could be a wrapper for a database table, like "experiment" or "user", or a logical concept like "submission" that is loaded from data in the session. The functions and classes inside the relevant model are all meant to encapsulate potentially complex logic that reads and writes this data. The "orm" directory contains [SQLAlchemy](https://www.sqlalchemy.org/) ORM models, while the "lib" directory contains more general-purpose code.
 
-The `app/view/templates` folder contains [Jinja2](https://jinja.palletsprojects.com/en/stable/) templates for every page or HTML fragment. The javascript, CSS, and images that are rendered in the main layout are located in the `app/view/static` directory. This follows the default structure of flask apps.
+The `app/view/templates` folder contains [Jinja2](https://jinja.palletsprojects.com/en/stable/) templates for every page or HTML fragment. Javascript and CSS code is located under `app/view/js` and `app/view/css`, respectively.
 
 The `app/pages` folder has all the handler functions that instantiate model objects, call utility functions, and inject the output into a template. These are hooked up to URL routes in [`initialization/routes.py`](initialization/routes.py).
 
@@ -108,5 +177,7 @@ make html
 - SVG Spinners: <https://github.com/n3r4zzurr0/svg-spinners>
 - Web icons: <https://github.com/tabler/tabler-icons>
 - Freepik icons:
-    - Bacteria: <a href="http://www.freepik.com">Designed by macrovector_official / Freepik</a>
-    - Test tube: <a href="http://www.freepik.com">Designed by Alvaro_cabrera / Freepik</a>
+    - Bacteria: <a href="https://www.freepik.com/free-vector/bacteria-icons-set_4425882.htm">Designed by macrovector_official / Freepik</a>
+    - Test tube: <a href="https://www.freepik.com/free-vector/black-white-chemical-test-tubes-icons_798687.htm">Designed by Alvaro_cabrera / Freepik</a>
+    - Office icons: <a href="https://www.freepik.com/free-vector/business-office-stationery-icons-set-smartphone-tablet-notebook-computer-isolated-vector-illustration_1158166.htm">Designed by macrovector on Freepik</a>
+

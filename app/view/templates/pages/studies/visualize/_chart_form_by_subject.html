@@ -1,0 +1,179 @@
+{% macro render_chart_form_by_subject(form, study) %}
+
+  {% set selectedExperimentId = request.args.get('selectedExperimentId', '') %}
+  {% set selectedSubjectType  = request.args.get('selectedSubjectType', '') %}
+  {% set selectedSubjectId    = request.args.get('selectedSubjectId', '0')|int %}
+
+  <div class="form-row">
+    <label>
+      <span>Experiment:</span>
+      <select name="experimentId" class="form-input-blue full">
+        {% for experiment in study.experiments: %}
+          <option
+              {{ "selected" if experiment.publicId == selectedExperimentId }}
+              value="{{ experiment.publicId }}">
+            {{- experiment.name }}: {{ experiment.description|truncate(80) -}}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  {% for experiment in study.experiments: %}
+    <div
+        class="experiment-container small hidden js-experiment-container"
+        data-experiment-id="{{ experiment.publicId }}">
+      {{ experiment.description|format_text }}
+    </div>
+  {% endfor %}
+
+  <div class="form-row margin-top-10">
+    <label class="full">
+      <span>Measurement subject:</span>
+      <select name="subject" class="form-input-blue full">
+        {% set experimentIdsBySubject = study.fetch_experiment_ids_by_measurement_subject(g.db_session) %}
+
+        {% for (subjectType, group) in study.fetch_grouped_measurement_subjects(g.db_session): %}
+          {% if subjectType == 'bioreplicate': %}
+            {% set group_label = "Community-level growth and pH" %}
+          {% elif subjectType == 'strain': %}
+            {% set group_label = "Strain-level growth" %}
+          {% elif subjectType == 'metabolite': %}
+            {% set group_label = "Metabolites" %}
+          {% endif %}
+
+          <optgroup label="{{- group_label -}}">
+            {% for (subjectId, subjectName) in group: %}
+              <option
+                  {{ "selected" if subjectType == selectedSubjectType and subjectId == selectedSubjectId }}
+                  data-experiment-ids='{{ experimentIdsBySubject[(subjectType, subjectId)]|tojson }}'
+                  value="{{ subjectType}}|{{ subjectId }}">
+                {{- subjectName -}}
+              </option>
+            {% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  {% for experiment in study.experiments: %}
+    <div
+        class="experiment-container margin-top-10 scroll-shadows hidden js-experiment-container"
+        data-experiment-id="{{ experiment.publicId }}">
+      <div class="experiment trace-group">
+        {% for technique in study.measurementTechniques: %}
+          {% for (bioreplicate, compartment), contexts in technique.get_grouped_contexts() if bioreplicate.experimentId == experiment.publicId: %}
+            {% if technique.subjectType != 'bioreplicate': %}
+              <div
+                  class="form-row hidden js-trace-row js-header-row"
+                  data-technique-id="{{ technique.id }}">
+                {% if bioreplicate.name.startswith('Average('): %}
+                  {% set description = "Average measurements over compartment {} across all biological replicates of the experiment {}.".format(compartment.name, experiment.name) %}
+                {% else: %}
+                  {% set description = "Measurements in compartment {} of biological replicate {}".format(compartment.name, bioreplicate.name) %}
+                {% endif %}
+
+                <h4 data-tooltip="{{ description }}">
+                  {% if experiment.compartments|length <= 1: %}
+                    {{ bioreplicate.name }}
+                  {% else: %}
+                    {{ bioreplicate.name }}<sub>{{ compartment.name }}</sub>
+                  {% endif %}
+
+                  {% if bioreplicate.calculationType == 'average': %}
+                    <span class="icon icon-inline icon-calculated">
+                    </span>
+                  {% endif %}
+                </h4>
+              </div>
+
+              {% if contexts|length > 1: %}
+                <div
+                    class="form-row hidden js-trace-row"
+                    data-technique-id="{{ technique.id }}">
+                  <button
+                      type="button"
+                      class="white-button small-button smaller js-select-all">
+                    🗹 Select all
+                  </button>
+
+                  <button
+                      type="button"
+                      class="white-button small-button smaller flex-right js-deselect-all"
+                      style="margin-right: 10px;">
+                    ☐ Deselect all
+                  </button>
+                </div>
+              {% endif %}
+            {% endif %}
+
+            {% for measurement_context in contexts: %}
+              {% set subjectId   = measurement_context.subjectId %}
+              {% set subjectType = measurement_context.subjectType %}
+              {% set subjectName = measurement_context.subjectName %}
+
+              {% set key = "measurementContext|{}".format(measurement_context.id) %}
+
+              <div
+                  class="form-row hidden js-trace-row"
+                  data-subject="{{ subjectType}}|{{ subjectId }}">
+                <input
+                    type="checkbox"
+                    name="{{ key }}"
+                    id="{{ key }}"
+                    {{ "checked" if measurement_context.id in form.measurement_context_ids }}
+                    {{ "data-axis-left" if measurement_context.id in form.left_axis_ids }}
+                    {{ "data-axis-right" if measurement_context.id in form.right_axis_ids }}
+                    class="js-measurement-toggle" />
+                <label for="{{ key }}">
+                  {{ measurement_context.technique.short_name }}
+
+                  in
+
+                  {% if experiment.compartments|length > 1: %}
+                    {{ bioreplicate.name }}<sub>{{ measurement_context.compartment.name }}</sub>
+                  {% else: %}
+                    {{ bioreplicate.name }}
+                  {% endif %}
+                </label>
+              </div>
+
+              {% for modeling_result in measurement_context.publishedModelingResults: %}
+                {% set key = "modelingResult|{}".format(modeling_result.id) %}
+
+                <div
+                    class="form-row small model-row hidden js-trace-row"
+                    data-technique-id="{{ measurement_context.techniqueId }}">
+                  <span class="icon icon-arrow-down-right"></span>
+                  <input
+                      type="checkbox"
+                      name="{{ key }}"
+                      id="{{ key }}"
+                      {{ "checked" if modeling_result.id in form.modeling_result_ids }}
+                      {{ "data-axis-left" if modeling_result.id in form.left_axis_model_ids }}
+                      {{ "data-axis-right" if modeling_result.id in form.right_axis_model_ids }}
+                      class="js-measurement-toggle" />
+                  <label for="{{ key }}">
+                    {{ modeling_result.model_name }}
+
+                    {% if modeling_result.short_model_name: %}
+                      ({{ modeling_result.short_model_name }})
+                    {% endif %}
+                  </label>
+                </div>
+              {% endfor %}
+            {% endfor %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+
+  <div class="form-row margin-top-10 small">
+    <a href="#" class="white-button small-button flex-right js-clear-chart">
+      🧹 Clear chart
+    </a>
+  </div>
+
+{% endmacro %}

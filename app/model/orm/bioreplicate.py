@@ -8,9 +8,19 @@ from sqlalchemy.orm import (
 )
 
 from app.model.orm.orm_base import OrmBase
+from app.model.lib.db import execute_into_df
 
 
 class Bioreplicate(OrmBase):
+    """
+    A specific physical implementation of a particular experiment.
+
+    This would usually be a specific vessel or a connected combination of
+    vessels (``Compartment`` records). All bioreplicates of one particular
+    experiment have the same experimental design. All measurements are made
+    within the context of a bioreplicate.
+    """
+
     __tablename__ = 'Bioreplicates'
 
     id:   Mapped[int] = mapped_column(primary_key=True)
@@ -19,19 +29,19 @@ class Bioreplicate(OrmBase):
     position:     Mapped[str] = mapped_column(sql.String(100))
     biosampleUrl: Mapped[str] = mapped_column(sql.String)
 
-    isControl: Mapped[bool] = mapped_column(sql.Boolean, nullable=False, default=False)
-    isBlank:   Mapped[bool] = mapped_column(sql.Boolean, nullable=False, default=False)
-
     # Only set if the bioreplicate was generated and not uploaded
     calculationType: Mapped[str] = mapped_column(sql.String(50))
 
-    studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.studyId'), nullable=False)
-    study: Mapped['Study'] = relationship(back_populates='bioreplicates')
-
-    experimentId: Mapped[int] = mapped_column(sql.ForeignKey('Experiments.id'), nullable=False)
+    experimentId: Mapped[str] = mapped_column(sql.ForeignKey('Experiments.publicId'), nullable=False)
     experiment: Mapped['Experiment'] = relationship(back_populates='bioreplicates')
 
+    study: Mapped['Study'] = relationship(
+        secondary='Experiments',
+        viewonly=True,
+    )
+
     measurementContexts: Mapped[List['MeasurementContext']] = relationship(
+        order_by='MeasurementContext.subjectTypeOrdering, MeasurementContext.subjectName',
         back_populates='bioreplicate',
         cascade='all, delete-orphan'
     )
@@ -41,12 +51,37 @@ class Bioreplicate(OrmBase):
         viewonly=True,
     )
 
-    @staticmethod
-    def find_for_study(db_session, study_id, name):
-        return db_session.scalars(
-            sql.select(Bioreplicate.id)
-            .where(
-                Bioreplicate.studyId == study_id,
-                Bioreplicate.name == name,
+    @property
+    def externalId(self):
+        """
+        For compatibility with other subjects of measurements.
+        Always ``None``, since a bioreplicate is not an external record.
+        """
+        return None
+
+    def get_df(self, db_session):
+        from app.model.orm import Measurement, MeasurementContext
+
+        query = (
+            sql.select(
+                MeasurementContext.id.label("measurementContextId"),
+                MeasurementContext.subjectType.label("subjectType"),
+                MeasurementContext.subjectName.label("subjectName"),
+                MeasurementContext.subjectExternalId.label("subjectExternalId"),
+                Measurement.timeInHours.label("time"),
+                Measurement.value,
+                Measurement.std,
             )
-        ).one()
+            .join(MeasurementContext)
+            .join(Bioreplicate)
+            .where(
+                Bioreplicate.id == self.id,
+                Measurement.value.is_not(None),
+            )
+            .order_by(
+                MeasurementContext.id,
+                Measurement.timeInSeconds,
+            )
+        )
+
+        return execute_into_df(db_session, query)

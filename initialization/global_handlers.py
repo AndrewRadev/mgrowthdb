@@ -1,33 +1,49 @@
 from uuid import uuid4
+from datetime import datetime, UTC
 
 from flask import (
-    current_app,
     g,
     redirect,
     render_template,
     request,
     session,
     url_for,
+    current_app,
 )
 import sqlalchemy as sql
 import sqlalchemy.exc as sql_exceptions
-from flask_sqlalchemy.record_queries import get_recorded_queries
 
 from db import get_connection, FLASK_DB
-from app.model.orm import User
-from app.model.lib.errors import LoginRequired
+from app.model.orm import (
+    User,
+    PageError,
+)
+from app.model.lib.errors import LoginRequired, ClientError
+from app.model.tasks.tracking import record_page_visit
 
 
 def init_global_handlers(app):
+    """
+    Main entry point of the module.
+
+    Assigns a number of request callbacks and error handlers. This includes
+    storing a database connection in ``g.db_session`` and fetching the
+    currently logged-in user in ``g.current_user``.
+    """
     app.before_request(_make_session_permanent)
+    app.before_request(_set_variables)
     app.before_request(_open_db_connection)
     app.before_request(_fetch_user)
+    app.before_request(_record_page_visit)
 
     app.after_request(_close_db_connection)
 
     app.errorhandler(404)(_render_not_found)
     app.errorhandler(sql_exceptions.NoResultFound)(_render_not_found)
 
+    app.errorhandler(ClientError)(_render_client_error)
+
+    app.errorhandler(400)(_render_bad_request)
     app.errorhandler(403)(_render_forbidden)
     app.errorhandler(500)(_render_server_error)
 
@@ -41,8 +57,20 @@ def _make_session_permanent():
     session.permanent = True
 
 
+def _set_variables():
+    if request.cookies.get('sidebar-open', 'true') == 'true':
+        g.sidebar_open = True
+    else:
+        g.sidebar_open = False
+
+    g.search_items_per_page = request.cookies.get('items-per-page', '10')
+    g.search_sort_order = request.cookies.get('sort-order', 'uploadDate_desc')
+    g.now = datetime.now(UTC)
+
+
 def _open_db_connection():
-    if request.endpoint == 'static':
+    if _is_static(request):
+        # Ignore static files
         return
 
     if 'db_conn' not in g:
@@ -53,7 +81,8 @@ def _open_db_connection():
 
 
 def _fetch_user():
-    if request.endpoint == 'static':
+    if _is_static(request):
+        # Ignore static files
         return
 
     if 'user' not in g:
@@ -72,18 +101,36 @@ def _fetch_user():
         ).one_or_none()
 
 
+def _record_page_visit():
+    if request.method != 'GET':
+        # We only track direct page visits
+        return
+    if _is_static(request):
+        # Don't record static files
+        return
+    if request.path.startswith('/admin/'):
+        # Ignore admin page requests
+        return
+    if _is_ajax(request):
+        # Ignore ajax requests
+        return
+
+    record_page_visit.delay({
+        'remote_addr':  request.remote_addr,
+        'path':         request.path,
+        'query_string': request.query_string,
+        'referrer':     request.referrer,
+        'user_agent':   request.user_agent.string,
+        'user_uuid':    session.get('user_uuid', ''),
+        'is_user':      (True if g.current_user else False),
+        'is_admin':     (True if g.current_user and g.current_user.isAdmin else False),
+    })
+
+
 def _close_db_connection(response):
-    if request.endpoint == 'static':
+    if _is_static(request):
+        # Ignore static files
         return response
-
-    if current_app.config['SQLALCHEMY_RECORD_QUERIES']:
-        recorded_queries = list(get_recorded_queries())
-
-        for query_info in recorded_queries:
-            duration_ms = round((query_info.end_time - query_info.start_time) * 1_000, 2)
-            current_app.logger.info(f"[SQL {duration_ms}ms] " + query_info.statement)
-
-        current_app.logger.info(f"SQL query count: {len(recorded_queries)}")
 
     db_conn = g.pop('db_conn', None)
     if db_conn is not None:
@@ -92,17 +139,78 @@ def _close_db_connection(response):
     return response
 
 
+def _render_bad_request(error):
+    description = error.get_description()
+
+    if _is_json(request):
+        # Clean HTML-like description for JSON
+        description = description.removeprefix('<p>').removesuffix('</p>')
+
+        return {'error': '400 Bad request', 'description': description}, 400
+    else:
+        raise error
+
+
 def _render_not_found(_error):
-    return render_template('errors/404.html'), 404
+    if _is_json(request):
+        return {'error': '404 Not found'}, 404
+    if _is_csv(request):
+        return '404 Not found', 404
+    else:
+        return render_template('errors/404.html'), 404
 
 
 def _render_forbidden(_error):
-    return render_template('errors/403.html'), 403
+    if _is_json(request):
+        return {'error': '403 Forbidden'}, 403
+    else:
+        return render_template('errors/403.html'), 403
 
 
-def _render_server_error(_error):
-    return render_template('errors/500.html'), 500
+def _render_client_error(error):
+    if _is_json(request):
+        return {'error': str(error)}, 400
+    if _is_csv(request):
+        return str(error), 400
+
+
+def _render_server_error(error):
+    try:
+        import traceback
+
+        traceback_lines = traceback.format_exception(error.original_exception)
+        page_error = PageError(
+            fullPath=request.full_path,
+            uuid=session.get('user_uuid'),
+            userId=(g.current_user.id if g.current_user else None),
+            traceback=''.join(traceback_lines).strip(),
+        )
+        g.db_session.add(page_error)
+        g.db_session.commit()
+    except Exception as e:
+        current_app.logger.warning(f"Couldn't record error in the database ({error}) due to: {e}")
+
+    if _is_json(request):
+        return {'error': '500 Server error'}, 500
+    else:
+        return render_template('errors/500.html'), 500
 
 
 def _redirect_to_login(_error):
     return redirect(url_for('user_login_page'))
+
+
+def _is_json(request):
+    return request.path.endswith('.json')
+
+
+def _is_csv(request):
+    return request.path.endswith('.csv')
+
+
+def _is_static(request):
+    return request.endpoint in ('static', 'admin.static', None)
+
+
+def _is_ajax(request):
+    return request.headers.get('X-Requested-With', '') == 'XMLHttpRequest'

@@ -1,0 +1,31 @@
+.study-visualize-page {
+  h4 {
+    margin-top: 10px;
+  }
+
+  .experiment-container {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-bottom: 10px;
+  }
+
+  .form-input-blue {
+    padding: 0.5rem !important;
+  }
+
+  .columns {
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+
+    .controls-column {
+      width: 30%;
+    }
+
+    .chart-column {
+      width: 70%;
+      overflow-x: hidden;
+    }
+  }
+
+}

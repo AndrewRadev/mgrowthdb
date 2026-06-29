@@ -1,12 +1,34 @@
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.inspection import inspect
-from sqlalchemy import LargeBinary
+import sqlalchemy as sql
 
 
 class OrmBase(DeclarativeBase):
+    "The shared base class of all the ORM models"
+
     @classmethod
     def filter_keys(Self, data: dict):
-        return {k: v for k, v in data.items() if hasattr(Self, k)}
+        return {k: v for k, v in data.items() if hasattr(Self, k) and not isinstance(getattr(Self, k), property)}
+
+    @classmethod
+    def list_ordering(Self, column, values):
+        """
+        Return an sql CASE statement that can be used to order records based on
+        the values of this column according to the given list of values.
+
+        For details, see:
+        https://docs.sqlalchemy.org/en/20/core/sqlelement.html#sqlalchemy.sql.expression.case
+        """
+        cases = []
+
+        for i, entry in enumerate(values):
+            cases.append((column == entry, i))
+
+        return sql.case(*cases, else_=len(cases))
+
+    @property
+    def class_name(self):
+        return self.__class__.__name__
 
     def update(self, **kwargs):
         for key, value in kwargs.items():
@@ -15,7 +37,7 @@ class OrmBase(DeclarativeBase):
 
     def _asdict(self):
         return {
-            c.name: "<BLOB>" if isinstance(c.type, LargeBinary) else getattr(self, c.name)
+            c.name: "<BLOB>" if isinstance(c.type, sql.LargeBinary) else getattr(self, c.name, None)
             for c in inspect(type(self)).c
         }
 
@@ -30,9 +52,13 @@ class OrmBase(DeclarativeBase):
         return f"<{type(self).__name__} {', '.join(parts)}>"
 
     def __repr__(self):
-        return f"{type(self).__name__}({', '.join([f'{k}={repr(v)}' for k, v in self._asdict().items()])}>"
+        name = type(self).__name__
+        props = ', '.join([f"{k}={repr(v)}" for k, v in self._asdict().items()])
+
+        return f"{name}({props})"
 
     def _validate_inclusion(self, key, value, valid_values):
         if value not in valid_values:
             raise ValueError(f"Invalid value for {key}: {repr(value)}, must be one of {repr(valid_values)}")
+
         return value

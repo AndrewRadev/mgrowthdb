@@ -1,0 +1,778 @@
+import tests.init  # noqa: F401
+
+import json
+from datetime import datetime, UTC
+
+import sqlalchemy as sql
+
+from app.model.orm import WorkspaceEntry
+from tests.page_test import PageTest
+
+
+class TestApiPages(PageTest):
+    def test_project_json(self):
+        project = self.create_project(name='Example project')
+        s1 = self.create_study(projectUuid=project.uuid)
+        s2 = self.create_study(projectUuid=project.uuid)
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/project/{project.publicId}.json")
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['id'], project.publicId)
+        self.assertEqual(response_json['name'], 'Example project')
+        self.assertEqual([s['id'] for s in response_json['studies']], [s1.publicId, s2.publicId])
+
+        # Nonexisting project:
+        response = self.client.get('/api/v1/project/nonexisting.json')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['error'], '404 Not found')
+
+    def test_published_study_json(self):
+        study = self.create_study(name='Example study', publishedAt=datetime.now(UTC))
+        e1    = self.create_experiment(studyId=study.publicId)
+        e2    = self.create_experiment(studyId=study.publicId)
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/study/{study.publicId}.json")
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['id'], study.publicId)
+        self.assertEqual(response_json['name'], 'Example study')
+        self.assertEqual([e['id'] for e in response_json['experiments']], [e1.publicId, e2.publicId])
+
+    def test_nonexistent_study(self):
+        response = self.client.get('/api/v1/study/nonexisting.json')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response.status, '404 NOT FOUND')
+        self.assertEqual(response_json['error'], '404 Not found')
+
+    def test_non_published_study(self):
+        study = self.create_study(name='Example study', publishedAt=None)
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/study/{study.publicId}.json")
+        response_json = self._get_json(response)
+
+        # Study is visible, but limited data is returned
+        self.assertEqual(response_json['id'], study.publicId)
+        self.assertEqual(set(response_json.keys()), {'id', 'name', 'projectId'})
+
+    def test_published_experiment_json(self):
+        study = self.create_study(publishedAt=datetime.now(UTC))
+
+        # Create community for the experiment:
+        community = self.create_community(studyId=study.publicId)
+        self.create_community_strain(communityId=community.id)
+        self.create_community_strain(communityId=community.id)
+
+        # Create experiment:
+        experiment = self.create_experiment(name='Example experiment', studyId=study.publicId, communityId=community.id)
+
+        # Add compartments:
+        compartment = self.create_compartment(studyId=study.publicId)
+        self.create_experiment_compartment(experimentId=experiment.publicId, compartmentId=compartment.id)
+
+        # Add 1 bioreplicate with 3 measurement contexts:
+        bioreplicate = self.create_bioreplicate(experimentId=experiment.publicId)
+
+        self.create_measurement_context(
+            bioreplicateId=bioreplicate.id,
+            subjectId=bioreplicate.id,
+            subjectType='bioreplicate',
+        )
+        self.create_measurement_context(
+            bioreplicateId=bioreplicate.id,
+            subjectId=self.create_study_strain(name='Roseburia').id,
+            subjectType='strain',
+        )
+        self.create_measurement_context(
+            bioreplicateId=bioreplicate.id,
+            subjectId=self.create_metabolite(name='glucose').id,
+            subjectType='metabolite',
+        )
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/experiment/{experiment.publicId}.json")
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['id'], experiment.publicId)
+        self.assertEqual(response_json['name'], 'Example experiment')
+
+        self.assertEqual(len(response_json['communityStrains']), 2)
+
+        self.assertEqual(len(response_json['bioreplicates']), 1)
+        self.assertEqual(len(response_json['bioreplicates'][0]['measurementContexts']), 3)
+
+    def test_nonexisting_experiment(self):
+        response = self.client.get('/api/v1/experiment/nonexisting.json')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response.status, '404 NOT FOUND')
+        self.assertEqual(response_json['error'], '404 Not found')
+
+    def test_non_published_experiment(self):
+        study      = self.create_study(publishedAt=None)
+        experiment = self.create_experiment(name='Example experiment', studyId=study.publicId)
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/experiment/{experiment.publicId}.json")
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['error'], '404 Not found')
+
+    def test_measurement_csv(self):
+        study        = self.create_study(publishedAt=datetime.now(UTC))
+        experiment   = self.create_experiment(studyId=study.publicId)
+        bioreplicate = self.create_bioreplicate(experimentId=experiment.publicId)
+
+        measurement_context = self.create_measurement_context(
+            studyId=study.publicId,
+            bioreplicateId=bioreplicate.id,
+            subjectId=bioreplicate.id,
+            subjectType='bioreplicate',
+        )
+        for i in range(1, 4):
+            self.create_measurement(
+                contextId=measurement_context.id,
+                timeInSeconds=(i * 3600),
+                value=(i * 10),
+            )
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.csv")
+        self.assertEqual(response.status, '200 OK')
+
+        response_df = self._get_csv(response)
+
+        self.assertEqual(response_df.columns.tolist(), ['time', 'value', 'std'])
+        self.assertEqual(response_df['time'].tolist(), [1, 2, 3])
+        self.assertEqual(response_df['value'].tolist(), [10, 20, 30])
+        self.assertTrue(response_df['std'].isna().all())
+
+    def test_measurement_json(self):
+        study           = self.create_study(publishedAt=datetime.now(UTC))
+        experiment      = self.create_experiment(studyId=study.publicId)
+        bioreplicate    = self.create_bioreplicate(name='B1', experimentId=experiment.publicId)
+        study_technique = self.create_study_technique(studyId=study.publicId, units='Cells/μL')
+        technique       = self.create_measurement_technique(studyTechniqueId=study_technique.id)
+
+        measurement_context = self.create_measurement_context(
+            studyId=study.publicId,
+            bioreplicateId=bioreplicate.id,
+            subjectId=bioreplicate.id,
+            subjectType='bioreplicate',
+            subjectName=bioreplicate.name,
+            techniqueId=technique.id,
+        )
+        for i in range(1, 4):
+            self.create_measurement(
+                contextId=measurement_context.id,
+                timeInSeconds=(i * 3600),
+                value=(i * 10),
+            )
+
+        # Unrelated measurement, not included in the count
+        self.create_measurement()
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.json")
+        self.assertEqual(response.status, '200 OK')
+
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['id'], measurement_context.id)
+        self.assertEqual(response_json['studyId'], study.publicId)
+        self.assertEqual(response_json['experimentId'], experiment.publicId)
+        self.assertEqual(response_json['techniqueType'], 'fc')
+        self.assertEqual(response_json['techniqueOriginalUnits'], 'Cells/μL')
+        self.assertEqual(response_json['techniqueUnits'], 'Cells/mL')
+        self.assertEqual(response_json['bioreplicateName'], 'B1')
+        self.assertEqual(response_json['measurementCount'], 3)
+        self.assertEqual(response_json['subject']['type'], 'bioreplicate')
+        self.assertEqual(response_json['subject']['name'], 'B1')
+
+    def test_modeling_result_json(self):
+        study               = self.create_study(name='Example study', publishedAt=datetime.now(UTC))
+        measurement_context = self.create_measurement_context(studyId=study.publicId)
+        modeling_result     = self.create_modeling_result(measurementContextId=measurement_context.id)
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/model-prediction/{modeling_result.id}.json")
+        self.assertEqual(response.status, '200 OK')
+
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['id'], modeling_result.id)
+        self.assertEqual(response_json['measurementContextId'], measurement_context.id)
+        self.assertEqual(response_json['studyId'], study.publicId)
+
+        # Check that the modeling result is present in the measurement context json:
+        response = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.json")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json['modelPredictionIds'], [modeling_result.id])
+
+    def test_non_published_measurement_endpoints(self):
+        study        = self.create_study(publishedAt=None)
+        experiment   = self.create_experiment(studyId=study.publicId)
+        bioreplicate = self.create_bioreplicate(experimentId=experiment.publicId)
+
+        measurement_context = self.create_measurement_context(
+            bioreplicateId=bioreplicate.id,
+            subjectId=bioreplicate.id,
+            subjectType='bioreplicate',
+        )
+        self.create_measurement(
+            contextId=measurement_context.id,
+            timeInSeconds=3600,
+            value=10,
+        )
+
+        self.db_session.commit()
+
+        response1 = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.json")
+        self.assertEqual(response1.status, '404 NOT FOUND')
+
+        response2 = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.csv")
+        self.assertEqual(response2.status, '404 NOT FOUND')
+        self.assertEqual(response2.data, b'404 Not found')
+
+    def test_bioreplicate_csv(self):
+        study        = self.create_study(publishedAt=datetime.now(UTC))
+        experiment   = self.create_experiment(studyId=study.publicId)
+        bioreplicate = self.create_bioreplicate(name='B1', experimentId=experiment.publicId)
+        strain       = self.create_study_strain(name='Roseburia', studyId=study.publicId)
+
+        for subject, subject_type in ((bioreplicate, 'bioreplicate'), (strain, 'strain')):
+            measurement_context = self.create_measurement_context(
+                studyId=study.publicId,
+                bioreplicateId=bioreplicate.id,
+                subjectId=subject.id,
+                subjectType=subject_type,
+                subjectName=subject.name,
+                subjectExternalId=subject.externalId,
+            )
+            for i in range(1, 4):
+                self.create_measurement(
+                    contextId=measurement_context.id,
+                    timeInSeconds=(i * 3600),
+                    value=(i * 10),
+                )
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv")
+        self.assertEqual(response.status, '200 OK')
+
+        response_df = self._get_csv(response)
+
+        self.assertEqual(response_df.columns.tolist(), [
+            'measurementContextId',
+            'subjectType',
+            'subjectName',
+            'subjectExternalId',
+            'time',
+            'value',
+            'std',
+        ])
+        self.assertEqual(response_df['time'].tolist(), [1, 2, 3, 1, 2, 3])
+        self.assertEqual(response_df['value'].tolist(), [10, 20, 30, 10, 20, 30])
+        self.assertEqual(response_df['subjectType'].tolist(), [
+            'bioreplicate', 'bioreplicate', 'bioreplicate',
+            'strain', 'strain', 'strain',
+        ])
+        self.assertEqual(response_df['subjectName'].tolist(), [
+            'B1', 'B1', 'B1',
+            'Roseburia', 'Roseburia', 'Roseburia',
+        ])
+        self.assertTrue(response_df['std'].isna().all())
+
+    def test_bioreplicate_json(self):
+        study        = self.create_study(publishedAt=datetime.now(UTC))
+        experiment   = self.create_experiment(studyId=study.publicId)
+        bioreplicate = self.create_bioreplicate(name='B1', experimentId=experiment.publicId)
+
+        measurement_context = self.create_measurement_context(
+            studyId=study.publicId,
+            bioreplicateId=bioreplicate.id,
+            subjectId=bioreplicate.id,
+            subjectType='bioreplicate',
+        )
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.json")
+        self.assertEqual(response.status, '200 OK')
+
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['id'], bioreplicate.id)
+        self.assertEqual(response_json['studyId'], study.publicId)
+        self.assertEqual(response_json['experimentId'], experiment.publicId)
+        self.assertEqual(response_json['name'], 'B1')
+        self.assertEqual(len(response_json['measurementContexts']), 1)
+        self.assertEqual(response_json['measurementContexts'][0]['id'], measurement_context.id)
+
+    def test_search(self):
+        s1 = self.create_study(publishedAt=datetime.now(UTC))
+        s2 = self.create_study(publishedAt=datetime.now(UTC))
+
+        b1 = self.create_bioreplicate(experimentId=self.create_experiment(studyId=s1.publicId).publicId)
+        b2 = self.create_bioreplicate(experimentId=self.create_experiment(studyId=s1.publicId).publicId)
+        b3 = self.create_bioreplicate(experimentId=self.create_experiment(studyId=s2.publicId).publicId)
+        b4 = self.create_bioreplicate(experimentId=self.create_experiment(studyId=s2.publicId).publicId)
+
+        roseburia = self.create_study_strain(name='Roseburia')
+        blautia   = self.create_study_strain(name='Blautia')
+
+        glucose   = self.create_metabolite(name="glucose")
+        trehalose = self.create_metabolite(name="trehalose")
+
+        mc1 = self.create_measurement_context(
+            studyId=s1.publicId,
+            bioreplicateId=b1.id,
+            subjectId=roseburia.id,
+            subjectType='strain',
+        )
+        mc2 = self.create_measurement_context(
+            studyId=s1.publicId,
+            bioreplicateId=b2.id,
+            subjectId=blautia.id,
+            subjectType='strain',
+        )
+        mc3 = self.create_measurement_context(
+            studyId=s2.publicId,
+            bioreplicateId=b3.id,
+            subjectId=roseburia.id,
+            subjectType='strain',
+        )
+        mc4 = self.create_measurement_context(
+            studyId=s2.publicId,
+            bioreplicateId=b4.id,
+            subjectId=glucose.id,
+            subjectType='metabolite',
+        )
+        mc5 = self.create_measurement_context(
+            studyId=s2.publicId,
+            bioreplicateId=b4.id,
+            subjectId=trehalose.id,
+            subjectType='metabolite',
+        )
+
+        self.db_session.commit()
+
+        # Searching by strain:
+        response = self.client.get(f"/api/v1/search.json?strainNcbiIds={roseburia.ncbiId}")
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.assertEqual(sorted(response_json['studies']), sorted([s1.publicId, s2.publicId]))
+        self.assertEqual(sorted(response_json['experiments']), sorted([b1.experimentId, b3.experimentId]))
+        mc_ids = sorted([mc['id'] for mc in response_json['measurementContexts']])
+        self.assertEqual(mc_ids, sorted([mc1.id, mc3.id]))
+
+        response = self.client.get(f"/api/v1/search.json?strainNcbiIds={blautia.ncbiId}")
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['studies'], [s1.publicId])
+        self.assertEqual(sorted(response_json['experiments']), sorted([b2.experimentId]))
+        mc_ids = sorted([mc['id'] for mc in response_json['measurementContexts']])
+        self.assertEqual(mc_ids, sorted([mc2.id]))
+
+        # Searching by metabolite:
+        query = trehalose.chebiId.removeprefix("CHEBI:")
+        response = self.client.get(f"/api/v1/search.json?metaboliteChebiIds={query}")
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response.status, '200 OK')
+        self.assertEqual(response_json['studies'], [s2.publicId])
+        self.assertEqual(sorted(response_json['experiments']), sorted([b4.experimentId]))
+        mc_ids = sorted([mc['id'] for mc in response_json['measurementContexts']])
+        self.assertEqual(mc_ids, sorted([mc5.id]))
+
+        # Searching by both strain and metabolite returns both matches (strain OR metabolite):
+        strain_query = blautia.ncbiId
+        metabolite_query = trehalose.chebiId.removeprefix("CHEBI:")
+
+        response = self.client.get(f"/api/v1/search.json?strainNcbiIds={strain_query}&metaboliteChebiIds={metabolite_query}")
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response.status, '200 OK')
+        self.assertEqual(sorted(response_json['studies']), sorted([s1.publicId, s2.publicId]))
+        self.assertEqual(sorted(response_json['experiments']), sorted([b2.experimentId, b4.experimentId]))
+        mc_ids = sorted([mc['id'] for mc in response_json['measurementContexts']])
+        self.assertEqual(mc_ids, sorted([mc2.id, mc5.id]))
+
+        # Searching by multiple strains and metabolites returns all matches:
+        strain_query = f"{blautia.ncbiId},{roseburia.ncbiId}"
+        metabolite_query = ','.join([
+            glucose.chebiId.removeprefix("CHEBI:"),
+            trehalose.chebiId.removeprefix("CHEBI:"),
+        ])
+
+        response = self.client.get(f"/api/v1/search.json?strainNcbiIds={strain_query}&metaboliteChebiIds={metabolite_query}")
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response.status, '200 OK')
+        self.assertEqual(sorted(response_json['studies']), sorted([s1.publicId, s2.publicId]))
+        self.assertEqual(
+            sorted(response_json['experiments']),
+            sorted([
+                b1.experimentId,
+                b2.experimentId,
+                b3.experimentId,
+                b4.experimentId,
+            ]),
+        )
+        mc_ids = sorted([mc['id'] for mc in response_json['measurementContexts']])
+        self.assertEqual(mc_ids, sorted([mc1.id, mc2.id, mc3.id, mc4.id, mc5.id]))
+
+        # No results:
+        response = self.client.get('/api/v1/search.json?strainNcbiIds=nonexistent')
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response.status, '200 OK')
+        self.assertEqual(response_json['studies'], [])
+        self.assertEqual(response_json['experiments'], [])
+        self.assertEqual(response_json['measurementContexts'], [])
+
+        # No search parameters:
+        response = self.client.get('/api/v1/search.json')
+        self.assertEqual(response.status, '400 BAD REQUEST')
+        self.assertTrue('error' in self._get_json(response))
+
+        # Unknown search parameter:
+        response = self.client.get('/api/v1/search.json?unknownSearchTerm=mistake')
+        self.assertEqual(response.status, '400 BAD REQUEST')
+        self.assertTrue('error' in self._get_json(response))
+
+    def test_csv_unit_conversion(self):
+        study        = self.create_study(publishedAt=datetime.now(UTC))
+        experiment   = self.create_experiment(studyId=study.publicId)
+        bioreplicate = self.create_bioreplicate(experimentId=experiment.publicId)
+        strain       = self.create_study_strain(studyId=study.publicId)
+        metabolite   = self.create_metabolite(averageMass=51)
+
+        mc_args = dict(studyId=study.publicId, bioreplicateId=bioreplicate.id)
+
+        # Bioreplicate/community measurements:
+        st1 = self.create_study_technique(units='Cells/mL')
+        mt1 = self.create_measurement_technique(studyTechniqueId=st1.id, subjectType='bioreplicate')
+        mc_b1 = self.create_measurement_context(
+            **mc_args,
+            techniqueId=mt1.id,
+            subjectId=bioreplicate.id,
+            subjectType='bioreplicate',
+        )
+        st2 = self.create_study_technique(units='')
+        mt2 = self.create_measurement_technique(studyTechniqueId=st2.id, subjectType='bioreplicate')
+        mc_b2 = self.create_measurement_context(
+            **mc_args,
+            techniqueId=mt2.id,
+            subjectId=bioreplicate.id,
+            subjectType='bioreplicate',
+        )
+
+        # Strain measurements:
+        st3 = self.create_study_technique(units='Cells/μL')
+        mt3 = self.create_measurement_technique(studyTechniqueId=st3.id, subjectType='strain')
+        mc_s1 = self.create_measurement_context(**mc_args, techniqueId=mt3.id, subjectId=strain.id, subjectType='strain')
+
+        st4 = self.create_study_technique(units='CFUs/mL')
+        mt4 = self.create_measurement_technique(studyTechniqueId=st4.id, subjectType='strain')
+        mc_s2 = self.create_measurement_context(**mc_args, techniqueId=mt4.id, subjectId=strain.id, subjectType='strain')
+
+        st5 = self.create_study_technique(units='g/L')
+        mt5 = self.create_measurement_technique(studyTechniqueId=st5.id, subjectType='strain')
+        mc_s3 = self.create_measurement_context(**mc_args, techniqueId=mt5.id, subjectId=strain.id, subjectType='strain')
+
+        # Metabolite measurements:
+        st6 = self.create_study_technique(units='mM')
+        mt6 = self.create_measurement_technique(studyTechniqueId=st6.id, subjectType='metabolite')
+        mc_m1 = self.create_measurement_context(**mc_args, techniqueId=mt6.id, subjectId=metabolite.id, subjectType='metabolite')
+
+        # All measured values are 1000, 2000, 3000
+        for mc in [mc_b1, mc_s1, mc_s2, mc_m1, mc_s3, mc_b2]:
+            for i in range(1, 4):
+                self.create_measurement(contextId=mc.id, timeInSeconds=(i * 3600), value=(i * 1000))
+
+        self.db_session.commit()
+
+        # Default growth units, Cells/mL:
+        response = self.client.get(f"/api/v1/measurement-context/{mc_b1.id}.csv")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df['value'].tolist(), [1000, 2000, 3000])
+
+        # Request Cells/μL:
+        response = self.client.get(f"/api/v1/measurement-context/{mc_b1.id}.csv?cellCountUnits=Cells/μL")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df['value'].tolist(), [1, 2, 3])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?cellCountUnits=Cells/μL")
+        response_df = self._get_csv(response)
+        mc_b1_df = response_df[response_df['measurementContextId'] == mc_b1.id]
+        self.assertEqual(mc_b1_df['value'].tolist(), [1, 2, 3])
+
+        # Request something invalid:
+        response = self.client.get(f"/api/v1/measurement-context/{mc_b1.id}.csv?cellCountUnits=g/L")
+        self.assertEqual(response.status, '400 BAD REQUEST')
+        self.assertEqual(response.text.strip(), 'Unexpected cell count units requested: g/L')
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?cellCountUnits=g/L")
+        self.assertEqual(response.status, '400 BAD REQUEST')
+        self.assertEqual(response.text.strip(), 'Unexpected cell count units requested: g/L')
+
+        # Convert metabolite units, multiplied by average mass, divided by 1000:
+        response = self.client.get(f"/api/v1/measurement-context/{mc_m1.id}.csv?metaboliteUnits=g/L")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df['value'].tolist(), [51.0, 102.0, 153.0])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?metaboliteUnits=g/L")
+        response_df = self._get_csv(response)
+        mc_m1_df = response_df[response_df['measurementContextId'] == mc_m1.id]
+        self.assertEqual(mc_m1_df['value'].tolist(), [51.0, 102.0, 153.0])
+
+        response = self.client.get(f"/api/v1/measurement-context/{mc_m1.id}.json?metaboliteUnits=g/L")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json['techniqueOriginalUnits'], 'mM')
+        self.assertEqual(response_json['techniqueUnits'], 'g/L')
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.json?metaboliteUnits=g/L")
+        response_json = self._get_json(response)
+        mc_json = [entry for entry in response_json['measurementContexts'] if entry['id'] == mc_m1.id][0]
+        self.assertEqual(mc_json['techniqueOriginalUnits'], 'mM')
+        self.assertEqual(mc_json['techniqueUnits'], 'g/L')
+
+        # Request strain measurements without parameters, converts from Cells/μL:
+        response = self.client.get(f"/api/v1/measurement-context/{mc_s1.id}.csv")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df['value'].tolist(), [1_000_000, 2_000_000, 3_000_000])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv")
+        response_df = self._get_csv(response)
+        mc_s1_df = response_df[response_df['measurementContextId'] == mc_s1.id]
+        self.assertEqual(mc_s1_df['value'].tolist(), [1_000_000, 2_000_000, 3_000_000])
+
+        # Request strain measurements with incompatible parameters, no conversion
+        response = self.client.get(f"/api/v1/measurement-context/{mc_s2.id}.csv?cellCountUnits=Cells/mL")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df['value'].tolist(), [1000, 2000, 3000])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?cellCountUnits=Cells/mL")
+        response_df = self._get_csv(response)
+        mc_s2_df = response_df[response_df['measurementContextId'] == mc_s2.id]
+        self.assertEqual(mc_s2_df['value'].tolist(), [1000, 2000, 3000])
+
+        # Request strain measurements with compatible parameters:
+        response = self.client.get(f"/api/v1/measurement-context/{mc_s2.id}.csv?cfuCountUnits=CFUs/μL")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df['value'].tolist(), [1, 2, 3])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?cfuCountUnits=CFUs/μL")
+        response_df = self._get_csv(response)
+        mc_s2_df = response_df[response_df['measurementContextId'] == mc_s2.id]
+        self.assertEqual(mc_s2_df['value'].tolist(), [1, 2, 3])
+
+    def test_metabolite_unit_conversion_without_mass(self):
+        study        = self.create_study(publishedAt=datetime.now(UTC))
+        experiment   = self.create_experiment(studyId=study.publicId)
+        bioreplicate = self.create_bioreplicate(experimentId=experiment.publicId)
+        metabolite   = self.create_metabolite(averageMass=None)
+
+        # Metabolite measurements:
+        st = self.create_study_technique(units='mM')
+        mt = self.create_measurement_technique(studyTechniqueId=st.id, subjectType='metabolite')
+        mc = self.create_measurement_context(
+            studyId=study.publicId,
+            bioreplicateId=bioreplicate.id,
+            techniqueId=mt.id,
+            subjectId=metabolite.id,
+            subjectType='metabolite',
+        )
+
+        # All measured values are 10, 20, 30
+        for i in range(1, 4):
+            self.create_measurement(contextId=mc.id, timeInSeconds=(i * 3600), value=(i * 10))
+
+        self.db_session.commit()
+
+        # Conversion fails, returns original values
+        response = self.client.get(f"/api/v1/measurement-context/{mc.id}.csv?metaboliteUnits=g/L")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df['value'].tolist(), [10, 20, 30])
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.csv?metaboliteUnits=g/L")
+        response_df = self._get_csv(response)
+        mc_df = response_df[response_df['measurementContextId'] == mc.id]
+        self.assertEqual(mc_df['value'].tolist(), [10, 20, 30])
+
+        response = self.client.get(f"/api/v1/measurement-context/{mc.id}.json?metaboliteUnits=g/L")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json['techniqueOriginalUnits'], 'mM')
+        self.assertEqual(response_json['techniqueUnits'], 'mM')
+
+        response = self.client.get(f"/api/v1/bioreplicate/{bioreplicate.id}.json?metaboliteUnits=g/L")
+        response_json = self._get_json(response)
+        mc_json = [entry for entry in response_json['measurementContexts'] if entry['id'] == mc.id][0]
+        self.assertEqual(mc_json['techniqueOriginalUnits'], 'mM')
+        self.assertEqual(mc_json['techniqueUnits'], 'mM')
+
+    def test_workspace_endpoints(self):
+        user = self.create_user(orcidId="test-orcid-id", apiKey="test-api-key")
+        w1 = self.create_workspace(userId=user.id)
+        w2 = self.create_workspace(userId=user.id, name="public", publishedAt=datetime.now(UTC))
+
+        test_data = "time,value\n1,100\n2,200\n3,400"
+
+        we1 = self.create_workspace_entry(label="WE1", data=test_data, workspaceId=w1.id)
+        we2 = self.create_workspace_entry(label="WE2", data=test_data, workspaceId=w2.id)
+        we3 = self.create_workspace_entry(label="WE3", data=test_data, workspaceId=w2.id)
+
+        self.db_session.commit()
+
+        # Default workspace is private, accessible only by api key:
+        response = self.client.get('/api/v1/workspace/test-orcid-id/default.json')
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "403 Forbidden")
+
+        response = self.client.get('/api/v1/workspace/test-orcid-id/default.json?apiKey=test-api-key')
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["name"], "default")
+        self.assertEqual([e["id"] for e in response_json["entries"]], [we1.id])
+
+        response = self.client.get('/api/v1/workspace/test-orcid-id/public.json')
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["name"], "public")
+        self.assertEqual([e["id"] for e in response_json["entries"]], [we2.id, we3.id])
+
+        # Entries in private workspaces are only accessible via api key:
+        response = self.client.get(f"/api/v1/workspace-entry/{we1.id}.json")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "404 Not found")
+
+        response = self.client.get(f"/api/v1/workspace-entry/{we1.id}.csv")
+        self.assertEqual(response.text, "404 Not found")
+
+        response = self.client.get(f"/api/v1/workspace-entry/{we1.id}.json?apiKey=test-api-key")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["label"], "WE1")
+
+        response = self.client.get(f"/api/v1/workspace-entry/{we1.id}.csv?apiKey=test-api-key")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df.columns.tolist(), ['time', 'value'])
+
+        # Public workspace, accessible to the world
+        response = self.client.get(f"/api/v1/workspace-entry/{we2.id}.json")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["label"], "WE2")
+
+        response = self.client.get(f"/api/v1/workspace-entry/{we2.id}.csv")
+        response_df = self._get_csv(response)
+        self.assertEqual(response_df.columns.tolist(), ['time', 'value'])
+
+    def test_workspace_update(self):
+        user = self.create_user(orcidId="test-orcid-id", apiKey="test-api-key")
+        workspace = self.create_workspace(userId=user.id)
+        api_url = '/api/v1/workspaces/default.json'
+
+        self.db_session.commit()
+
+        payload = {
+            "apiKey": "test-api-key",
+            "entries": [{
+                "label": "test entry",
+                "data": """
+                    time,value
+                    1,100,
+                    2,200,
+                    3,400,
+                """,
+            }]
+        }
+
+        # Workspace entry does not exist:
+        self.assertEqual(workspace.entries, [])
+
+        response = self.client.post(api_url, data=json.dumps(payload))
+        self.db_session.commit()
+        self.db_session.refresh(user)
+        response_json = self._get_json(response)
+
+        self.assertTrue(response_json["workspaceUrl"].endswith("/workspaces/test-orcid-id/default/"))
+
+        # Workspace entry exists:
+        self.assertNotEqual(workspace.entries, [])
+        workspace_entry = workspace.entries[0]
+
+        # A new workspaces entry is created after pushing another batch of data:
+        response = self.client.post(api_url, data=json.dumps(payload))
+        self.db_session.commit()
+        self.db_session.refresh(workspace)
+        response_json = self._get_json(response)
+
+        self.assertEqual(len(workspace.entries), 1)
+
+        new_workspace_entry = workspace.entries[0]
+        self.assertNotEqual(workspace_entry, new_workspace_entry)
+
+        # Label defaults to second column name, data columns relabeled
+        payload = {"apiKey": "test-api-key", "entries": [{
+            "data": "Time,Cell count,Error\n1,1e6,1e3",
+        }]}
+        response = self.client.post(api_url, data=json.dumps(payload))
+        response_json = self._get_json(response)
+        self.db_session.commit()
+        self.db_session.refresh(workspace)
+
+        new_workspace_entry = workspace.entries[0]
+        self.assertEqual(new_workspace_entry.label, "Cell count")
+        self.assertEqual(new_workspace_entry.get_df().columns.tolist(), ['time', 'value', 'error'])
+
+        # No data sent: BadRequest
+        bad_payload = {"apiKey": "test-api-key"}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "400 Bad request")
+
+        # Wrong api key: 400 client error
+        bad_payload = {"apiKey": "wrong-api-key", "entries": []}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertIn("API key", response_json["error"])
+
+        # Missing api key: Forbidden
+        bad_payload = {"entries": []}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "403 Forbidden")
+
+        # Data payload doesn't have enough columns
+        bad_payload = {"apiKey": "test-api-key", "entries": [{
+            "label": "test entry",
+            "data": "time\n1",
+        }]}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "400 Bad request")
+
+        # Data payload doesn't have enough rows
+        bad_payload = {"apiKey": "test-api-key", "entries": [{
+            "label": "test entry",
+            "data": "time,value",
+        }]}
+        response = self.client.post(api_url, data=json.dumps(bad_payload))
+        response_json = self._get_json(response)
+        self.assertEqual(response_json["error"], "400 Bad request")

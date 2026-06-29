@@ -10,15 +10,62 @@ from sqlalchemy.orm import (
 
 from app.model.orm.orm_base import OrmBase
 
+PROPERTY_NAMES = {
+    'volume':                'volume',
+    'pressure':              'pressure',
+    'stirringMode':          'stirring mode',
+    'stirringSpeed':         'stirring speed',
+    'dilutionRate':          'dilution rate',
+    'O2':                    'O<sub>2</sub>',
+    'CO2':                   'CO<sub>2</sub>',
+    'H2':                    'H<sub>2</sub>',
+    'N2':                    'N<sub>2</sub>',
+    'inoculumConcentration': 'inoculum concentration',
+    'inoculumVolume':        'inoculum volume',
+    'initialPh':             'initial pH',
+    'initialTemperature':    'initial temperature',
+}
+"The human-readable names of the properties of a Compartment"
+
+PROPERTY_UNITS = {
+    'volume':                'mL',
+    'pressure':              'atm',
+    'stirringMode':          '',
+    'stirringSpeed':         'rpm',
+    'dilutionRate':          'h<sup>-1</sup>',
+    'O2':                    '%',
+    'CO2':                   '%',
+    'H2':                    '%',
+    'N2':                    '%',
+    'inoculumConcentration': ' Cells/mL',
+    'inoculumVolume':        'mL',
+    'initialPh':             '',
+    'initialTemperature':    '°C',
+}
+"The units that properties of a Compartment are measured in"
+
 
 class Compartment(OrmBase):
+    """
+    The environment of a particular bioreplicate.
+
+    There could be multiple of these within the same bioreplicate that form a
+    single biological system, but can be measured separately.
+
+    One compartment may change to a different compartment due to a
+    ``Perturbation``.
+
+    In the future, this entity may be broken down into a separate "compartment"
+    and "environment".
+    """
+
     __tablename__ = "Compartments"
 
     id:   Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(sql.String(100), nullable=False)
 
     # Note: convert to studyUniqueID or delete
-    studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.studyId'), nullable=False)
+    studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.publicId'), nullable=False)
     study: Mapped['Study'] = relationship(back_populates='compartments')
 
     volume:        Mapped[Decimal] = mapped_column(sql.Numeric(7, 2), nullable=True)
@@ -35,6 +82,8 @@ class Compartment(OrmBase):
     inoculumVolume:        Mapped[Decimal] = mapped_column(sql.Numeric(7, 2), nullable=True)
     initialPh:             Mapped[Decimal] = mapped_column(sql.Numeric(7, 2), nullable=True)
     initialTemperature:    Mapped[Decimal] = mapped_column(sql.Numeric(7, 2), nullable=True)
+
+    dilutionRate: Mapped[Decimal] = mapped_column(sql.Numeric(7, 3), nullable=True)
 
     mediumName: Mapped[str]  = mapped_column(sql.String(100), nullable=True)
     mediumUrl:  Mapped[str]  = mapped_column(sql.String(100), nullable=True)
@@ -54,25 +103,27 @@ class Compartment(OrmBase):
 
     @property
     def properties_description(self):
-        properties = {
-            "volume":                 (self.volume, 'mL'),
-            "pressure":               (self.pressure, 'atm'),
-            "stirring mode":          (self.stirringMode, ''),
-            "stirring speed":         (self.stirringSpeed, 'rpm'),
-            "O<sub>2</sub>":          (self.O2, '%'),
-            "CO<sub>2</sub>":         (self.CO2, '%'),
-            "H<sub>2</sub>":          (self.H2, '%'),
-            "N<sub>2</sub>":          (self.N2, '%'),
-            "inoculum concentration": (self.inoculumConcentration, ' Cells/mL'),
-            "inoculum volume":        (self.inoculumVolume, ' mL'),
-            "initial pH":             (self.initialPh, ''),
-            "initial temperature":    (self.initialTemperature, '°C'),
-        }
+        formatted_properties = []
 
-        formatted_properties = [
-            f"<strong>{v}{units}</strong> {k}"
-            for (k, (v, units)) in properties.items()
-            if v is not None and v != ''
-        ]
+        for prop, name in PROPERTY_NAMES.items():
+            units = PROPERTY_UNITS[prop]
+            value = getattr(self, prop)
+
+            if value is None or value == '':
+                continue
+
+            formatted_properties.append(f"<strong>{value}{units}</strong> {name}")
 
         return ', '.join(formatted_properties)
+
+    def diff(self, other):
+        changes = []
+
+        for prop in PROPERTY_NAMES.keys():
+            value       = getattr(self, prop)
+            other_value = getattr(other, prop)
+
+            if value != other_value:
+                changes.append((PROPERTY_NAMES[prop], value, other_value))
+
+        return changes

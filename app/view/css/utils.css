@@ -1,0 +1,621 @@
+.clear {
+  clear: both;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.loading {
+  opacity: 0.5;
+}
+
+.loading-input {
+  background: url(/static/images/loader.svg) no-repeat right 10px center, var(--light-blue);
+}
+
+.loader-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  img {
+    height: 50%;
+  }
+}
+
+.full {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-1 {
+  flex: 1;
+}
+.flex-2 {
+  flex: 2;
+}
+
+.flex-right {
+  margin-left: auto;
+}
+
+.flex-start {
+  align-self: flex-start;
+}
+
+.flex-end {
+  align-self: flex-end;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-gap-10 {
+  gap: 10px;
+}
+
+.flex-gap-6 {
+  gap: 6px;
+}
+
+.float-right {
+  float: right;
+}
+
+.margin-top-0 {
+  margin-top: 0;
+}
+
+.margin-top-10 {
+  margin-top: 10px;
+}
+
+.margin-bottom-10 {
+  margin-bottom: 10px;
+}
+
+.small {
+  font-size: 14px;
+  p { margin-top: 0; }
+}
+
+.smaller {
+  font-size: 12px;
+  p { margin-top: 0; }
+}
+
+button {
+  cursor: pointer;
+}
+
+code.inline {
+  font-family: monospace;
+  font-size: 16px;
+  background-color: var(--light-blue);
+  padding: 0 6px;
+}
+
+a.external::after {
+  content: '';
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: 0.1em;
+  background-size: 100%;
+  background-image: url("/static/images/external-link.svg");
+  vertical-align: middle;
+  opacity: 0.7;
+}
+
+.truncate {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+hr {
+  clear: both;
+  height: 2px;
+  background-color: var(--border-color);
+  border: 0;
+  border-radius: 4px;
+  margin: 16px 0;
+}
+
+.box {
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 10px;
+
+  &.new {
+    border-style: dashed;
+  }
+}
+
+.box-light {
+  border-color: var(--light-border-color);
+}
+
+.chart-placeholder {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 52px;
+  opacity: 0.5;
+}
+
+.error-message,
+.flash-error {
+  display: block;
+  background: pink;
+  padding: 10px;
+  border-left: 4px solid #d02631;
+}
+
+.warning-message,
+.flash-warning {
+  display: block;
+  background: #fff3cd;
+  padding: 10px;
+  border-left: 4px solid #ffeeba;
+}
+
+.manager-message {
+  display: block;
+  background: #fff3cd;
+  padding: 10px;
+  border-left: 4px solid coral;
+}
+
+.notice-message,
+.flash-notice {
+  display: block;
+  background: #d1ecf1;
+  padding: 10px;
+  border-left: 4px solid #bee5eb;
+}
+
+.error-message-list {
+  background: pink;
+  border-left: 4px solid #d02631;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.warning-message-list {
+  background: #fff3cd;
+  border-left: 4px solid #ffeeba;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+table.simple-table {
+  border-collapse: collapse;
+
+  th, td {
+    padding: 6px 13px;
+    border: 1px solid var(--border-color);
+    vertical-align: top;
+  }
+
+  ul {
+    padding-left: 10px;
+  }
+}
+
+.dataframe-container {
+  overflow: auto;
+  max-height: 500px;
+}
+
+table.dataframe-table {
+  border-spacing: 0;
+  font-size: 13px;
+
+  th {
+    background-color: var(--sidebar-color);
+  }
+
+  th, td {
+    padding: 6px 13px;
+    border: 1px solid var(--border-color);
+    vertical-align: top;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+
+  tr.highlight {
+    background-color: var(--light-blue);
+  }
+
+  /* Border-collapse + rounded borders doesn't seem to work well. Might end up
+   * doing something different */
+  tr:first-child th:first-child {
+    border-top-left-radius: 4px;
+  }
+  tr:first-child th:last-child {
+    border-top-right-radius: 4px;
+  }
+  tr:last-child td:first-child {
+    border-bottom-left-radius: 4px;
+  }
+  tr:last-child td:last-child {
+    border-bottom-right-radius: 4px;
+  }
+}
+
+form.simple-form {
+  display: flex;
+  flex-direction: column;
+  row-gap: 10px;
+
+  .no-label {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .required {
+    font-weight: bold;
+  }
+
+  .required::after {
+    content: "* ";
+    color: red;
+  }
+
+  .form-row {
+    display: flex;
+    column-gap: 10px;
+
+    label.full {
+      flex-grow: 1;
+    }
+
+    .form-input-full {
+      width: 100%;
+    }
+
+    label span,
+    label div,
+    .input-label {
+      font-size: 14px;
+      line-height: 2;
+
+      &.help {
+        line-height: 1.2;
+      }
+    }
+  }
+
+  input[type="reset"],
+  button[type="reset"] {
+    cursor: pointer;
+  }
+
+  input[type="submit"],
+  button[type="submit"] {
+    cursor: pointer;
+    padding: 0.7rem;
+    border: 1px solid rgb(8, 131, 149);
+    border-radius: var(--border-radius);
+    background-color: rgb(8, 131, 149);
+    color: white;
+    transition: background-color var(--transition-length);
+
+    &.small-button {
+      padding: 0.3rem;
+    }
+
+    &:hover {
+      background-color: rgb(7, 110, 126);
+    }
+
+    span {
+      color: white;
+    }
+
+    &.icon {
+      border: none !important;
+      background-color: transparent !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+  }
+
+  textarea {
+    line-height: 1.5em;
+  }
+
+  input.error,
+  textarea.error {
+    border: 1px solid red;
+    box-shadow: inset 0 0 5px #a94442;
+  }
+
+  select[disabled],
+  input[disabled],
+  textarea[disabled]
+  {
+    color: gray;
+  }
+
+  button[disabled] {
+    background-color: gray;
+    &:hover {
+      background-color: gray;
+    }
+  }
+}
+
+.help {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.form-input-blue {
+  background-color: var(--light-blue);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  padding: 0.7rem;
+
+  &.form-input-small {
+    padding: 0.5rem;
+  }
+
+  transition: color var(--transition-length) ease;
+  transition: background-color var(--transition-length) ease;
+
+  &.highlight {
+    color: var(--dark-blue);
+    background-color: var(--sidebar-hover-color);
+  }
+}
+
+.button-group {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  vertical-align: middle;
+
+  .white-button {
+    border: 0;
+  }
+
+  > span,> a {
+    display: block;
+    float: left;
+  }
+}
+
+.green-button {
+  display: inline-block;
+  padding: 0.7rem;
+  border: 1px solid rgb(8, 131, 149);
+  border-radius: var(--border-radius);
+  background-color: rgb(8, 131, 149);
+  color: white;
+  text-decoration: none;
+  line-height: 1.1;
+  white-space: nowrap;
+  transition:
+    color var(--transition-length) ease-in,
+    background-color var(--transition-length) ease-in;
+
+  &.flex-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  &:hover {
+    background-color: rgb(7, 110, 126);
+    color: white;
+  }
+
+  &.small-button {
+    padding: 0.3rem;
+  }
+
+  &[disabled] {
+    color: lightgray;
+    opacity: 0.5;
+  }
+}
+
+.white-button {
+  display: inline-block;
+  padding: 0.7rem;
+  border: 1px solid rgb(8, 131, 149);
+  border-radius: var(--border-radius);
+  background-color: white;
+  text-decoration: none;
+  line-height: 1.1;
+  color: var(--black);
+  white-space: nowrap;
+  transition: background-color var(--transition-length) ease-in;
+
+  &.flex-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  &:hover {
+    background-color: #eee;
+    color: inherit;
+  }
+
+  &:visited {
+    color: inherit;
+  }
+
+  &.small-button {
+    padding: 0.3rem;
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &.orange-border {
+    border: 1px solid coral;
+  }
+
+  &.no-border {
+    border: none;
+  }
+}
+
+.tabs {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  border-bottom: 2px solid var(--border-color);
+
+  li {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: -2px;
+    padding: 0 10px;
+
+    a {
+      text-decoration: none;
+      color: var(--black);
+    }
+
+    &.current {
+      border-bottom: 2px solid var(--dark-blue);
+      a {
+        color: var(--dark-blue);
+      }
+    }
+  }
+}
+
+.copy-button-wrapper {
+  .copy-button {
+    white-space: nowrap;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    cursor: pointer;
+  }
+
+  input[type="text"] {
+    border-radius: 0;
+  }
+
+  .url-box {
+    padding: 0.3rem 10px;
+    border: 1px solid var(--dark-blue);
+    border-left: none;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  }
+
+  .show-button {
+    white-space: nowrap;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    cursor: pointer;
+  }
+}
+
+/* Taken from: https://css-tricks.com/books/greatest-css-tricks/scroll-shadows/ */
+.scroll-shadows {
+  max-height: 200px;
+  overflow: auto;
+
+  background:
+    /* Shadow Cover TOP */
+    linear-gradient(
+      white 30%,
+      rgba(255, 255, 255, 0)
+    ) center top,
+
+    /* Shadow Cover BOTTOM */
+    linear-gradient(
+      rgba(255, 255, 255, 0),
+      white 70%
+    ) center bottom,
+
+    /* Shadow TOP */
+    radial-gradient(
+      farthest-side at 50% 0,
+      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0)
+    ) center top,
+
+    /* Shadow BOTTOM */
+    radial-gradient(
+      farthest-side at 50% 100%,
+      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0)
+    ) center bottom;
+
+  background-repeat: no-repeat;
+  background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  background-size: cover;
+  flex-shrink: 0;
+}
+
+.icon-inline {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.icon.icon-edit              { background-image: url('/static/images/icons/edit.svg'); }
+.icon.icon-remove            { background-image: url('/static/images/icons/red-minus.svg'); }
+.icon.icon-delete            { background-image: url('/static/images/icons/square-red-minus.svg'); }
+.icon.icon-add               { background-image: url('/static/images/icons/green-plus.svg'); }
+.icon.icon-download-black    { background-image: url('/static/images/icons/download-black.svg'); }
+.icon.icon-download-white    { background-image: url('/static/images/icons/download-white.svg'); }
+.icon.icon-chart             { background-image: url('/static/images/icons/chart-dots-2.svg'); }
+.icon.icon-tool              { background-image: url('/static/images/icons/tool.svg'); }
+.icon.icon-info              { background-image: url('/static/images/icons/info-circle.svg'); }
+.icon.icon-duplicate         { background-image: url('/static/images/icons/transition-bottom.svg'); }
+.icon.icon-left              { background-image: url('/static/images/icons/chevrons-left.svg'); }
+.icon.icon-right             { background-image: url('/static/images/icons/chevrons-right.svg'); }
+.icon.icon-orcid             { background-image: url('/static/images/icons/orcid-authenticated.svg'); }
+.icon.icon-visible           { background-image: url('/static/images/icons/green-eye-check.svg'); }
+.icon.icon-invisible         { background-image: url('/static/images/icons/red-eye-cross.svg'); }
+.icon.icon-unknown-strain    { background-image: url('/static/images/icons/progress-help.svg'); }
+.icon.icon-calculated        { background-image: url('/static/images/icons/calculator.svg'); }
+.icon.icon-calculated-orange { background-image: url('/static/images/icons/calculator-orange.svg'); }
+.icon.icon-arrow-down-right  { background-image: url('/static/images/icons/arrow-down-right.svg'); }
+.icon.icon-upload-orange     { background-image: url('/static/images/icons/upload-orange.svg'); }
+.icon.icon-history           { background-image: url('/static/images/icons/history.svg'); }
+.icon.icon-arrows-diff       { background-image: url('/static/images/icons/arrows-diff.svg'); }
+.icon.icon-arrows-left-right { background-image: url('/static/images/icons/arrows-left-right.svg'); }

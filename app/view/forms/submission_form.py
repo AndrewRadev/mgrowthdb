@@ -1,3 +1,5 @@
+import json
+import copy
 import itertools
 from uuid import uuid4
 
@@ -10,21 +12,27 @@ from app.model.orm import (
     Project,
     Study,
     Submission,
+    SubmissionBackup
 )
 
-# The structure of a Submission's `studyDesign` field. Any parameters given to
-# the form will be merged with this as a default. Changing the structure here
-# will allow stored submissions to be reused and made compatible with the new
-# structure.
-#
-# When the `submission.studyDesign` is modified, we need to use `flag_modified`
-# to tell the ORM to persist the field.
-#
 DEFAULT_STUDY_DESIGN = {
-    'project': {'name': None, 'description': None},
-    'study':   {'name': None, 'description': None, 'url': None},
+    'project': {
+        'name':        None,
+        'description': None,
+    },
+    'study': {
+        'name':             None,
+        'description':      None,
+        'url':              None,
+        'licenseUrl':       None,
+        'authors':          [],
+        'authorCache':      None,
+        'publicationType':  None,
+        'publicationDate':  None,
+        'embargoExpiresAt': None,
+    },
 
-    'timeUnits': None,
+    'timeUnits': 'h',
 
     'strains':        [],
     'custom_strains': [],
@@ -33,48 +41,102 @@ DEFAULT_STUDY_DESIGN = {
     'communities':    [],
     'experiments':    [],
 }
+"""
+The structure of a Submission's `studyDesign` field. Any parameters given to
+the form will be merged with this as a default. Changing the structure here
+will allow stored submissions to be reused and made compatible with the new
+structure.
+"""
 
 
 class SubmissionForm:
-    def __init__(self, submission_id=None, step=0, db_session=None, user_uuid=None):
+    @classmethod
+    def create(Self, db_session, user_uuid, study_uuid=None):
+        form = Self(
+            db_session=db_session,
+            user_uuid=user_uuid,
+            study_uuid=study_uuid,
+        )
+        form.init_from_existing_study()
+        form.save()
+
+        return form
+
+    @classmethod
+    def load(Self, db_session, submission_id, step=0):
+        return Self(
+            db_session=db_session,
+            submission_id=submission_id,
+            step=step,
+        )
+
+    def __init__(self, db_session=None, submission_id=None, step=0, user_uuid=None, study_uuid=None):
         self.step       = step
         self.db_session = db_session
         self.errors     = []
 
-        # Load submission object
-        self.submission = None
-        if submission_id is not None:
-            self.submission = self.db_session.get(Submission, submission_id)
+        self._default_study_design = copy.deepcopy(DEFAULT_STUDY_DESIGN)
 
-        if self.submission is not None:
+        if submission_id is not None:
+            # Find existing submission:
+            self.submission = self.db_session.get_one(Submission, submission_id)
             self.submission.studyDesign = {
-                **DEFAULT_STUDY_DESIGN,
+                **self._default_study_design,
                 **self.submission.studyDesign,
             }
         else:
+            # Initialize a brand new submission:
             self.submission = Submission(
                 projectUniqueID=None,
-                studyUniqueID=None,
+                studyUniqueID=(study_uuid if study_uuid != '_new' else str(uuid4())),
                 userUniqueID=user_uuid,
-                studyDesign=DEFAULT_STUDY_DESIGN,
+                studyDesign=self._default_study_design,
             )
 
         # Check for an existing project/study and set the submission "type" accordingly:
         self.project_id = self._find_project_id()
         self.study_id   = self._find_study_id()
-        self.type       = self._determine_project_type()
 
-    def update_project(self, data):
+    def init_from_existing_study(self):
+        if self.study_id is None:
+            return
+
+        if study := self.db_session.get(Study, self.study_id):
+            self.submission.projectUniqueID = study.project.uuid
+            self.project_id = self._find_project_id()
+
+            # Reuse its last published design:
+            if previous_submission := study.lastSubmission:
+                self.submission.studyDesign = {
+                    **self._default_study_design,
+                    **previous_submission.studyDesign,
+                }
+                self.submission.dataFileId = previous_submission.dataFileId
+
+            # Update the project info to the last saved one:
+            self.submission.studyDesign['project']['name'] = study.project.name
+            self.submission.studyDesign['project']['description'] = study.project.description
+
+    @property
+    def show_embargo_date_input(self):
+        "Embargo date input is shown if the study is not published yet"
+        if not self.submission.study:
+            return True
+        if not self.submission.study.isPublished:
+            return True
+        return False
+
+    @property
+    def show_reuse_study_input(self):
+        "Input for reusing a study design is shown for new studies"
+        return not self.study_id
+
+    def update_study_info(self, data):
         # Update IDs:
         if data['project_uuid'] == '_new':
             self.submission.projectUniqueID = str(uuid4())
         else:
             self.submission.projectUniqueID = data['project_uuid']
-
-        if data['study_uuid'] == '_new':
-            self.submission.studyUniqueID = str(uuid4())
-        else:
-            self.submission.studyUniqueID = data['study_uuid']
 
         # If study to reuse has been given, copy its last submission's study
         # design:
@@ -88,6 +150,9 @@ class SubmissionForm:
 
             if previous_submission:
                 self.submission.studyDesign = previous_submission.studyDesign
+                # Clear out experiment ids:
+                for experiment_data in self.submission.studyDesign.get('experiments', []):
+                    experiment_data['publicId'] = None
 
         # Update text fields:
         self.submission.studyDesign['project'] = {
@@ -95,19 +160,23 @@ class SubmissionForm:
             'description': data.get('project_description', ''),
         }
         self.submission.studyDesign['study'] = {
-            'name':        data['study_name'],
-            'description': data.get('study_description', ''),
-            'url':         data.get('study_url', ''),
+            'name':             data['study_name'],
+            'description':      data.get('study_description', ''),
+            'url':              data.get('study_url', ''),
+            'licenseUrl':       data.get('license_url', ''),
+            'authors':          json.loads(data.get('authors', '[]')),
+            'authorCache':      data.get('authorCache', ''),
+            'publicationType':  data.get('publicationType', ''),
+            'publicationDate':  data.get('publicationDate', ''),
+            'embargoExpiresAt': data.get('embargo_expires_at', None),
         }
-        flag_modified(self.submission, 'studyDesign')
 
         # Validate uniqueness:
         self._validate_unique_project_names()
 
-        # Check whether projects exist:
+        # Check whether project exists:
         self.project_id = self._find_project_id()
         self.study_id   = self._find_study_id()
-        self.type       = self._determine_project_type()
 
     def update_strains(self, data):
         # Existing strains
@@ -131,15 +200,29 @@ class SubmissionForm:
         for strain_data in self.submission.studyDesign['custom_strains']:
             strain_data['name'] = strain_data['name'].strip()
 
-        flag_modified(self.submission, 'studyDesign')
+    def update_techniques(self, data):
+        for i in range(len(data['techniques'])):
+            technique_data = data['techniques'][i]
+
+            cell_types = []
+            if technique_data.get('includeLive', False):
+                cell_types.append('live')
+            if technique_data.get('includeDead', False):
+                cell_types.append('dead')
+            if technique_data.get('includeTotal', False):
+                cell_types.append('total')
+
+            technique_data['cellTypes'] = cell_types
+
+        self.update_study_design(data)
 
     def update_study_design(self, data):
         study_design = {**self.submission.studyDesign, **data}
+
         if 'csrf_token' in study_design:
             del study_design['csrf_token']
 
         self.submission.studyDesign = study_design
-        flag_modified(self.submission, 'studyDesign')
 
     def fetch_taxa(self):
         strains = self.submission.studyDesign['strains']
@@ -175,13 +258,34 @@ class SubmissionForm:
         ).all()
 
     def save(self):
+        # When the `submission.studyDesign` is modified, we need to use
+        # `flag_modified` to tell the ORM to persist the field. We always do
+        # this before saving, because almost all updates to the submission are
+        # updates to the study design.
+        #
+        flag_modified(self.submission, 'studyDesign')
+
         self.db_session.add(self.submission)
         self.db_session.commit()
 
         return self.submission.id
 
+    def save_backup(self, study_id, project_id):
+        self.db_session.add(SubmissionBackup(
+            projectId=project_id,
+            studyId=study_id,
+            userUuid=self.submission.userUniqueID,
+            studyDesign=self.submission.studyDesign,
+            dataFileId=self.submission.dataFileId,
+        ))
+        self.db_session.commit()
+
     def has_error(self, key):
         return key in self.errors
+
+    @property
+    def is_published(self):
+        return self.submission.study and self.submission.study.isPublished
 
     def error_messages(self):
         # Flatten messages per property:
@@ -189,15 +293,16 @@ class SubmissionForm:
 
     def technique_descriptions(self):
         ordering = ('bioreplicate', 'strain', 'metabolite')
-        techniques = sorted(self.submission.build_techniques(), key=lambda t: ordering.index(t.subjectType))
+        study_techniques = self.submission.build_techniques()
+        sorted_techniques = sorted(study_techniques, key=lambda t: ordering.index(t.subjectType))
 
-        for (subject_type, techniques) in itertools.groupby(techniques, lambda t: t.subjectType):
+        for (subject_type, grouped_techniques) in itertools.groupby(sorted_techniques, lambda t: t.subjectType):
             match subject_type:
                 case 'bioreplicate': type = 'Community-level'
                 case 'strain':       type = 'Strain-level'
                 case 'metabolite':   type = 'Metabolite'
 
-            yield (type, list(techniques))
+            yield (type, list(grouped_techniques))
 
     def html_step_classes(self, target_step):
         if self.step < target_step:
@@ -220,8 +325,8 @@ class SubmissionForm:
             return None
 
         return self.db_session.scalars(
-            sql.select(Project.projectId)
-            .where(Project.projectUniqueID == self.submission.projectUniqueID)
+            sql.select(Project.publicId)
+            .where(Project.uuid == self.submission.projectUniqueID)
         ).one_or_none()
 
     def _find_study_id(self):
@@ -229,17 +334,9 @@ class SubmissionForm:
             return None
 
         return self.db_session.scalars(
-            sql.select(Study.studyId)
-            .where(Study.studyUniqueID == self.submission.studyUniqueID)
+            sql.select(Study.publicId)
+            .where(Study.uuid == self.submission.studyUniqueID)
         ).one_or_none()
-
-    def _determine_project_type(self):
-        if self.project_id and self.study_id:
-            return 'update_study'
-        elif self.project_id:
-            return 'new_study'
-        else:
-            return 'new_project'
 
     def _validate_unique_project_names(self):
         self.errors = {}
@@ -250,8 +347,8 @@ class SubmissionForm:
             project_exists = self.db_session.query(
                 sql.exists()
                 .where(
-                    Project.projectName == project_name,
-                    Project.projectUniqueID != self.submission.projectUniqueID
+                    Project.name == project_name,
+                    Project.uuid != self.submission.projectUniqueID
                 )
             ).scalar()
 

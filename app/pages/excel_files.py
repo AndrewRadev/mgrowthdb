@@ -31,7 +31,7 @@ def download_excel_file(id):
 
     # TODO (2025-04-14) Add a check for already-submitted studies, once we plug in studyId
 
-    if g.current_user.uuid not in allowed_user_ids:
+    if g.current_user.uuid not in allowed_user_ids and not g.current_user.isAdmin:
         raise Forbidden()
 
     return send_file(

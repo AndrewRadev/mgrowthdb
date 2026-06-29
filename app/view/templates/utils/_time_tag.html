@@ -1,7 +1,9 @@
 {%- macro time_tag(timestamp, format="%Y-%m-%d %H:%M", relative=False) -%}
   <time
       class="{{ class }}"
-      data-tooltip="{{ timestamp.strftime("%c UTC") }}"
+      {% if not format.startswith("%c"): %}
+        data-tooltip="{{ timestamp.strftime("%c UTC") }}"
+      {% endif %}
       datetime="{{ timestamp.isoformat() }}">
     {% if relative: %}
       {{ timestamp|relative_time }}

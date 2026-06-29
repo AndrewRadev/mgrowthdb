@@ -24,6 +24,7 @@ from app.model.orm import (
     Bioreplicate,
     Community,
     Compartment,
+    CustomModel,
     ExcelFile,
     Experiment,
     ExperimentCompartment,
@@ -31,16 +32,20 @@ from app.model.orm import (
     MeasurementContext,
     MeasurementTechnique,
     Metabolite,
-    ModelingRequest,
     ModelingResult,
+    PageError,
+    PageVisit,
+    PageVisitCounter,
     Perturbation,
     Project,
     ProjectUser,
-    Strain,
     Study,
     StudyMetabolite,
+    StudyStrain,
+    StudyTechnique,
     StudyUser,
     Submission,
+    SubmissionBackup,
     Taxon,
     User,
 )
@@ -48,10 +53,49 @@ from app.model.lib.util import humanize_camelcased_string
 
 
 def json_formatter(_view, data, _name):
+    "Format JSON using ``simplejson`` with ``use_decimal=True``"
     return Markup(f"<pre>{json.dumps(data, indent=2, use_decimal=True)}</pre>")
 
 
+def json_page_visit_counter_formatter(_view, data, _name):
+    "Format nested JSON as an HTML table, specifically for Page Visit records"
+    sorted_entries = sorted(
+        ((k, v) for k, v in data.items() if v['visitCount'] > 0),
+        key=lambda pair: -pair[1]['visitCount'],
+    )
+
+    rows = []
+
+    for key, entry in sorted_entries:
+        rows.append(f"""
+            <tr>
+              <td>{key}</td>
+              <td>{entry['visitCount']}</td>
+              <td>{entry['visitorCount']}</td>
+              <td>{entry['userCount']}</td>
+            </tr>
+        """)
+
+    html = f"""
+        <table style="font-size: 14px;">
+          <thead>
+            <tr>
+              <th>Key ({len(sorted_entries)})</th>
+              <th>Visits</th>
+              <th>Visitors</th>
+              <th>Users</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"\n".join(rows)}
+          </tbody>
+        </table>
+    """
+
+    return Markup(html)
+
 def record_formatter(_view, record, *args):
+    "Format ORM records to make them easier to read"
     if hasattr(record, 'publicId'):
         return record.publicId
     elif hasattr(record, 'name'):
@@ -60,16 +104,15 @@ def record_formatter(_view, record, *args):
         return str(record)
 
 
-FORMATTERS = {
+_FORMATTERS = {
     dict: json_formatter,
     OrmBase: record_formatter,
 }
 
 
 class AppJSONField(fields.TextAreaField):
-    """
-    Copied from Flask-admin to replace `json` with `simplejson` with `use_decimal=True`
-    """
+    "Copied from Flask-admin to replace ``json`` with ``simplejson`` with ``use_decimal=True``"
+
     def _value(self):
         if self.raw_data:
             return self.raw_data[0]
@@ -80,6 +123,8 @@ class AppJSONField(fields.TextAreaField):
             return '{}'
 
     def process_formdata(self, valuelist):
+        "Process data received over the wire from a form."
+
         if valuelist:
             value = valuelist[0]
 
@@ -95,6 +140,8 @@ class AppJSONField(fields.TextAreaField):
 
 
 class AppModelConverter(AdminModelConverter):
+    "Custom converter for JSON and datetime fields"
+
     @converts('JSON')
     def convert_JSON(self, field_args, **extra):
         return AppJSONField(**field_args)
@@ -105,7 +152,11 @@ class AppModelConverter(AdminModelConverter):
 
 
 class AppDateTimeField(form.DateTimeField):
+    "Ensures that timestamps in the database are stored in the UTC timezone"
+
     def process_formdata(self, valuelist):
+        "Process data received over the wire from a form."
+
         if not valuelist:
             return
 
@@ -121,6 +172,8 @@ class AppDateTimeField(form.DateTimeField):
 
 
 class AppAdminIndexView(AdminIndexView):
+    "Blocks the entire admin for non-admin users"
+
     @expose('/')
     def index(self):
         if not g.current_user or not g.current_user.isAdmin:
@@ -129,40 +182,70 @@ class AppAdminIndexView(AdminIndexView):
 
 
 class AppView(ModelView):
+    "Custom view with common functionality for ORM records"
+
     can_export       = True
     can_view_details = True
 
-    model_form_converter = AppModelConverter
+    # By default, sort by id DESC, so the newest records show up first. This is
+    # overridden below for the three records that use "publicId" as the primary
+    # key.
+    column_default_sort = ('id', True)
 
-    def prettify_name(self, name):
+    model_form_converter = AppModelConverter
+    "Custom converter for JSON and datetime"
+
+    def _prettify_name(self, name):
+        "Overridden to render camelCased strings nicely in various places"
         return humanize_camelcased_string(name).title()
 
-    column_type_formatters        = FORMATTERS
-    column_type_formatters_export = FORMATTERS
-    column_type_formatters_detail = FORMATTERS
+    column_type_formatters = _FORMATTERS
+    "Custom formatters for the list view"
+
+    column_type_formatters_export = _FORMATTERS
+    "Custom formatters for the export view"
+
+    column_type_formatters_detail = _FORMATTERS
+    "Custom formatters for the detail view"
 
     def is_accessible(self):
+        "Only allow admin users to the admin"
         return g.current_user and g.current_user.isAdmin
 
     def inaccessible_callback(self, name, **kwargs):
+        "Raise 404 instead of 403 to hide the presence of the endpoint for bots"
         raise NotFound()
 
 
 def init_admin(app):
+    """
+    Main entry point of the module, initializes Flask-Admin for our Flask app
+    """
+
     configure_mappers()
 
     admin = Admin(
         app,
-        name='μGrowthDB admin',
+        name='mGrowthDB admin',
         index_view=AppAdminIndexView(),
     )
 
     db_session = FLASK_DB.session
 
     class StudyView(AppView):
-        column_searchable_list = ['studyName']
-        column_exclude_list = ['studyDescription']
-        form_excluded_columns = ['measurements', 'measurementContexts', 'measurementTechniques']
+        column_searchable_list = ['name']
+        column_exclude_list = ['description', 'authors']
+        column_default_sort = ('publicId', True)
+        form_excluded_columns = [
+            'measurements', 'measurementContexts', 'studyTechniques', 'measurementTechniques',
+            'studyUsers', 'experiments', 'strains', 'communities', 'compartments',
+            'modelingResults', 'bioreplicates',
+            'studyMetabolites', 'metabolites',
+            'authorCache',
+        ]
+
+    class ProjectView(AppView):
+        column_default_sort = ('publicId', True)
 
     class SubmissionView(AppView):
         column_exclude_list = ['studyDesign', 'dataFile']
@@ -190,25 +273,45 @@ def init_admin(app):
                 download_name=file.filename
             )
 
-    admin.add_view(AppView(Project,           db_session, category="Studies"))
-    admin.add_view(StudyView(Study,           db_session, category="Studies"))
-    admin.add_view(SubmissionView(Submission, db_session, category="Studies"))
-    admin.add_view(AppView(Strain,            db_session, category="Studies"))
-    admin.add_view(AppView(StudyMetabolite,   db_session, category="Studies"))
-    admin.add_view(ExcelFileView(ExcelFile,   db_session, category="Studies"))
+    admin.add_view(ProjectView(Project,             db_session, category="Studies"))
+    admin.add_view(StudyView(Study,                 db_session, category="Studies"))
+    admin.add_view(SubmissionView(Submission,       db_session, category="Studies"))
+    admin.add_view(SubmissionView(SubmissionBackup, db_session, category="Studies"))
+    admin.add_view(AppView(StudyStrain,             db_session, category="Studies"))
+    admin.add_view(AppView(StudyMetabolite,         db_session, category="Studies"))
+    admin.add_view(ExcelFileView(ExcelFile,         db_session, category="Studies"))
 
-    admin.add_view(AppView(Experiment,            db_session, category="Experiments"))
-    admin.add_view(AppView(ExperimentCompartment, db_session, category="Experiments"))
-    admin.add_view(AppView(Compartment,           db_session, category="Experiments"))
-    admin.add_view(AppView(Bioreplicate,          db_session, category="Experiments"))
-    admin.add_view(AppView(Community,             db_session, category="Experiments"))
-    admin.add_view(AppView(Perturbation,          db_session, category="Experiments"))
+    class ExperimentEntityView(AppView):
+        # We ignore all of these "child" entities, because they can't
+        # practically be updated through the form.
+        form_excluded_columns = [
+            'bioreplicates',
+            'compartments',
+            'perturbations',
+            'experimentCompartments',
+            'experiments',
+            'measurementContexts',
+            'measurements',
+        ]
+    class ExperimentView(ExperimentEntityView):
+        column_default_sort = ('publicId', True)
 
-    admin.add_view(AppView(MeasurementTechnique, db_session, category="Measurements"))
-    admin.add_view(AppView(MeasurementContext,   db_session, category="Measurements"))
-    admin.add_view(AppView(Measurement,          db_session, category="Measurements"))
-    admin.add_view(AppView(ModelingRequest,      db_session, category="Measurements"))
-    admin.add_view(AppView(ModelingResult,       db_session, category="Measurements"))
+    admin.add_view(ExperimentView(Experiment,                  db_session, category="Experiments"))
+    admin.add_view(ExperimentEntityView(ExperimentCompartment, db_session, category="Experiments"))
+    admin.add_view(ExperimentEntityView(Compartment,           db_session, category="Experiments"))
+    admin.add_view(ExperimentEntityView(Bioreplicate,          db_session, category="Experiments"))
+    admin.add_view(ExperimentEntityView(Community,             db_session, category="Experiments"))
+    admin.add_view(ExperimentEntityView(Perturbation,          db_session, category="Experiments"))
+
+    class ModelingResultView(AppView):
+        column_exclude_list = ['rSummary', 'xValues', 'yValues', 'yErrors']
+
+    admin.add_view(AppView(StudyTechnique,            db_session, category="Measurements"))
+    admin.add_view(AppView(MeasurementTechnique,      db_session, category="Measurements"))
+    admin.add_view(AppView(MeasurementContext,        db_session, category="Measurements"))
+    admin.add_view(AppView(Measurement,               db_session, category="Measurements"))
+    admin.add_view(ModelingResultView(ModelingResult, db_session, category="Measurements"))
+    admin.add_view(ModelingResultView(CustomModel,    db_session, category="Measurements"))
 
     class MetaboliteView(AppView):
         column_searchable_list = ['name']
@@ -221,10 +324,40 @@ def init_admin(app):
     admin.add_view(TaxonView(Taxon,           db_session, category="External data"))
 
     class UserView(AppView):
-        form_excluded_columns = ['createdAt', 'updatedAt', 'lastLoginAt']
+        form_excluded_columns = [
+            'createdAt', 'lastLoginAt', 'updatedAt', 'submissions',
+            'orcidToken',
+            'managedProjects', 'managedStudies',
+            'ownedProjects', 'ownedStudies',
+            'projectUsers', 'studyUsers',
+        ]
 
-    admin.add_view(UserView(User,       db_session, category="Users"))
-    admin.add_view(AppView(StudyUser,   db_session, category="Users"))
-    admin.add_view(AppView(ProjectUser, db_session, category="Users"))
+    class PageVisitView(AppView):
+        column_list = [
+            'createdAt',
+            'path', 'parsedQuery',
+            'userAgent', 'ip', 'country',
+            'uuid', 'isBot', 'isUser', 'isAdmin',
+        ]
+        column_filters = ['isBot', 'isUser', 'isAdmin', 'country', 'path']
+
+    class PageVisitCounterView(AppView):
+        column_type_formatters = {
+            **_FORMATTERS,
+            dict: json_page_visit_counter_formatter,
+        }
+
+    class PageErrorView(AppView):
+        column_list = ['createdAt', 'fullPath', 'traceback', 'uuid', 'userId']
+        column_formatters = {
+            'traceback': lambda v, c, m, p: Markup(f"<pre>{m.traceback}</pre>"),
+        }
+
+    admin.add_view(UserView(User,                         db_session, category="Users"))
+    admin.add_view(AppView(StudyUser,                     db_session, category="Users"))
+    admin.add_view(AppView(ProjectUser,                   db_session, category="Users"))
+    admin.add_view(PageVisitView(PageVisit,               db_session, category="Users"))
+    admin.add_view(PageVisitCounterView(PageVisitCounter, db_session, category="Users"))
+    admin.add_view(PageErrorView(PageError,               db_session, category="Users"))
 
     return app

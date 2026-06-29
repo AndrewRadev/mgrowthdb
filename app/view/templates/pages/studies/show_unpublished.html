@@ -1,23 +1,30 @@
 {% from 'utils/_dataframe.html' import render_dataframe %}
+{% from 'utils/_time_tag.html' import time_tag %}
 
 {% extends '_layout.html' %}
 
-{% block title %}: Study {{ study.studyId }}{% endblock %}
+{% block title %}: Study {{ study.publicId }}{% endblock %}
 
 {% block content %}
   <div class="container study-page">
     {% include 'pages/studies/_header.html' %}
 
     <article>
-      <h1>{{ study.studyName }}</h1>
+      <h1>{{ study.name }}</h1>
 
-      {% if study.studyDescription: %}
-        <p>{{ study.studyDescription }}</p>
+      {% if study.description: %}
+        {{ study.description|format_text }}
       {% endif %}
 
       <p>
         <em>This study is not published yet, so its data is not available at this time.</em>
       </p>
+
+      {% if study.embargoExpiresAt: %}
+        <p>
+          <em>The study is expected to be published after the embargo date provided by the authors: <strong>{{ time_tag(study.embargoExpiresAt, format="%Y-%m-%d") }}</strong></em>.
+        </p>
+      {% endif %}
     </article>
   </div>
 {% endblock %}

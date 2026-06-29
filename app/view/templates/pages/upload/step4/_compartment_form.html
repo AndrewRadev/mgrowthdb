@@ -1,8 +1,8 @@
 {% macro render_compartment_form(form, index) %}
   <div class="subform-container box js-subform-container">
     <h3>
-      Compartment <span class="js-index">{{ index + 1 if index is not none else '' }}</span>
-      {%- if form.data['name']: -%}: {{ form.data['name'] }}{% endif %}
+      Compartment <span class="js-index">{{ index + 1 if index is not none else '' }}</span>:
+      <span class="js-title">{{ form.data['name'] or '[New]' }}</span>
     </h3>
 
     <div class="form-row form-row-compact">
@@ -16,8 +16,11 @@
         {{ form.mediumName(class="form-input-blue form-input-full", placeholder="e.g. Wilkins-Chalgren") }}
       </label>
 
-      <label data-tooltip="A link to a URL with information about the medium. MediaDive is recommended">
-        <div>Medium URL</div>
+      <label>
+        <div>
+          Medium URL
+          <span class="icon icon-info" data-tooltip="A link to a URL with information about the medium. MediaDive is recommended"></span>
+        </div>
         {{ form.mediumUrl(class="form-input-blue form-input-full", placeholder="https://mediadive.dsmz.de/medium/339") }}
       </label>
     </div>
@@ -41,6 +44,14 @@
       <label>
         <div>Stirring speed (rpm)</div>
         {{ form.stirringSpeed(class='form-input-blue') }}
+      </label>
+
+      <label >
+        <div>
+          Dilution rate (h<sup>-1</sup>)
+          <span class="icon icon-info" data-tooltip="For chemostat experiments"></span>
+        </div>
+        {{ form.dilutionRate(class='form-input-blue') }}
       </label>
     </div>
 
@@ -87,7 +98,7 @@
         {{ form.inoculumVolume(class='form-input-blue') }}
       </label>
 
-      <a href="#" class="white-button flex-row flex-end js-duplicate-trigger">
+      <a href="#" class="white-button flex-row flex-end js-duplicate-trigger js-duplicate-compartment-{{ index or 'new' }}">
         <span class="icon icon-duplicate"></span> Duplicate
       </a>
 

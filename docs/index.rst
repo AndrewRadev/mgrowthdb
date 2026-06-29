@@ -5,46 +5,28 @@
 
    .. image:: https://readthedocs.org/projects/crest/badge/?version=latest
       :target: https://mgrowthdb.readthedocs.io/en/latest/?badge=latest
-      :alt: Documentation Status
+      :alt: Documentation status
 
 .. toctree::
-   :numbered: 1
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: About μGrowthDB
 
    about/introduction
+   about/installation
+   about/deployment
    about/known-issues
    about/history
 
-
 .. toctree::
-   :numbered:
-   :maxdepth: 3
-   :caption: Data Submission
+   :maxdepth: 1
+   :caption: Developer guides
 
-   submission/upload
-
-
-.. toctree::
-   :numbered:
-   :maxdepth: 3
-   :caption: Data Discovery and Retrieval
-
-   retrieval/discover
-
-.. toctree::
-   :numbered:
-   :maxdepth: 3
-   :caption: Tips and hints
-
-   faqs/faqs
-
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Developer Guide
-
-   contributing/intro
-   contributing/model_layer
+   contributing/orm_models
    contributing/controller_layer
    contributing/workers
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Reference documentation
+
+   api.md

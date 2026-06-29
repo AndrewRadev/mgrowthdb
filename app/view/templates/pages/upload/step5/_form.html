@@ -3,8 +3,8 @@
 {% macro render_step5_form(submission_form, upload_form) %}
 
   <form
-      class="simple-form"
-      action="{{ url_for('upload_step5_page') }}"
+      class="simple-form step-form js-step-form"
+      action="{{ url_for('upload_step5_page', id=submission_form.submission.id) }}"
       method="POST">
 
     {{ upload_form.csrf_token }}
@@ -34,15 +34,13 @@
 
     <div class="form-row flex-right flex-row">
       <a href="#" class="white-button flex-row js-add-trigger js-add-experiment">
-        <span class="icon icon-add"></span> Experiment
+        <span class="icon icon-add"></span> Add experiment
       </a>
     </div>
 
     <div class="form-row">
-      <input
-          type="submit"
-          class="form-input-blue"
-          value="Next" />
+      <input type="submit" class="form-input-blue" value="Next" />
+      {% include 'pages/upload/_loader.html' %}
     </div>
 
     <template class="experiment-form">

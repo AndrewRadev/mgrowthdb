@@ -21,16 +21,14 @@
         </label>
 
         <label class="full">
-          <span class="species-text">Parent species:</span>
+          <span class="required species-text">Parent strain/species:</span>
           <select
               name="{{ prefix }}species"
               class="form-input-full form-input-blue js-single-strain-select"
               required>
             {% if submission.studyDesign['custom_strains']|length > 0 and index is not none and index < submission.studyDesign['custom_strains']|length: %}
               {% set custom_strain_data = submission.studyDesign['custom_strains'][index] %}
-              <option value="{{ custom_strain_data['species'] }}">
-              {{ custom_strain_data['species_name'] }} (NCBI:{{ custom_strain_data['species'] }})
-              </option>
+              <option value="{{ custom_strain_data['species'] }}">{{ custom_strain_data['species_name'] }} (NCBI:{{ custom_strain_data['species'] }})</option>
             {% endif %}
           </select>
         </label>
@@ -38,12 +36,12 @@
 
       <label class="full flex-1">
         <div>Description</div>
-        {{ form['description'](class='form-input-blue form-input-full', rows=5) }}
+        {{ form['description'](class='form-input-blue form-input-full', rows=4) }}
       </label>
     </div>
 
     <div class="form-row">
-      <a href="#" class="white-button flex-row js-duplicate-trigger">
+      <a href="#" class="white-button flex-row js-duplicate-trigger js-duplicate-{{ index or 'new' }}">
         <span class="icon icon-duplicate"></span> Duplicate
       </a>
 

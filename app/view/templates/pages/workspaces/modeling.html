@@ -1,0 +1,61 @@
+{% from 'pages/workspaces/modeling/_modeling_form.html' import render_modeling_form %}
+
+{% extends '_layout.html' %}
+
+{% block title %}: Workspace data modeling{% endblock %}
+
+{% block head %}
+  {% assets "plotly_js" %}
+  <script src="{{ ASSET_URL }}" type="text/javascript"></script>
+  {% endassets %}
+{% endblock %}
+
+{% set chart_url = url_for(
+  'workspaces_modeling_chart_fragment',
+  orcidId=workspace.user.orcidId,
+  name=workspace.name
+) %}
+
+{% block content %}
+  <div
+    data-chart-url="{{ chart_url }}"
+    data-orcid-id="{{ workspace.user.orcidId }}"
+    data-workspace-name="{{ workspace.name }}"
+    class="container workspaces-modeling-page">
+    <div class="workspaces-header-component flex-row">
+      {% include 'pages/workspaces/shared/_header.html' %}
+    </div>
+
+    <article>
+      {% include 'pages/workspaces/shared/_tabs.html' %}
+
+      {% if workspace.manageable_by_user(g.current_user): %}
+        <p class="help small">
+          Select a type of model to fit to your growth data. The results will
+          be available in the "Visualize" tab if the calculation is successful.
+          {{ "workspaces"|help_link("Read more") }}.
+        </p>
+      {% endif %}
+
+      {# TODO: "Download model parameters" csv link? #}
+
+      <form
+          action="{{ url_for('workspaces_modeling_submit_action', orcidId=workspace.user.orcidId, name=workspace.name) }}"
+          class="simple-form modeling-form margin-top-10 js-modeling-form">
+        <div class="columns">
+          <div class="controls-column">
+            {{ render_modeling_form(workspace) }}
+          </div>
+
+          <div class="chart-column">
+            <div class="chart js-chart">
+              <div class="chart-placeholder box chart-container">
+                📊
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </article>
+  </div>
+{% endblock %}

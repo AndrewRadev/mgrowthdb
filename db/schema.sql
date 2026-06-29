@@ -23,20 +23,20 @@ DROP TABLE IF EXISTS Bioreplicates;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE Bioreplicates (
-  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   id int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  experimentId int NOT NULL,
   biosampleUrl text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   position varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   isControl tinyint(1) NOT NULL DEFAULT '0',
   isBlank tinyint(1) NOT NULL DEFAULT '0',
   calculationType varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  experimentId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY studyId (studyId,`name`),
-  KEY fk_1 (experimentId),
-  CONSTRAINT BioReplicatesPerExperiment_fk_1 FOREIGN KEY (experimentId) REFERENCES Experiments (id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT BioReplicatesPerExperiment_fk_2 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY Bioreplicates_experimentId (experimentId),
+  CONSTRAINT Bioreplicates_experimentId FOREIGN KEY (experimentId) REFERENCES Experiments (publicId) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT BioReplicatesPerExperiment_fk_2 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -54,8 +54,25 @@ CREATE TABLE Communities (
   strainIds json NOT NULL DEFAULT (json_array()),
   PRIMARY KEY (id),
   KEY fk_2 (studyId),
-  CONSTRAINT Community_fk_2 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT Community_fk_2 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `CommunityStrains`
+--
+
+DROP TABLE IF EXISTS CommunityStrains;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE CommunityStrains (
+  id int NOT NULL AUTO_INCREMENT,
+  communityId int NOT NULL,
+  strainId int NOT NULL,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY CommunityStrains_join (communityId,strainId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -84,10 +101,54 @@ CREATE TABLE Compartments (
   carbonSource tinyint(1) DEFAULT '0',
   mediumName varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   mediumUrl varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  dilutionRate decimal(7,3) DEFAULT NULL,
   PRIMARY KEY (id),
   KEY fk_1 (studyId),
-  CONSTRAINT Compartments_fk_1 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT Compartments_fk_1 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `CustomModels`
+--
+
+DROP TABLE IF EXISTS CustomModels;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE CustomModels (
+  id int NOT NULL AUTO_INCREMENT,
+  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  shortName varchar(5) DEFAULT NULL,
+  coefficientNames json DEFAULT (json_array()),
+  fitNames json DEFAULT (json_array()),
+  PRIMARY KEY (id),
+  KEY CustomModels_studyId (studyId),
+  CONSTRAINT CustomModels_studyId FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `DashboardEntries`
+--
+
+DROP TABLE IF EXISTS DashboardEntries;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE DashboardEntries (
+  id int NOT NULL AUTO_INCREMENT,
+  userId int NOT NULL,
+  label varchar(255) NOT NULL,
+  `data` text,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY DashboardEntries_userId (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -116,16 +177,16 @@ DROP TABLE IF EXISTS ExperimentCompartments;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE ExperimentCompartments (
   studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  experimentId int NOT NULL,
   compartmentId int NOT NULL,
   id bigint unsigned NOT NULL AUTO_INCREMENT,
+  experimentId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (id),
   KEY fk_2 (compartmentId),
   KEY fk_4 (studyId),
-  KEY CompartmentsPerExperiment_fk_1 (experimentId),
-  CONSTRAINT CompartmentsPerExperiment_fk_1 FOREIGN KEY (experimentId) REFERENCES Experiments (id) ON DELETE CASCADE ON UPDATE CASCADE,
+  KEY ExperimentCompartments_experimentId (experimentId),
   CONSTRAINT CompartmentsPerExperiment_fk_2 FOREIGN KEY (compartmentId) REFERENCES Compartments (id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT CompartmentsPerExperiment_fk_4 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT CompartmentsPerExperiment_fk_4 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT ExperimentCompartments_experimentId FOREIGN KEY (experimentId) REFERENCES Experiments (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -138,18 +199,17 @@ DROP TABLE IF EXISTS Experiments;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE Experiments (
   studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  id int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   cultivationMode varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   communityId int DEFAULT NULL,
-  publicId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (id),
+  publicId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  PRIMARY KEY (publicId),
   UNIQUE KEY Experiments_publicId (publicId),
   KEY fk_1 (studyId),
   KEY Experiment_fk_1 (communityId),
   CONSTRAINT Experiment_fk_1 FOREIGN KEY (communityId) REFERENCES Communities (id) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT Experiments_fk_1 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT Experiments_fk_1 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -166,9 +226,12 @@ CREATE TABLE MeasurementContexts (
   bioreplicateId int NOT NULL,
   compartmentId int NOT NULL,
   techniqueId int DEFAULT NULL,
-  subjectId varchar(100) NOT NULL,
+  deprecatedSubjectId varchar(100) DEFAULT NULL,
   subjectType varchar(100) NOT NULL,
   calculationType varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  subjectId int NOT NULL,
+  subjectName varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  subjectExternalId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (id),
   KEY MeasurementContexts_fk_1 (bioreplicateId),
   KEY MeasurementContexts_fk_2 (compartmentId),
@@ -177,7 +240,7 @@ CREATE TABLE MeasurementContexts (
   CONSTRAINT MeasurementContexts_fk_1 FOREIGN KEY (bioreplicateId) REFERENCES Bioreplicates (id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT MeasurementContexts_fk_2 FOREIGN KEY (compartmentId) REFERENCES Compartments (id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT MeasurementContexts_fk_3 FOREIGN KEY (techniqueId) REFERENCES MeasurementTechniques (id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT MeasurementContexts_fk_4 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT MeasurementContexts_fk_4 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -192,17 +255,15 @@ CREATE TABLE MeasurementTechniques (
   id int NOT NULL AUTO_INCREMENT,
   `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   subjectType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  units varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `description` text,
   includeStd tinyint(1) NOT NULL DEFAULT '0',
-  studyUniqueId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   metaboliteIds json DEFAULT (json_array()),
-  strainIds json DEFAULT (json_array()),
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  studyTechniqueId int DEFAULT NULL,
+  cellType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (id),
-  KEY MeasurementTechniques_studyUniqueId (studyUniqueId),
-  CONSTRAINT MeasurementTechniques_studyUniqueId FOREIGN KEY (studyUniqueId) REFERENCES Studies (studyUniqueID) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY MeasurementTechniques_studyTechniqueId (studyTechniqueId),
+  CONSTRAINT MeasurementTechniques_studyTechniqueId FOREIGN KEY (studyTechniqueId) REFERENCES StudyTechniques (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -236,9 +297,11 @@ DROP TABLE IF EXISTS Metabolites;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE Metabolites (
   chebiId varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `name` varchar(512) COLLATE utf8mb4_bin NOT NULL,
+  `name` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   id int NOT NULL AUTO_INCREMENT,
   averageMass decimal(10,5) DEFAULT NULL,
+  `definition` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  massIsEstimation tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (id),
   UNIQUE KEY Metabolites_chebiId (chebiId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -260,28 +323,6 @@ CREATE TABLE MigrationVersions (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `ModelingRequests`
---
-
-DROP TABLE IF EXISTS ModelingRequests;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE ModelingRequests (
-  id int NOT NULL AUTO_INCREMENT,
-  `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  jobUuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  state varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `error` text,
-  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  PRIMARY KEY (id),
-  KEY ModelingRequests_studyId (studyId),
-  CONSTRAINT ModelingRequests_studyId FOREIGN KEY (studyId) REFERENCES Studies (studyId)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `ModelingResults`
 --
 
@@ -291,20 +332,90 @@ DROP TABLE IF EXISTS ModelingResults;
 CREATE TABLE ModelingResults (
   id int NOT NULL AUTO_INCREMENT,
   `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  requestId int NOT NULL,
-  coefficients json DEFAULT (json_object()),
   state varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `error` text,
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   calculatedAt datetime DEFAULT NULL,
-  fit json DEFAULT (json_object()),
-  measurementContextId int NOT NULL,
-  inputs json NOT NULL DEFAULT (json_object()),
+  measurementContextId int DEFAULT NULL,
   rSummary text,
+  params json DEFAULT (json_object()),
+  xValues json DEFAULT (json_array()),
+  yValues json DEFAULT (json_array()),
+  yErrors json DEFAULT (json_array()),
+  customModelId int DEFAULT NULL,
+  publishedAt datetime DEFAULT NULL,
+  workspaceEntryId int DEFAULT NULL,
   PRIMARY KEY (id),
-  KEY Calculations_calculationTechniqueId (requestId),
-  CONSTRAINT Calculations_calculationTechniqueId FOREIGN KEY (requestId) REFERENCES ModelingRequests (id) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY ModelingResults_customModelId (customModelId),
+  KEY ModelingResults_workspaceEntryId (workspaceEntryId),
+  CONSTRAINT ModelingResults_customModelId FOREIGN KEY (customModelId) REFERENCES CustomModels (id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT ModelingResults_workspaceEntryId FOREIGN KEY (workspaceEntryId) REFERENCES WorkspaceEntries (id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `PageErrors`
+--
+
+DROP TABLE IF EXISTS PageErrors;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE PageErrors (
+  id int NOT NULL AUTO_INCREMENT,
+  fullPath text NOT NULL,
+  uuid varchar(36) DEFAULT NULL,
+  userId int DEFAULT NULL,
+  traceback text NOT NULL,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `PageVisitCounters`
+--
+
+DROP TABLE IF EXISTS PageVisitCounters;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE PageVisitCounters (
+  id int NOT NULL AUTO_INCREMENT,
+  paths json NOT NULL DEFAULT (json_object()),
+  startTimestamp datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  endTimestamp datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  countries json NOT NULL DEFAULT (json_object()),
+  totalVisitCount int NOT NULL DEFAULT '0',
+  totalBotVisitCount int NOT NULL DEFAULT '0',
+  totalVisitorCount int NOT NULL DEFAULT '0',
+  totalUserCount int NOT NULL DEFAULT '0',
+  totalApiVisitCount int NOT NULL DEFAULT '0',
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `PageVisits`
+--
+
+DROP TABLE IF EXISTS PageVisits;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE PageVisits (
+  id int NOT NULL AUTO_INCREMENT,
+  isUser tinyint(1) NOT NULL DEFAULT '0',
+  isAdmin tinyint(1) NOT NULL DEFAULT '0',
+  isBot tinyint(1) NOT NULL DEFAULT '0',
+  uuid varchar(36) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `query` varchar(255) DEFAULT NULL,
+  referrer varchar(255) DEFAULT NULL,
+  ip varchar(100) DEFAULT NULL,
+  userAgent text,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  country varchar(255) DEFAULT NULL,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -318,18 +429,19 @@ DROP TABLE IF EXISTS Perturbations;
 CREATE TABLE Perturbations (
   studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   id int NOT NULL AUTO_INCREMENT,
-  experimentId int NOT NULL,
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   removedCompartmentId int DEFAULT NULL,
   addedCompartmentId int DEFAULT NULL,
   oldCommunityId int DEFAULT NULL,
   newCommunityId int DEFAULT NULL,
-  startTimepoint int NOT NULL,
+  startTimeInSeconds int NOT NULL,
+  endTimeInSeconds int DEFAULT NULL,
+  experimentId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (id),
-  KEY fk_1 (experimentId),
   KEY fk_2 (studyId),
-  CONSTRAINT Perturbation_fk_1 FOREIGN KEY (experimentId) REFERENCES Experiments (id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT Perturbation_fk_2 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY Perturbations_experimentId (experimentId),
+  CONSTRAINT Perturbation_fk_2 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT Perturbations_experimentId FOREIGN KEY (experimentId) REFERENCES Experiments (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -347,7 +459,7 @@ CREATE TABLE ProjectUsers (
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY projectUniqueID (projectUniqueID),
-  CONSTRAINT projectUniqueID FOREIGN KEY (projectUniqueID) REFERENCES Projects (projectUniqueID) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT projectUniqueID FOREIGN KEY (projectUniqueID) REFERENCES Projects (uuid) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -359,38 +471,16 @@ DROP TABLE IF EXISTS Projects;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE Projects (
-  projectId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  projectName varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  projectDescription text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  projectUniqueID varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  publicId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  uuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  ownerUniqueID varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (projectId),
-  UNIQUE KEY projectName (projectName),
-  UNIQUE KEY projectUniqueID (projectUniqueID)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `Strains`
---
-
-DROP TABLE IF EXISTS Strains;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE Strains (
-  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  defined tinyint(1) DEFAULT '0',
-  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  id int NOT NULL AUTO_INCREMENT,
-  NCBId int DEFAULT NULL,
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  assemblyGenBankId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  userUniqueID varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (id),
-  KEY fk_1 (studyId),
-  CONSTRAINT Strains_fk_1 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  ownerUuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  PRIMARY KEY (publicId),
+  UNIQUE KEY projectUniqueID (uuid),
+  UNIQUE KEY projectName (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -402,21 +492,29 @@ DROP TABLE IF EXISTS Studies;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE Studies (
-  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  projectUniqueID varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  studyName varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  studyDescription text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  studyURL varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  studyUniqueID varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  publicId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  projectUuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  uuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   timeUnits varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   publishableAt datetime DEFAULT NULL,
   publishedAt datetime DEFAULT NULL,
   embargoExpiresAt datetime DEFAULT NULL,
-  ownerUniqueID varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (studyId),
-  UNIQUE KEY studyUniqueID (studyUniqueID)
+  ownerUuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  authors json NOT NULL DEFAULT (json_array()),
+  authorCache text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  lastSubmissionId int DEFAULT NULL,
+  licenseUrl varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  publicationDate varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  publicationType varchar(100) COLLATE utf8mb4_bin DEFAULT NULL,
+  PRIMARY KEY (publicId),
+  UNIQUE KEY studyUniqueID (uuid),
+  KEY Studies_publicationDate (publicationDate),
+  KEY Studies_publicationType (publicationType)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -429,14 +527,61 @@ DROP TABLE IF EXISTS StudyMetabolites;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE StudyMetabolites (
   studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  chebi_id varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  chebiId varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   id bigint unsigned NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (id),
-  KEY fk_1 (chebi_id),
+  KEY fk_1 (chebiId),
   KEY fk_3 (studyId),
-  CONSTRAINT MetabolitePerExperiment_fk_1 FOREIGN KEY (chebi_id) REFERENCES Metabolites (chebiId) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT MetabolitePerExperiment_fk_3 FOREIGN KEY (studyId) REFERENCES Studies (studyId) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT MetabolitePerExperiment_fk_1 FOREIGN KEY (chebiId) REFERENCES Metabolites (chebiId) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT MetabolitePerExperiment_fk_3 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `StudyStrains`
+--
+
+DROP TABLE IF EXISTS StudyStrains;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE StudyStrains (
+  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  defined tinyint(1) DEFAULT '0',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  id int NOT NULL AUTO_INCREMENT,
+  ncbiId int DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  assemblyGenBankId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  userUniqueID varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY fk_1 (studyId),
+  CONSTRAINT Strains_fk_1 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `StudyTechniques`
+--
+
+DROP TABLE IF EXISTS StudyTechniques;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE StudyTechniques (
+  id int NOT NULL AUTO_INCREMENT,
+  `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `description` text,
+  units varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  includeStd tinyint(1) NOT NULL DEFAULT '0',
+  label varchar(100) DEFAULT NULL,
+  subjectType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  includeUnknown tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (id),
+  KEY StudyTechniques_studyId (studyId),
+  CONSTRAINT StudyTechniques_studyId FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -453,7 +598,26 @@ CREATE TABLE StudyUsers (
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY studyUniqueID (studyUniqueID),
-  CONSTRAINT studyUniqueID FOREIGN KEY (studyUniqueID) REFERENCES Studies (studyUniqueID) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT studyUniqueID FOREIGN KEY (studyUniqueID) REFERENCES Studies (uuid) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `SubmissionBackups`
+--
+
+DROP TABLE IF EXISTS SubmissionBackups;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE SubmissionBackups (
+  id int NOT NULL AUTO_INCREMENT,
+  projectId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  userUuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  studyDesign json DEFAULT (json_object()),
+  dataFileId int DEFAULT NULL,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -474,6 +638,8 @@ CREATE TABLE Submissions (
   dataFileId int DEFAULT NULL,
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  publishedAt datetime DEFAULT NULL,
+  changelogText text,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -486,11 +652,13 @@ DROP TABLE IF EXISTS Taxa;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE Taxa (
-  ncbiId varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `name` varchar(512) COLLATE utf8mb4_bin NOT NULL,
+  ncbiId int NOT NULL,
+  `name` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   id int NOT NULL AUTO_INCREMENT,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY Taxa_ncbiId (ncbiId)
+  UNIQUE KEY Taxa_ncbiId (ncbiId),
+  UNIQUE KEY Taxa_name (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -505,15 +673,63 @@ CREATE TABLE Users (
   id int NOT NULL AUTO_INCREMENT,
   uuid varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   orcidId varchar(100) NOT NULL,
-  orcidToken varchar(100) NOT NULL,
+  orcidToken varchar(100) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   isAdmin tinyint(1) NOT NULL DEFAULT '0',
   createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  lastLoginAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  lastLoginAt datetime DEFAULT NULL,
+  apiKey varchar(100) DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY Users_uuid (uuid),
-  UNIQUE KEY Users_orcidId (orcidId)
+  UNIQUE KEY Users_orcidId (orcidId),
+  UNIQUE KEY Users_apiKey (apiKey)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `WorkspaceEntries`
+--
+
+DROP TABLE IF EXISTS WorkspaceEntries;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE WorkspaceEntries (
+  id int NOT NULL AUTO_INCREMENT,
+  label varchar(255) NOT NULL,
+  `data` text,
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  dataType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  subjectType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  subjectId int DEFAULT NULL,
+  units varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  sourceType varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT 'upload',
+  workspaceId int NOT NULL,
+  PRIMARY KEY (id),
+  KEY WorkspaceEntries_workspaceId (workspaceId),
+  CONSTRAINT WorkspaceEntries_workspaceId FOREIGN KEY (workspaceId) REFERENCES Workspaces (id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Workspaces`
+--
+
+DROP TABLE IF EXISTS Workspaces;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE Workspaces (
+  id int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL DEFAULT 'default',
+  userId int NOT NULL,
+  size int NOT NULL DEFAULT '0',
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  publishedAt datetime DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY Workspaces_userId_and_name (userId,`name`),
+  CONSTRAINT Workspaces_userId FOREIGN KEY (userId) REFERENCES Users (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -527,54 +743,109 @@ CREATE TABLE Users (
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 INSERT INTO MigrationVersions VALUES
-(1,'2024_11_11_160324_initial_schema','2025-04-30 12:54:12'),
-(2,'2024_11_11_164726_remove_unique_study_description_index','2025-04-30 12:54:12'),
-(3,'2024_11_21_115349_allow_null_medialink','2025-04-30 12:54:12'),
-(4,'2024_11_21_120444_fix_unique_primary_keys','2025-04-30 12:54:13'),
-(5,'2025_01_30_152951_fix_bioreplicates_metadata_unique_id','2025-04-30 12:54:13'),
-(6,'2025_02_04_134239_rename-chebi-id','2025-04-30 12:54:13'),
-(7,'2025_02_05_134203_make-project-and-study-uuids-unique','2025-04-30 12:54:13'),
-(8,'2025_02_12_170210_add-assembly-id-to-strains','2025-04-30 12:54:13'),
-(9,'2025_02_13_114748_increase_experiment_id_size','2025-04-30 12:54:13'),
-(10,'2025_02_13_120609_rename_comunity_to_community','2025-04-30 12:54:13'),
-(11,'2025_02_13_121409_rename_comunity_to_community_2','2025-04-30 12:54:14'),
-(12,'2025_02_13_163206_create_measurements','2025-04-30 12:54:14'),
-(13,'2025_02_17_161750_remove_duplicated_columns_from_metabolite_per_experiment','2025-04-30 12:54:14'),
-(14,'2025_03_11_113040_create_submissions_and_excel_files','2025-04-30 12:54:14'),
-(15,'2025_03_21_112110_create_project_and_study_user_join_tables','2025-04-30 12:54:14'),
-(16,'2025_03_25_133231_add_user_id_to_new_strains','2025-04-30 12:54:14'),
-(17,'2025_03_28_181930_create_measurement_techniques','2025-04-30 12:54:14'),
-(18,'2025_03_30_160720_add_technique_id_to_measurements','2025-04-30 12:54:14'),
-(19,'2025_04_03_121425_add_time_units_to_study','2025-04-30 12:54:14'),
-(20,'2025_04_03_125243_add_timestamps_to_study_and_project','2025-04-30 12:54:14'),
-(21,'2025_04_15_112546_add_publishing_related_states_to_studies','2025-04-30 12:54:15'),
-(22,'2025_04_24_095808_create_calculation_techniques','2025-04-30 12:54:15'),
-(23,'2025_04_25_103658_create_calculations','2025-04-30 12:54:15'),
-(24,'2025_04_30_135012_fix_compartments_per_experiment_keys_and_columns','2025-04-30 12:54:15'),
-(30,'2025_04_30_142205_fix_compartment_columns','2025-04-30 13:08:43'),
-(33,'2025_05_01_172225_fix_community_columns','2025-05-01 15:32:33'),
-(36,'2025_05_02_171609_fix_strain_columns','2025-05-02 15:23:03'),
-(41,'2025_05_05_104555_fix_experiment_columns','2025-05-05 09:24:08'),
-(46,'2025_05_05_130725_fix_experiment_compartments','2025-05-05 11:21:15'),
-(53,'2025_05_05_201613_fix_bioreplicate_columns','2025-05-05 18:36:14'),
-(56,'2025_05_05_204021_remove_bioreplicate_metadata','2025-05-05 18:44:24'),
-(67,'2025_05_09_143613_fix_perturbation_columns','2025-05-09 16:16:48'),
-(69,'2025_05_09_185956_remove_position_from_measurements','2025-05-09 17:00:56'),
-(74,'2025_05_09_194730_fix_study_metabolite_columns','2025-05-09 17:59:54'),
-(76,'2025_05_10_112933_add_compartment_id_to_measurements','2025-05-10 09:32:30'),
-(78,'2025_05_11_154801_add_fields_to_bioreplicates','2025-05-11 13:52:06'),
-(82,'2025_05_13_172421_drop_unused_tables','2025-05-13 16:10:28'),
-(102,'2025_05_16_141435_fix_taxon_columns','2025-05-16 12:29:44'),
-(103,'2025_05_15_202520_create_measurement_contexts','2025-05-16 12:44:48'),
-(104,'2025_05_15_202707_move_measurement_fields_to_contexts','2025-05-16 12:44:48'),
-(120,'2025_05_17_165050_fix_metabolite_columns','2025-05-18 09:49:50'),
-(121,'2025_05_18_105334_rename_calculations_to_models','2025-05-18 09:49:50'),
-(128,'2025_05_19_170414_add_calculation_types','2025-05-19 17:10:23'),
-(130,'2025_05_20_220923_fix_modeling_requests_error_column','2025-05-20 20:11:12'),
-(133,'2025_05_21_143554_add_input_params_to_modeling_results','2025-05-21 12:37:48'),
-(136,'2025_05_22_235526_add_r_summary_to_modeling_results','2025-05-22 22:15:36'),
-(138,'2025_05_25_132228_add_public_id_to_experiments','2025-05-25 11:25:28'),
-(143,'2025_06_05_114908_create_users','2025-06-05 12:25:49'),
-(146,'2025_06_05_145355_add_owner_to_studies_and_projects','2025-06-05 12:55:11'),
-(148,'2025_06_05_150110_rename_study_and_project','2025-06-05 13:01:50');
+(1,'2024_11_11_160324_initial_schema','2025-06-05 16:50:08'),
+(2,'2024_11_11_164726_remove_unique_study_description_index','2025-06-05 16:50:08'),
+(3,'2024_11_21_115349_allow_null_medialink','2025-06-05 16:50:08'),
+(4,'2024_11_21_120444_fix_unique_primary_keys','2025-06-05 16:50:09'),
+(5,'2025_01_30_152951_fix_bioreplicates_metadata_unique_id','2025-06-05 16:50:09'),
+(6,'2025_02_04_134239_rename-chebi-id','2025-06-05 16:50:09'),
+(7,'2025_02_05_134203_make-project-and-study-uuids-unique','2025-06-05 16:50:09'),
+(8,'2025_02_12_170210_add-assembly-id-to-strains','2025-06-05 16:50:09'),
+(9,'2025_02_13_114748_increase_experiment_id_size','2025-06-05 16:50:09'),
+(10,'2025_02_13_120609_rename_comunity_to_community','2025-06-05 16:50:09'),
+(11,'2025_02_13_121409_rename_comunity_to_community_2','2025-06-05 16:50:09'),
+(12,'2025_02_13_163206_create_measurements','2025-06-05 16:50:09'),
+(13,'2025_02_17_161750_remove_duplicated_columns_from_metabolite_per_experiment','2025-06-05 16:50:09'),
+(14,'2025_03_11_113040_create_submissions_and_excel_files','2025-06-05 16:50:09'),
+(15,'2025_03_21_112110_create_project_and_study_user_join_tables','2025-06-05 16:50:09'),
+(16,'2025_03_25_133231_add_user_id_to_new_strains','2025-06-05 16:50:09'),
+(17,'2025_03_28_181930_create_measurement_techniques','2025-06-05 16:50:09'),
+(18,'2025_03_30_160720_add_technique_id_to_measurements','2025-06-05 16:50:09'),
+(19,'2025_04_03_121425_add_time_units_to_study','2025-06-05 16:50:09'),
+(20,'2025_04_03_125243_add_timestamps_to_study_and_project','2025-06-05 16:50:09'),
+(21,'2025_04_15_112546_add_publishing_related_states_to_studies','2025-06-05 16:50:10'),
+(22,'2025_04_24_095808_create_calculation_techniques','2025-06-05 16:50:10'),
+(23,'2025_04_25_103658_create_calculations','2025-06-05 16:50:10'),
+(24,'2025_04_30_135012_fix_compartments_per_experiment_keys_and_columns','2025-06-05 16:50:10'),
+(25,'2025_04_30_142205_fix_compartment_columns','2025-06-05 16:50:10'),
+(26,'2025_05_01_172225_fix_community_columns','2025-06-05 16:50:10'),
+(27,'2025_05_02_171609_fix_strain_columns','2025-06-05 16:50:10'),
+(28,'2025_05_05_104555_fix_experiment_columns','2025-06-05 16:50:10'),
+(29,'2025_05_05_130725_fix_experiment_compartments','2025-06-05 16:50:10'),
+(30,'2025_05_05_201613_fix_bioreplicate_columns','2025-06-05 16:51:00'),
+(31,'2025_05_05_204021_remove_bioreplicate_metadata','2025-06-05 16:51:00'),
+(32,'2025_05_09_143613_fix_perturbation_columns','2025-06-05 16:51:01'),
+(33,'2025_05_09_185956_remove_position_from_measurements','2025-06-05 16:51:01'),
+(34,'2025_05_09_194730_fix_study_metabolite_columns','2025-06-05 16:51:01'),
+(35,'2025_05_10_112933_add_compartment_id_to_measurements','2025-06-05 16:51:01'),
+(36,'2025_05_11_154801_add_fields_to_bioreplicates','2025-06-05 16:51:01'),
+(37,'2025_05_13_172421_drop_unused_tables','2025-06-05 16:51:01'),
+(38,'2025_05_15_202520_create_measurement_contexts','2025-06-05 16:51:01'),
+(39,'2025_05_15_202707_move_measurement_fields_to_contexts','2025-06-05 16:51:01'),
+(40,'2025_05_16_141435_fix_taxon_columns','2025-06-05 16:51:01'),
+(41,'2025_05_17_165050_fix_metabolite_columns','2025-06-05 16:51:01'),
+(42,'2025_05_18_105334_rename_calculations_to_models','2025-06-05 16:51:02'),
+(43,'2025_05_19_170414_add_calculation_types','2025-06-05 16:51:02'),
+(44,'2025_05_20_220923_fix_modeling_requests_error_column','2025-06-05 16:51:02'),
+(45,'2025_05_21_143554_add_input_params_to_modeling_results','2025-06-05 16:51:02'),
+(46,'2025_05_22_235526_add_r_summary_to_modeling_results','2025-06-05 16:51:02'),
+(47,'2025_05_25_132228_add_public_id_to_experiments','2025-06-05 16:51:02'),
+(48,'2025_06_05_114908_create_users','2025-06-05 16:51:02'),
+(49,'2025_06_05_145355_add_owner_to_studies_and_projects','2025-06-05 16:51:02'),
+(50,'2025_06_05_150110_rename_study_and_project','2025-06-05 16:51:02'),
+(51,'2025_06_17_202034_fix_project_columns','2025-06-22 16:27:52'),
+(52,'2025_06_17_203802_fix_study_columns','2025-06-22 16:27:53'),
+(53,'2025_06_22_152747_combine_modeling_params','2025-06-22 16:27:54'),
+(54,'2025_06_22_161710_create_submission_backups','2025-06-22 16:27:54'),
+(55,'2025_06_29_142448_add_fields_to_taxa','2025-07-02 08:53:03'),
+(56,'2025_07_02_114751_readd_end_time_to_perturbations','2025-07-05 10:01:35'),
+(57,'2025_07_02_174630_create_community_strains','2025-07-05 10:01:35'),
+(58,'2025_07_05_121137_fix_metabolite_subject_ids','2025-08-20 12:11:24'),
+(59,'2025_07_05_150703_nullify_study_ids','2025-08-20 12:11:24'),
+(60,'2025_07_05_153044_fix_measurement_technique_study_ids','2025-08-20 12:11:24'),
+(61,'2025_07_09_121550_use_experiment_public_id_as_key','2025-08-20 12:11:25'),
+(62,'2025_07_09_124639_remove_deprecated_experiment_id','2025-08-20 12:11:25'),
+(63,'2025_07_10_183310_make_subject_id_not_null','2025-08-20 12:11:25'),
+(64,'2025_07_13_121621_make_orcid_token_nullable','2025-08-20 12:11:25'),
+(65,'2025_10_20_124103_make_last_login_at_nullable','2025-10-20 10:52:18'),
+(66,'2025_10_21_163448_add_dilution_rate','2025-10-21 16:31:56'),
+(70,'2025_11_10_122037_increase_metabolite_name_length','2025-11-10 11:29:23'),
+(71,'2025_11_11_155050_add_subject_name_and_external_id_to_measurement_contexts','2025-11-12 11:06:25'),
+(72,'2025_11_11_160439_populate_subject_name_and_external_id','2025-11-12 11:06:28'),
+(73,'2025_11_03_160947_create_study_techniques','2025-11-13 14:05:49'),
+(74,'2025_11_03_162139_modify_measurement_techniques','2025-11-13 14:05:50'),
+(75,'2025_11_03_164617_populate_study_techniques','2025-11-13 14:05:50'),
+(76,'2025_11_18_125634_add_more_fields_to_metabolites','2025-11-18 14:20:52'),
+(77,'2025_11_19_173702_add_include_unknown_flag_to_study_techniques','2025-11-20 14:00:51'),
+(78,'2025_11_26_151231_rename_ncbi_id_in_study_strains','2025-11-27 11:51:23'),
+(79,'2025_11_26_151436_rename_strains_to_study_strains','2025-11-27 11:51:23'),
+(80,'2025_11_26_160528_rename_chebi_id_in_study_metabolites','2025-11-27 11:51:23'),
+(81,'2025_12_08_172450_remove_modeling_request_id_constraint','2025-12-17 15:59:32'),
+(82,'2025_12_14_121007_create_custom_models','2025-12-17 15:59:32'),
+(83,'2025_12_14_121008_add_custom_upload_modeling_result_fields','2025-12-17 15:59:32'),
+(84,'2025_12_14_173844_add_publish_state_to_modeling_result','2025-12-17 15:59:33'),
+(85,'2025_12_17_153401_add_short_model_name_to_custom_models','2025-12-17 15:59:33'),
+(86,'2026_01_05_113846_add-params-to-custom-models','2026-01-08 13:28:47'),
+(87,'2026_01_22_172601_create_page_visits','2026-01-23 14:20:13'),
+(88,'2026_01_23_120741_create_page_visit_counters','2026-01-23 14:20:14'),
+(89,'2026_01_26_172214_add_country_to_page_visits','2026-01-27 11:41:23'),
+(90,'2026_01_28_155444_track_country_in_page_visit_counters','2026-01-28 15:14:22'),
+(91,'2026_01_29_165248_add_authorship_fields_to_studies','2026-02-04 11:42:55'),
+(92,'2026_02_06_164753_create_page_errors','2026-02-06 16:10:14'),
+(93,'2026_02_18_115807_add_api_count_to_page_visit_counter','2026-02-18 11:17:48'),
+(94,'2026_02_16_111742_link_studies_last_submissions','2026-03-13 14:05:27'),
+(95,'2026_03_01_175101_add_changelog_text_to_submissions','2026-03-13 14:05:27'),
+(96,'2026_04_16_105253_remove_unnecessary_fields_from_measurement_techniques','2026-04-20 13:53:42'),
+(97,'2026_03_31_163435_add_api_key_to_users','2026-05-27 14:19:21'),
+(98,'2026_03_31_181039_create_dashboard_entries','2026-05-27 14:19:21'),
+(99,'2026_05_14_142254_rename_dashboard_entries_to_workspace_entries','2026-05-27 14:19:21'),
+(100,'2026_05_14_143040_add_fields_to_workspace_entries','2026-05-27 14:19:21'),
+(101,'2026_05_19_111609_add_source_type_to_workspace_entries','2026-05-27 14:19:21'),
+(102,'2026_05_19_112912_create_workspaces','2026-05-27 14:19:21'),
+(103,'2026_05_19_114228_move_workspace_entries_under_workspaces','2026-05-27 14:22:49'),
+(104,'2026_05_25_111809_add_workspace_entry_id_to_modeling_result','2026-05-27 14:22:49'),
+(105,'2026_06_03_164607_add_license_url_to_studies','2026-06-03 15:44:09'),
+(106,'2026_06_09_113637_add_publication_date_to_studies','2026-06-09 10:35:16'),
+(109,'2026_06_27_151530_delete_modeling_requests','2026-06-27 13:19:32'),
+(111,'2026_06_27_154711_add_publication_type_to_studies','2026-06-27 13:49:00');
 

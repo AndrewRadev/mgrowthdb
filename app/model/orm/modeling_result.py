@@ -1,4 +1,6 @@
+import re
 from datetime import datetime
+from decimal import Decimal
 
 import numpy as np
 import pandas as pd
@@ -9,104 +11,288 @@ from sqlalchemy.orm import (
     relationship,
     validates,
 )
-from sqlalchemy.schema import FetchedValue
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_utc.sqltypes import UtcDateTime
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.model.orm.orm_base import OrmBase
+from app.model.lib.modeling import (
+    MODEL_NAMES,
+    SHORT_MODEL_NAMES,
+    MODEL_DESCRIPTIONS,
+    ALL_COEFFICIENTS,
+    FIT_PARAMETERS,
+)
 
-VALID_TYPES = [
+_VALID_TYPES = [
     'easy_linear',
     'logistic',
     'baranyi_roberts',
 ]
-
-VALID_STATES = [
+_VALID_STATES = [
     'pending',
     'ready',
     'error',
 ]
 
-MODEL_NAMES = {
-    'easy_linear':     '"Easy linear" method',
-    'logistic':        'Logistic model',
-    'baranyi_roberts': 'Baranyi-Roberts model',
-}
+
+class ModelInfo:
+    def __init__(self, *, type, name, url, description, params):
+        self.type        = type
+        self.name        = name
+        self.url         = url
+        self.description = description
+        self.params      = params
+
+    @property
+    def is_custom(self):
+        return self.type.startswith('custom_')
+
+    def __eq__(self, other):
+        return self.type == other.type
+
+    def __hash__(self):
+        return self.type.__hash__()
 
 
 class ModelingResult(OrmBase):
+    """
+    The results of fitting a model onto a set of measurements.
+
+    The measurements are represented by a ``ModelingContext`` and the results
+    of the calculation are stored in the ``params`` field. The ``state`` of the
+    record describes the status of the job that runs the calculations.
+    """
+
     __tablename__ = "ModelingResults"
 
     id:   Mapped[int] = mapped_column(primary_key=True)
     type: Mapped[str] = mapped_column(sql.String(100), nullable=False)
 
-    requestId: Mapped[int] = mapped_column(sql.ForeignKey('ModelingRequests.id'), nullable=False)
-    request: Mapped['ModelingRequest'] = relationship(back_populates='results')
-
+    # A modeling result should either have a target MeasurementContext or
+    # WorkspaceEntry. Both are marked as nullable, but at least one should be
+    # present:
+    #
     measurementContextId: Mapped[int] = mapped_column(
         sql.ForeignKey('MeasurementContexts.id'),
-        nullable=False,
+        nullable=True,
     )
     measurementContext: Mapped['MeasurementContext'] = relationship(back_populates='modelingResults')
+    study: Mapped['Study'] = relationship(
+        secondary='MeasurementContexts',
+        viewonly=True
+    )
 
-    inputs:       Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
-    fit:          Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
-    coefficients: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
+    workspaceEntryId: Mapped[int] = mapped_column(
+        sql.ForeignKey('WorkspaceEntries.id'),
+        nullable=True,
+    )
+    workspaceEntry: Mapped['WorkspaceEntry'] = relationship(back_populates='modelingResults')
+
+    customModelId: Mapped[int] = mapped_column(sql.ForeignKey('CustomModels.id'))
+    customModel: Mapped['CustomModel'] = relationship()
+
+    params: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
 
     state:    Mapped[str] = mapped_column(sql.String(100), default='pending')
     error:    Mapped[str] = mapped_column(sql.String)
     rSummary: Mapped[str] = mapped_column(sql.String)
 
-    createdAt:    Mapped[datetime] = mapped_column(UtcDateTime, server_default=FetchedValue())
-    updatedAt:    Mapped[datetime] = mapped_column(UtcDateTime, server_default=FetchedValue())
+    createdAt:    Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
+    updatedAt:    Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     calculatedAt: Mapped[datetime] = mapped_column(UtcDateTime)
+    publishedAt:  Mapped[datetime] = mapped_column(UtcDateTime)
 
-    @classmethod
-    def empty_coefficients(Self, model_type):
-        if model_type == 'easy_linear':
-            return {'y0': None, 'y0_lm': None, 'mumax': None, 'lag': None}
-        elif model_type == 'logistic':
-            return {'y0': None, 'mumax': None, 'K': None}
-        elif model_type == 'baranyi_roberts':
-            return {'y0': None, 'mumax': None, 'K': None, 'h0': None}
-        else:
-            raise ValueError(f"Don't know what the coefficients are for model type: {repr(model_type)}")
-
-    @classmethod
-    def empty_fit(Self):
-        return {'r2': None, 'rss': None}
-
-    @classmethod
-    def empty_inputs(Self, model_type):
-        if model_type == 'easy_linear':
-            return {'pointCount': '5'}
-        elif model_type in ('logistic', 'baranyi_roberts'):
-            return {'endTime': ''}
-        else:
-            return {}
-
-    @property
-    def model_name(self):
-        return MODEL_NAMES[self.type]
+    # For custom models:
+    xValues: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
+    yValues: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
+    yErrors: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
 
     @validates('type')
     def _validate_type(self, key, value):
-        return self._validate_inclusion(key, value, VALID_TYPES)
+        if re.fullmatch(r'custom_\d+', value):
+            return value
+        else:
+            return self._validate_inclusion(key, value, _VALID_TYPES)
 
     @validates('state')
     def _validate_state(self, key, value):
-        return self._validate_inclusion(key, value, VALID_STATES)
+        return self._validate_inclusion(key, value, _VALID_STATES)
 
-    def generate_chart_df(self, measurements_df):
-        start_time = measurements_df['time'].min()
-        end_time   = measurements_df['time'].max()
+    @classmethod
+    def empty_params(Self, model_type):
+        fit = {
+            'r2': None,
+            'rss': None,
+        }
 
-        timepoints = np.linspace(start_time, end_time, 200)
-        values = self._predict(timepoints)
+        if model_type == 'easy_linear':
+            inputs = {'pointCount': '5'}
+            coefficients = {
+                'y0':    None,
+                'y0_lm': None,
+                'mumax': None,
+                'lag':   None,
+            }
+        elif model_type == 'logistic':
+            inputs = {'endTime': ''}
+            coefficients = {
+                'y0':    None,
+                'mumax': None,
+                'K':     None,
+            }
+        elif model_type == 'baranyi_roberts':
+            inputs = {'endTime': ''}
+            coefficients = {
+                'y0':    None,
+                'mumax': None,
+                'K':     None,
+                'h0':    None,
+            }
+        elif model_type.startswith('custom_'):
+            inputs = {}
+            coefficients = {}
+            fit = {}
+        else:
+            raise ValueError(f"Don't know what the coefficients are for model type: {repr(model_type)}")
 
-        return pd.DataFrame.from_dict({
-            'time': timepoints,
+        return {
+            'coefficients': coefficients,
+            'inputs': inputs,
+            'fit': fit,
+        }
+
+    @hybrid_property
+    def isPublished(self):
+        return self.publishedAt != None
+
+    @property
+    def info(self):
+        return ModelInfo(
+            type=self.type,
+            name=self.model_name,
+            url=self.model_url,
+            description=self.model_description,
+            params=self.model_params,
+        )
+
+    @property
+    def model_name(self):
+        if self.type.startswith('custom_'):
+            return self.customModel.name
+        else:
+            return MODEL_NAMES[self.type]
+
+    @property
+    def short_model_name(self):
+        if self.type.startswith('custom_'):
+            return self.customModel.shortName
+        else:
+            return SHORT_MODEL_NAMES[self.type]
+
+    @property
+    def model_url(self):
+        if self.type.startswith('custom_'):
+            return self.customModel.url
+
+    @property
+    def model_description(self):
+        if self.type.startswith('custom_'):
+            return self.customModel.description
+        else:
+            return MODEL_DESCRIPTIONS[self.type]
+
+    @property
+    def model_params(self):
+        coefficient_names = []
+        fit_names = []
+
+        if self.type.startswith('custom_'):
+            coefficient_names = self.customModel.coefficientNames
+            fit_names         = self.customModel.fitNames
+        else:
+            empty_params = self.__class__.empty_params(self.type)
+            coefficient_names = empty_params['coefficients'].keys()
+            fit_names         = empty_params['fit'].keys()
+
+        return {
+            'coefficients': [ALL_COEFFICIENTS[c] for c in coefficient_names],
+            'fit':          [FIT_PARAMETERS[f] for f in fit_names],
+        }
+
+    @property
+    def target(self):
+        if self.measurementContextId:
+            return self.measurementContext
+        elif self.workspaceEntryId:
+            return self.workspaceEntry
+        else:
+            raise ValueError("None of measurementContextId or workspaceEntryId are present")
+
+    @property
+    def units(self):
+        return self.target.units
+
+    def get_chart_label(self):
+        model_name = self.short_model_name or self.model_name
+
+        return self.target.get_chart_label(model_name=model_name)
+
+    def generate_chart_df(self, measurements_df=None):
+        if self.type.startswith('custom_'):
+            timepoints = _map_float(self.xValues)
+            values     = _map_float(self.yValues)
+            errors     = _map_float(self.yErrors)
+        else:
+            if measurements_df is None:
+                raise ValueError("A dataframe with measurements need to be provided")
+
+            start_time = measurements_df['time'].min()
+            end_time   = measurements_df['time'].max()
+
+            timepoints = np.linspace(start_time, end_time, 200)
+            values     = self._predict(timepoints)
+            errors     = None
+
+        data = {
+            'time':  timepoints,
             'value': values,
-        })
+            'std':   errors or [float('nan') for _ in range(len(timepoints))],
+        }
+
+        df = pd.DataFrame.from_dict(data)
+
+        return df
+
+    def update_model_params(self, form):
+        if not self.customModel:
+            raise RuntimeError("Tried to update non-custom modeling result")
+
+        coefficients = self.params.get('coefficients', {})
+        fit          = self.params.get('fit', {})
+
+        for name in self.customModel.coefficientNames:
+            key = f"coefficients[{name}]"
+            if key in form:
+                coefficients[name] = form[key]
+
+        for name in self.customModel.fitNames:
+            key = f"fit[{name}]"
+            if key in form:
+                fit[name] = form[key]
+
+        self.params['coefficients'] = coefficients
+        self.params['fit']          = fit
+
+        flag_modified(self, 'params')
+
+    def visible_to_user(self, user):
+        if self.measurementContextId is not None:
+            return self.study.visible_to_user(user)
+        elif self.workspaceEntryId is not None:
+            return self.workspaceEntry.workspace.visible_to_user(user)
+        else:
+            raise ValueError("None of measurementContextId or workspaceEntryId are present")
 
     def _predict(self, timepoints):
         if self.type == 'easy_linear':
@@ -119,10 +305,12 @@ class ModelingResult(OrmBase):
             raise ValueError(f"Don't know how to predict values for model type: {repr(self.type)}")
 
     def _predict_easy_linear(self, time):
-        # y0    = float(self.coefficients['y0'])
-        y0_lm = float(self.coefficients['y0_lm'])
-        mumax = float(self.coefficients['mumax'])
-        # lag   = float(self.coefficients['lag'])
+        coefficients = self.params['coefficients']
+
+        # y0    = float(coefficients['y0'])
+        y0_lm = float(coefficients['y0_lm'])
+        mumax = float(coefficients['mumax'])
+        # lag   = float(coefficients['lag'])
 
         # No lag:
         # return y0 * np.exp(time * mumax)
@@ -131,17 +319,21 @@ class ModelingResult(OrmBase):
         return y0_lm * np.exp(time * mumax)
 
     def _predict_logistic(self, time):
-        y0    = float(self.coefficients['y0'])
-        mumax = float(self.coefficients['mumax'])
-        K     = float(self.coefficients['K'])
+        coefficients = self.params['coefficients']
+
+        y0    = float(coefficients['y0'])
+        mumax = float(coefficients['mumax'])
+        K     = float(coefficients['K'])
 
         return (K * y0)/(y0 + (K - y0) * np.exp(-mumax * time))
 
     def _predict_baranyi_roberts(self, time):
-        y0    = float(self.coefficients['y0'])
-        mumax = float(self.coefficients['mumax'])
-        K     = float(self.coefficients['K'])
-        h0    = float(self.coefficients['h0'])
+        coefficients = self.params['coefficients']
+
+        y0    = float(coefficients['y0'])
+        mumax = float(coefficients['mumax'])
+        K     = float(coefficients['K'])
+        h0    = float(coefficients['h0'])
 
         # Formula taken from the "growthrates" documentation under `grow_baranyi`:
         # https://cran.r-project.org/web/packages/growthrates/growthrates.pdf
@@ -150,3 +342,20 @@ class ModelingResult(OrmBase):
         log_y = np.log(y0) + mumax * A - np.log(1 + (np.exp(mumax * A) - 1)/np.exp(np.log(K) - np.log(y0)))
 
         return np.exp(log_y)
+
+
+def _map_float(decimal_list):
+    result = []
+
+    if len(decimal_list) == 1 and isinstance(decimal_list[0], list):
+        # Fix for an odd serialization bug where a list of nulls gets stored as
+        # a nested list:
+        decimal_list = decimal_list[0]
+
+    for value in decimal_list:
+        if isinstance(value, Decimal):
+            result.append(float(value))
+        else:
+            result.append(value)
+
+    return result
