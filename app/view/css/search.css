@@ -22,10 +22,6 @@
     padding-right: 40px;
     padding-bottom: 40px;
 
-    .simple-table {
-      width: 100%;
-    }
-
     .highlight {
       background-color: var(--light-blue);
     }

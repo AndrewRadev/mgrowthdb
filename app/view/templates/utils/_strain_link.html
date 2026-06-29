@@ -3,12 +3,14 @@
     {{ strain.ncbiId|ncbi_url|external_link(strain.name) }}
   {% else: %}
     {{ strain.name }}
-    <br>
-    (derived from {{ strain.ncbiId|ncbi_url|external_link("NCBI:{}".format(strain.ncbiId)) }})
-    {%- if strain.description: -%}
-      <div class="small">
-        {{ strain.description|format_text }}
-      </div>
+
+    {% if strain.description: -%}
+      <span class="icon icon-small icon-inline icon-info" data-tooltip="{{ strain.description }}">
+      </span>
     {% endif %}
+
+    <div style="display: inline-block" class="smaller">
+      (derived from {{ strain.ncbiId|ncbi_url|external_link("NCBI:{}".format(strain.ncbiId), tooltip=strain.taxon.name) }})
+    </div>
   {% endif %}
 {% endmacro %}

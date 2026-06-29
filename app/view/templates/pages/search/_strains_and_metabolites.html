@@ -1,0 +1,78 @@
+{% from 'utils/_strain_link.html' import render_strain_link %}
+
+{% macro render_strains_and_metabolites(study, search=None) %}
+  <table class="strains-and-metabolites-table simple-table margin-top-10 small full">
+    <tr>
+      {% if study.strains|length > 5: %}
+        <th colspan="2" align="center">
+          Strains ({{ study.strains|length }})
+        </th>
+      {% elif study.strains: %}
+        <th>Strains ({{ study.strains|length }})</th>
+      {% endif %}
+
+      {% if study.metabolites|length > 5: %}
+        <th colspan="2" align="center">
+          Metabolites ({{ study.metabolites|length }})
+        </th>
+      {% elif study.metabolites|length: %}
+        <th>Metabolites ({{ study.metabolites|length }})</th>
+      {% endif %}
+    </tr>
+
+    <tr>
+      {% if study.strains: %}
+        {% if study.strains|length > 5: %}
+          {% set half_length = study.strains|length // 2  %}
+          {% set left_strains = study.strains[:half_length] %}
+          {% set right_strains = study.strains[half_length:] %}
+        {% else: %}
+          {% set left_strains = study.strains %}
+          {% set right_strains = [] %}
+        {% endif %}
+
+        {% for strains in [left_strains, right_strains]: %}
+          {% if strains|length: %}
+            <td>
+              <ul>
+                {% for strain in strains if strain.notUnknown: %}
+                  <li class="{{ 'highlight' if search and strain.ncbiId in search.ncbiIds else '' }}">
+                    {{ render_strain_link(strain) }}
+                  </li>
+                {% endfor %}
+              </ul>
+            </td>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {% if study.metabolites: %}
+        {% if study.metabolites|length > 5: %}
+          {% set half_length = study.metabolites|length // 2  %}
+          {% set left_metabolites = study.metabolites[:half_length] %}
+          {% set right_metabolites = study.metabolites[half_length:] %}
+        {% else: %}
+          {% set left_metabolites = study.metabolites %}
+          {% set right_metabolites = [] %}
+        {% endif %}
+
+        {% for metabolites in [left_metabolites, right_metabolites]: %}
+          {% if metabolites|length: %}
+            <td>
+              <ul>
+                {% for metabolite in metabolites: %}
+                  <li class="{{ 'highlight' if search and metabolite.chebiId in search.chebiIds else '' }}">
+                    <a href="{{ url_for('metabolite_show_page', chebiId=metabolite.chebiId) }}">
+                      {{ metabolite.name }}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </td>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </tr>
+  </table>
+
+{% endmacro %}

@@ -1,6 +1,6 @@
 import re
 
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from flask import url_for
 
 from app.view.filters.text import highlight
@@ -16,11 +16,16 @@ def chebi_url(chebi_id):
     return f"https://www.ebi.ac.uk/chebi/searchId.do?chebiId={chebi_id}"
 
 
-def external_link(url, text=None, css_class=''):
+def external_link(url, text=None, css_class='', tooltip=None):
     text = text or url
 
+    if tooltip:
+        tooltip_html = Markup(f'data-tooltip="{escape(tooltip)}"')
+    else:
+        tooltip_html = ''
+
     return Markup(
-        f"""<a class="external {css_class}" target="_blank" rel="noreferrer" href="{url}">{text}</a>"""
+        f"""<a class="external {css_class}" target="_blank" rel="noreferrer" href="{url}" {tooltip_html}>{escape(text)}</a>"""
     )
 
 

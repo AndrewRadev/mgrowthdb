@@ -217,6 +217,10 @@ hr {
 table.simple-table {
   border-collapse: collapse;
 
+  th {
+    white-space: nowrap;
+  }
+
   th, td {
     padding: 6px 13px;
     border: 1px solid var(--border-color);
@@ -594,6 +598,12 @@ form.simple-form {
 .icon-inline {
   display: inline-block;
   vertical-align: bottom;
+}
+
+.icon.icon-small {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
 }
 
 .icon.icon-edit              { background-image: url('/static/images/icons/edit.svg'); }

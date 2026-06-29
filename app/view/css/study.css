@@ -85,4 +85,18 @@
       padding-left: 30px;
     }
   }
+
+  .strains-and-metabolites-table {
+    border: 0;
+
+    ul {
+      margin: 0;
+      padding: 0;
+      margin-left: 8px;
+
+      li {
+        list-style: circle;
+      }
+    }
+  }
 }

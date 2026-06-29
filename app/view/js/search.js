@@ -98,6 +98,7 @@ Page('.search-page', function($page) {
       urlParams: { offset },
       success: function(response) {
         $button.replaceWith(response);
+        initTooltips();
       }
     });
   }
