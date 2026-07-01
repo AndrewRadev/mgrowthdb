@@ -5,7 +5,7 @@
 
 {% extends '_layout.html' %}
 
-{% block title %}: Experiment {{ experiment.publicId }}{% endblock %}
+{% block title %}: [{{ experiment.publicId }}] {{ experiment.name }}{% endblock %}
 
 {% block content %}
   {% set study = experiment.study %}
