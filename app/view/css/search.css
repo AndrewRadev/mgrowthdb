@@ -25,6 +25,15 @@
     .highlight {
       background-color: var(--light-blue);
     }
+
+    .publication-type {
+      white-space: nowrap;
+      font-size: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 0.4em;
+      color: #333;
+    }
   }
 
   .load-more {

@@ -16,7 +16,7 @@
             {{ study.nameWithId|highlight(search.query_words) }}
           </a>
 
-          <div class="flex-row flex-right flex-gap-10">
+          <div class="flex-row flex-right flex-gap-10 flex-start">
             {% if not study.isPublished: %}
               <span
                   class="icon icon-invisible flex-end"
@@ -31,6 +31,18 @@
               </span>
             {% endif %}
           </div>
+
+          {% if study.publicationType: %}
+            <div class="publication-type flex-right flex-start">
+              {% if study.publicationType == 'publication': %}
+                📚 {{ study.url|external_link("Publication") }}
+              {% elif study.publicationType == 'preprint': %}
+                📄 {{ study.url|external_link("Pre-print") }}
+              {% elif study.publicationType == 'dataset': %}
+                💽 Dataset
+              {% endif %}
+            </div>
+          {% endif %}
         </h3>
 
         {% if study.description: %}
