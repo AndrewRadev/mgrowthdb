@@ -15,6 +15,22 @@
     background-color: var(--light-blue);
   }
 
+  .simple-form .form-row.small-input-row {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 6px;
+    padding-top: 0;
+    font-size: 12px;
+
+    label span {
+      font-size: 12px;
+    }
+
+    select {
+      padding: 0.4rem;
+    }
+  }
+
   .results-list {
     transition: opacity var(--transition-length);
     border: 1px solid var(--border-color);

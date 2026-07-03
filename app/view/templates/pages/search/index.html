@@ -33,35 +33,6 @@
                 class="form-input-full form-input-blue" />
           </label>
 
-          <label>
-            <span style="white-space: nowrap">Items per page</span>
-            {% set selected = search.per_page|string %}
-            <select name="perPage" class="form-input-blue form-input-full js-per-page">
-              <option {{ "selected" if selected == '10' }}>10</option>
-              <option {{ "selected" if selected == '20' }}>20</option>
-              <option {{ "selected" if selected == '50' }}>50</option>
-            </select>
-          </label>
-
-          <label>
-            <span style="white-space: nowrap">Sort order</span>
-            {% set selected = search.sort_order|string %}
-            <select name="sort" class="form-input-blue form-input-full js-per-page">
-              <option value="publicationDate_desc" {{ "selected" if selected == 'publicationDate_desc' }}>
-                Publication date (newest first)
-              </option>
-              <option value="publicationDate_asc" {{ "selected" if selected == 'publicationDate_asc' }}>
-                Publication date (oldest first)
-              </option>
-              <option value="uploadDate_desc" {{ "selected" if selected == 'uploadDate_desc' }}>
-                Upload date (newest first)
-              </option>
-              <option value="uploadDate_asc" {{ "selected" if selected == 'uploadDate_asc' }}>
-                Upload date (oldest first)
-              </option>
-            </select>
-          </label>
-
           <input class="flex-end" type="submit" value="🔍 Search" />
           <a href="{{ url_for('search_index_page') }}" class="flex-end white-button">🧹 Clear</a>
         </div>
@@ -93,9 +64,42 @@
             </select>
           </label>
         </div>
+
+        <fieldset class="form-row full small-input-row">
+          <legend>Search settings</legend>
+
+          <label>
+            <span style="white-space: nowrap">Items per page</span>
+            {% set selected = search.per_page|string %}
+            <select name="perPage" class="form-input-blue form-input-full js-per-page">
+              <option {{ "selected" if selected == '10' }}>10</option>
+              <option {{ "selected" if selected == '20' }}>20</option>
+              <option {{ "selected" if selected == '50' }}>50</option>
+            </select>
+          </label>
+
+          <label>
+            <span style="white-space: nowrap">Sort order</span>
+            {% set selected = search.sort_order|string %}
+            <select name="sort" class="form-input-blue form-input-full js-per-page">
+              <option value="publicationDate_desc" {{ "selected" if selected == 'publicationDate_desc' }}>
+                Publication date (newest first)
+              </option>
+              <option value="publicationDate_asc" {{ "selected" if selected == 'publicationDate_asc' }}>
+                Publication date (oldest first)
+              </option>
+              <option value="uploadDate_desc" {{ "selected" if selected == 'uploadDate_desc' }}>
+                Upload date (newest first)
+              </option>
+              <option value="uploadDate_asc" {{ "selected" if selected == 'uploadDate_asc' }}>
+                Upload date (oldest first)
+              </option>
+            </select>
+          </label>
+        </fieldset>
       </form>
 
-      <a class="float-right small" href="{{ url_for('advanced_search_index_page') }}">
+      <a class="float-right smaller" href="{{ url_for('advanced_search_index_page') }}">
         Advanced search
       </a>
 
