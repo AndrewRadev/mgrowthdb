@@ -38,6 +38,7 @@ Page('.search-page', function($page) {
   $page.on('keyup', 'input[name=q]', _.debounce(updateSearch, 200));
   $page.on('change', '.js-strain-select,.js-metabolite-select', updateSearch)
   $page.on('change', '.js-per-page', updateSearch)
+  $page.on('change', '.js-publication-type', updateSearch)
 
   // Make sure the "advanced search" checkbox reflects the current state of the
   // form:
@@ -48,6 +49,9 @@ Page('.search-page', function($page) {
   } else {
     $checkbox.prop('checked', true);
   }
+
+  // Trigger initial update on page load:
+  updateSearch()
 
   $page.on('click', '.js-load-more', function(e) {
     e.preventDefault();

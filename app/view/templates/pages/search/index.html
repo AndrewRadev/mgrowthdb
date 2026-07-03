@@ -69,7 +69,13 @@
           <legend>Search settings</legend>
 
           <label>
-            <span style="white-space: nowrap">Items per page</span>
+            <span style="white-space: nowrap">
+              Items per page
+              <span
+                class="icon icon-inline icon-small icon-info-gray"
+                data-tooltip="This preference is remembered in your browser">
+              </span>
+            </span>
             {% set selected = search.per_page|string %}
             <select name="perPage" class="form-input-blue form-input-full js-per-page">
               <option {{ "selected" if selected == '10' }}>10</option>
@@ -79,7 +85,13 @@
           </label>
 
           <label>
-            <span style="white-space: nowrap">Sort order</span>
+            <span style="white-space: nowrap">
+              Sort order
+              <span
+                class="icon icon-inline icon-small icon-info-gray"
+                data-tooltip="This preference is remembered in your browser">
+              </span>
+            </span>
             {% set selected = search.sort_order|string %}
             <select name="sort" class="form-input-blue form-input-full js-per-page">
               <option value="publicationDate_desc" {{ "selected" if selected == 'publicationDate_desc' }}>
@@ -93,6 +105,25 @@
               </option>
               <option value="uploadDate_asc" {{ "selected" if selected == 'uploadDate_asc' }}>
                 Upload date (oldest first)
+              </option>
+            </select>
+          </label>
+
+          <label>
+            <span style="white-space: nowrap">Publication type</span>
+            {% set selected = search.publication_type %}
+            <select name="publicationType" class="form-input-blue form-input-full js-publication-type">
+              <option value="" {{ "selected" if selected == '' }}>
+                All
+              </option>
+              <option value="publication" {{ "selected" if selected == 'publication' }}>
+                📚 Publication
+              </option>
+              <option value="preprint" {{ "selected" if selected == 'preprint' }}>
+                📄 Pre-print
+              </option>
+              <option value="dataset" {{ "selected" if selected == 'dataset' }}>
+                💽 Dataset
               </option>
             </select>
           </label>

@@ -30,19 +30,19 @@
                   data-tooltip="You are able to manage this study, either because you uploaded it or because you've given someone the right to edit it.">
               </span>
             {% endif %}
-          </div>
 
-          {% if study.publicationType: %}
-            <div class="publication-type flex-right flex-start">
-              {% if study.publicationType == 'publication': %}
-                📚 {{ study.url|external_link("Publication") }}
-              {% elif study.publicationType == 'preprint': %}
-                📄 {{ study.url|external_link("Pre-print") }}
-              {% elif study.publicationType == 'dataset': %}
-                💽 Dataset
-              {% endif %}
-            </div>
-          {% endif %}
+            {% if study.publicationType: %}
+              <div class="publication-type">
+                {% if study.publicationType == 'publication': %}
+                  📚 {{ study.url|external_link("Publication") }}
+                {% elif study.publicationType == 'preprint': %}
+                  📄 {{ study.url|external_link("Pre-print") }}
+                {% elif study.publicationType == 'dataset': %}
+                  💽 Dataset
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
         </h3>
 
         {% if study.description: %}

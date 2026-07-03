@@ -20,24 +20,27 @@ class StudySearch():
         query=None,
         ncbiIds=None,
         chebiIds=None,
-        per_page=10,
         sort_order='uploadDate_desc',
+        publication_type='',
+        per_page=10,
         offset=0,
     ):
-        self.db_session = db_session
-        self.user       = user
-        self.query      = (query or '').strip().lower()
-        self.per_page   = per_page
-        self.ncbiIds    = [int(n) for n in (ncbiIds or [])]
-        self.chebiIds   = chebiIds or []
-        self.offset     = offset
-        self.sort_order = sort_order
+        self.db_session       = db_session
+        self.user             = user
+        self.query            = (query or '').strip().lower()
+        self.per_page         = per_page
+        self.ncbiIds          = [int(n) for n in (ncbiIds or [])]
+        self.chebiIds         = chebiIds or []
+        self.offset           = offset
+        self.sort_order       = sort_order
+        self.publication_type = publication_type
 
         self.query_words = []
         self.has_more = False
 
     def fetch_results(self):
-        publish_clause = self._build_publish_clause()
+        publish_clause          = self._build_publish_clause()
+        publication_type_clause = self._build_publication_type_clause()
 
         if self.sort_order == 'publicationDate_asc':
             order_clauses = (Study.publicationDate.asc(),)
@@ -52,14 +55,14 @@ class StudySearch():
             sql.select(Study)
             .group_by(Study.publicId)
             .join(StudyUser, isouter=True)
-            .where(publish_clause)
+            .where(publish_clause, publication_type_clause)
             .limit(self.per_page)
             .offset(self.offset)
         )
         db_count_query = (
             sql.select(sql.func.count(Study.publicId.distinct()))
             .join(StudyUser, isouter=True)
-            .where(publish_clause)
+            .where(publish_clause, publication_type_clause)
         )
 
         if len(self.query):
@@ -130,6 +133,13 @@ class StudySearch():
             )
         else:
             return Study.isPublished
+
+    def _build_publication_type_clause(self):
+        if self.publication_type in ('publication', 'preprint', 'dataset'):
+            return Study.publicationType == self.publication_type
+        else:
+            # Noop, show everything
+            return Study.publicId.isnot(None)
 
 
 def _replace_public_id_references(text):

@@ -162,6 +162,27 @@ class TestStudySearch(DatabaseTest):
         self._assertEqualPublicIds(search.fetch_results(), [s1])
         self.assertFalse(search.has_more)
 
+    def test_publication_types(self):
+        published_study   = self.create_study(publicationType='publication', publishedAt=datetime.now(UTC))
+        biorxiv_study     = self.create_study(publicationType='preprint',    publishedAt=datetime.now(UTC))
+        unpublished_study = self.create_study(publicationType='dataset',     publishedAt=datetime.now(UTC))
+
+        search = StudySearch(self.db_session)
+        self._assertEqualPublicIds(search.fetch_results(), [unpublished_study, biorxiv_study, published_study])
+
+        search = StudySearch(self.db_session, publication_type='publication')
+        self._assertEqualPublicIds(search.fetch_results(), [published_study])
+
+        search = StudySearch(self.db_session, publication_type='preprint')
+        self._assertEqualPublicIds(search.fetch_results(), [biorxiv_study])
+
+        search = StudySearch(self.db_session, publication_type='dataset')
+        self._assertEqualPublicIds(search.fetch_results(), [unpublished_study])
+
+        # Return all result for an unknown filter
+        search = StudySearch(self.db_session, publication_type='[unsupported]')
+        self._assertEqualPublicIds(search.fetch_results(), [unpublished_study, biorxiv_study, published_study])
+
     def test_pagination(self):
         admin = self.create_user(isAdmin=True)
 

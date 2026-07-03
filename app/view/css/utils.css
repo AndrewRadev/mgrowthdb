@@ -615,6 +615,7 @@ form.simple-form {
 .icon.icon-chart             { background-image: url('/static/images/icons/chart-dots-2.svg'); }
 .icon.icon-tool              { background-image: url('/static/images/icons/tool.svg'); }
 .icon.icon-info              { background-image: url('/static/images/icons/info-circle.svg'); }
+.icon.icon-info-gray         { background-image: url('/static/images/icons/info-circle-gray.svg'); }
 .icon.icon-duplicate         { background-image: url('/static/images/icons/transition-bottom.svg'); }
 .icon.icon-left              { background-image: url('/static/images/icons/chevrons-left.svg'); }
 .icon.icon-right             { background-image: url('/static/images/icons/chevrons-right.svg'); }
