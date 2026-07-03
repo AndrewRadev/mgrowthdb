@@ -59,6 +59,7 @@
 
       .example {
         transition: border-color var(--transition-length);
+        transition: top var(--transition-length);
         background: white;
         padding: 0 6px;
         max-height: 100%;
@@ -73,9 +74,22 @@
         }
       }
 
-      .example1 { top: 0; left: 0; z-index: 3; }
-      .example2 { top: 20px; left: 20px; z-index: 2; }
-      .example3 { top: 40px; left: 40px; z-index: 1 }
+      .example1 {
+        top: 0;
+        left: 0;
+        z-index: 3;
+      }
+      .example2 {
+        top: 20px;
+        left: 50%;
+        translate: -50% 0;
+        z-index: 2;
+      }
+      .example3 {
+        top: 40px;
+        right: 0;
+        z-index: 1;
+      }
     }
   }
 }
