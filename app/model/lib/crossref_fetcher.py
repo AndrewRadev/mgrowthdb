@@ -21,7 +21,8 @@ class CrossrefFetcher:
 
     def make_request(self):
         # Author records for linking and searching:
-        crossref_url = f"https://api.crossref.org/works/{self.doi}"
+        quoted_doi = requests.utils.quote(self.doi)
+        crossref_url = f"https://api.crossref.org/works/{quoted_doi}"
         response = requests.get(crossref_url)
 
         if response.status_code == 404:
