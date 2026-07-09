@@ -169,7 +169,7 @@ def _render_forbidden(_error):
 
 def _render_client_error(error):
     if _is_json(request):
-        return {'error': str(error)}, 400
+        return {'error': '400 Bad request', 'description': str(error)}, 400
     if _is_csv(request):
         return str(error), 400
 

@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 
 import sqlalchemy as sql
 
-from app.model.orm import WorkspaceEntry
+from app.model.orm import CustomModel, WorkspaceEntry
 from tests.page_test import PageTest
 
 
@@ -125,6 +125,56 @@ class TestApiPages(PageTest):
         response_json = self._get_json(response)
 
         self.assertEqual(response_json['error'], '404 Not found')
+
+
+    def test_updating_experiment(self):
+        user = self.create_user(apiKey='test1')
+
+        s1 = self.create_study(ownerUuid=user.uuid, publishedAt=datetime.now(UTC))
+        s2 = self.create_study(publishedAt=datetime.now(UTC))
+
+        e1 = self.create_experiment(studyId=s1.publicId)
+        e2 = self.create_experiment(studyId=s2.publicId)
+
+        self.db_session.commit()
+
+        payload = {
+            'apiKey': 'test1',
+            'model': {
+                'name': 'Test model',
+                'shortName': 'TM',
+                'description': 'Test model',
+            },
+            'entries': [{
+                'data': "time,value\n1,100\n2,200",
+            }]
+        }
+
+        # Study doesn't belong to this user, even if it's published
+        response = self.client.post(
+            f"/api/v1/experiment/{e2.publicId}/modeling.json",
+            data=json.dumps(payload),
+        )
+        response_json = self._get_json(response)
+        print(response_json)
+        self.assertEqual(response_json['error'], '403 Forbidden')
+
+        # Successful update:
+        response = self.client.post(
+            f"/api/v1/experiment/{e1.publicId}/modeling.json",
+            data=json.dumps(payload),
+        )
+        response_json = self._get_json(response)
+        self.assertEqual(response_json['status'], 'ok')
+
+        self.db_session.commit()
+
+        # Custom model exists now:
+        custom_model = self.db_session.get(CustomModel, response_json['customModelId'])
+        self.assertEqual(custom_model.study, s1)
+
+        # TODO (2026-07-09) Validate creation of modeling results
+
 
     def test_measurement_csv(self):
         study        = self.create_study(publishedAt=datetime.now(UTC))
