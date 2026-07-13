@@ -247,13 +247,6 @@ def init_routes(app):
     app.add_url_rule("/api/v1/experiment/<string:publicId>.json", view_func=api_pages.experiment_json)
     app.add_url_rule("/api/v1/experiment/<string:publicId>.csv",  view_func=api_pages.experiment_csv)
 
-    # TODO (2026-07-13) Remove
-    app.add_url_rule(
-        "/api/v1/experiment/<string:publicId>/modeling.json",
-        view_func=api_pages.experiment_modeling_update_json,
-        methods=["POST"],
-    )
-
     app.add_url_rule("/api/v1/bioreplicate/<int:id>.json", view_func=api_pages.bioreplicate_json)
     app.add_url_rule("/api/v1/bioreplicate/<int:id>.csv",  view_func=api_pages.bioreplicate_csv)
 

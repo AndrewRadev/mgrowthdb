@@ -145,64 +145,6 @@ def experiment_json(publicId):
     }
 
 
-def experiment_modeling_update_json(publicId):
-    if not request.data:
-        raise BadRequest("No JSON data payload")
-
-    request_json = json.loads(request.data)
-
-    if 'entries' not in request_json:
-        raise BadRequest("No 'entries' array given")
-
-    current_user = _get_current_user(request_json.get('apiKey'))
-    if current_user is None:
-        raise Forbidden
-
-    experiment = g.db_session.get(Experiment, publicId)
-    if not experiment.study.manageable_by_user(current_user):
-        raise Forbidden
-
-    custom_model = _find_or_create_custom_model(experiment.studyId, request_json)
-
-    # TODO: clear out existing, how? Add `sourceType` to model records
-    # Clear out existing "api" entries, unless we got an `append` parameter:
-    # for entry in workspace.entries:
-    #     if entry.sourceType == 'api':
-    #         g.db_session.delete(entry)
-
-    # Create "api" entries
-    modeling_results = []
-    for entry in request_json['entries']:
-        df = pd.read_csv(StringIO(entry['data']))
-
-        # Check for enough rows and columns:
-        if len(df.columns) < 2:
-            raise BadRequest(f"At least 2 columns are expected, {len(df.columns)} were found")
-
-        row_count = df.shape[0]
-        if row_count <= 0:
-            raise BadRequest("No data rows were found")
-
-        # If label is not provided, use second column's name
-        label = entry.get('label') or df.columns[1]
-
-        modeling_results.append(ModelingResult(
-            type=f"custom_{custom_model.id}",
-            customModelId=custom_model.id,
-            xValues=df[df.columns[0]].tolist(),
-            yValues=df[df.columns[1]].tolist(),
-            yErrors=([] if len(df.columns) < 3 else df[df.columns[3]].tolist())
-        ))
-
-    g.db_session.add_all(modeling_results)
-    g.db_session.commit()
-
-    return {
-        'status': 'ok',
-        'customModelId': custom_model.id,
-    }
-
-
 def experiment_csv(publicId):
     current_user = _get_current_user()
     experiment = g.db_session.get(Experiment, publicId)
