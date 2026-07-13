@@ -1,3 +1,4 @@
+import html
 from uuid import uuid4
 from datetime import datetime, UTC
 
@@ -145,6 +146,7 @@ def _render_bad_request(error):
     if _is_json(request):
         # Clean HTML-like description for JSON
         description = description.removeprefix('<p>').removesuffix('</p>')
+        description = html.unescape(description)
 
         return {'error': '400 Bad request', 'description': description}, 400
     else:
