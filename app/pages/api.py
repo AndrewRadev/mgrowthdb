@@ -162,32 +162,7 @@ def experiment_modeling_update_json(publicId):
     if not experiment.study.manageable_by_user(current_user):
         raise Forbidden
 
-    if 'model' not in request_json:
-        raise BadRequest("Missing 'model' data to create the records under")
-    if 'name' not in request_json['model']:
-        raise BadRequest("Missing 'name' key in the 'model' data to create the records under")
-
-    if 'shortName' in request_json['model'] and len(request_json['model']['shortName']) > 5:
-        short_name = request_json['model']['shortName']
-        raise BadRequest(f"Given 'shortName' ({short_name}) is too long for a model (maximum 5 characters)")
-
-    custom_model = g.db_session.scalars(
-        sql.select(CustomModel)
-        .where(
-            CustomModel.studyId == experiment.studyId,
-            CustomModel.name == request_json['model']['name'],
-        )
-    ).one_or_none()
-    if not custom_model:
-        custom_model = CustomModel(
-            studyId=experiment.studyId,
-            name=request_json['model']['name'],
-            shortName=request_json['model'].get('shortName'),
-            url=request_json['model'].get('url'),
-            description=request_json['model'].get('description'),
-        )
-        g.db_session.add(custom_model)
-        g.db_session.flush()
+    custom_model = _find_or_create_custom_model(experiment.studyId, request_json)
 
     # TODO: clear out existing, how? Add `sourceType` to model records
     # Clear out existing "api" entries, unless we got an `append` parameter:
@@ -283,6 +258,56 @@ def measurement_context_csv(id):
         df.rename(columns={'value': plain_label}, inplace=True)
 
     return df.to_csv(index=False)
+
+
+def measurement_context_update_model_predictions(id):
+    request_json = json.loads(request.data)
+    current_user = _get_current_user(request_json.get('apiKey'))
+
+    measurement_context = g.db_session.get(MeasurementContext, id)
+    if not measurement_context:
+        raise NotFound
+    if not measurement_context.study.manageable_by_user(current_user):
+        raise Forbidden
+
+    if 'data' not in request_json:
+        raise BadRequest("No 'data' given in CSV format")
+
+    custom_model = _find_or_create_custom_model(measurement_context.study.publicId, request_json.get('model'))
+
+    existing_modeling_results = g.db_session.scalars(
+        sql.select(ModelingResult)
+        .where(
+            ModelingResult.measurementContextId == measurement_context.id,
+            ModelingResult.customModelId == custom_model.id,
+        )
+    ).all()
+    for modeling_result in existing_modeling_results:
+        g.db_session.delete(modeling_result)
+
+    df = pd.read_csv(StringIO(request_json['data']))
+
+    # Check for enough rows and columns:
+    if len(df.columns) < 2:
+        raise BadRequest(f"At least 2 columns are expected, {len(df.columns)} were found")
+
+    row_count = df.shape[0]
+    if row_count <= 0:
+        raise BadRequest("No data rows were found")
+
+    modeling_result = ModelingResult(
+        measurementContext=measurement_context,
+        type=f"custom_{custom_model.id}",
+        state='ready',
+        customModelId=custom_model.id,
+        xValues=df[df.columns[0]].tolist(),
+        yValues=df[df.columns[1]].tolist(),
+        yErrors=([] if len(df.columns) < 3 else df[df.columns[3]].tolist())
+    )
+    g.db_session.add(modeling_result)
+    g.db_session.commit()
+
+    return {'modelingResultId': modeling_result.id}
 
 
 def model_prediction_json(id):
@@ -699,3 +724,36 @@ def _convert_to_requested_units(df, source_units, metabolite_mass=None):
             raise ClientError(f"Unexpected metabolite count units requested: {target_units}")
 
         convert_df_units(df, source_units, target_units, metabolite_mass)
+
+
+def _find_or_create_custom_model(study_id, model_data):
+    if model_data is None:
+        raise BadRequest("Missing 'model' data to create the records under")
+
+    if 'name' not in model_data:
+        raise BadRequest("Missing 'name' key in the 'model' data to create the records under")
+
+    if 'shortName' in model_data and len(model_data['shortName']) > 5:
+        short_name = model_data['shortName']
+        raise BadRequest(f"Given 'shortName' ({short_name}) is too long for a model (maximum 5 characters)")
+
+    custom_model = g.db_session.scalars(
+        sql.select(CustomModel)
+        .where(
+            CustomModel.studyId == study_id,
+            CustomModel.name == model_data['name'],
+        )
+    ).one_or_none()
+
+    if not custom_model:
+        custom_model = CustomModel(
+            studyId=study_id,
+            name=model_data['name'],
+            shortName=model_data.get('shortName'),
+            url=model_data.get('url'),
+            description=model_data.get('description'),
+        )
+        g.db_session.add(custom_model)
+        g.db_session.flush()
+
+    return custom_model

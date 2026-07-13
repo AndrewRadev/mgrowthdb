@@ -270,6 +270,88 @@ class TestApiPages(PageTest):
         response_json = self._get_json(response)
         self.assertEqual(response_json['modelPredictionIds'], [modeling_result.id])
 
+    def test_updating_model_predictions(self):
+        user = self.create_user(apiKey='test1')
+        study = self.create_study(
+            name='Example study',
+            publishedAt=datetime.now(UTC),
+            ownerUuid=user.uuid,
+        )
+        measurement_context = self.create_measurement_context(studyId=study.publicId)
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.json")
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['modelPredictionIds'], [])
+
+        # Push model prediction:
+        payload = {
+            'apiKey': 'test1',
+            'model': {
+                'name': 'Test model',
+                'shortName': 'TM',
+                'description': 'Test model',
+            },
+            'data': "time,value\n1,100\n2,200",
+        }
+        response = self.client.post(
+            f"/api/v1/measurement-context/{measurement_context.id}/model-predictions.json",
+            data=json.dumps(payload),
+        )
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.db_session.commit()
+
+        self.assertEqual(
+            [mr.id for mr in measurement_context.modelingResults],
+            [response_json['modelingResultId']],
+        )
+        self.assertEqual(measurement_context.modelingResults[0].yValues, [100, 200])
+
+        # Push another batch of data, overwrites the previous one by name:
+        payload = {
+            'apiKey': 'test1',
+            'model': {'name': 'Test model'},
+            'data': "time,value\n1,300\n2,400",
+        }
+        response = self.client.post(
+            f"/api/v1/measurement-context/{measurement_context.id}/model-predictions.json",
+            data=json.dumps(payload),
+        )
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.db_session.commit()
+
+        self.assertEqual(
+            [mr.id for mr in measurement_context.modelingResults],
+            [response_json['modelingResultId']],
+        )
+        self.assertEqual(measurement_context.modelingResults[0].yValues, [300, 400])
+        custom_model = measurement_context.modelingResults[0].customModel
+        self.assertEqual(custom_model.shortName, 'TM')
+
+        # Push another batch of data with a second new model:
+        payload = {
+            'apiKey': 'test1',
+            'model': {'name': 'Test model 2'},
+            'data': "time,value\n1,500\n2,600",
+        }
+        response = self.client.post(
+            f"/api/v1/measurement-context/{measurement_context.id}/model-predictions.json",
+            data=json.dumps(payload),
+        )
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.db_session.commit()
+
+        self.assertEqual(len(measurement_context.modelingResults), 2)
+
     def test_non_published_measurement_endpoints(self):
         study        = self.create_study(publishedAt=None)
         experiment   = self.create_experiment(studyId=study.publicId)

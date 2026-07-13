@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -94,7 +95,12 @@ class ModelingResult(OrmBase):
 
     params: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
 
-    state:    Mapped[str] = mapped_column(sql.String(100), default='pending')
+    state: Mapped[Literal[
+        'pending',
+        'ready',
+        'error',
+    ]] = mapped_column(sql.String(100), default='pending')
+
     error:    Mapped[str] = mapped_column(sql.String)
     rSummary: Mapped[str] = mapped_column(sql.String)
 
