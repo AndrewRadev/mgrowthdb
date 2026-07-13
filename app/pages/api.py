@@ -258,6 +258,18 @@ def model_prediction_json(id):
     if not modeling_result or not modeling_result.study.visible_to_user(current_user):
         raise NotFound
 
+    if modeling_result.customModelId is None:
+        custom_model_fields = {}
+    else:
+        custom_model_fields = {
+            'customModel': {
+                'name':        modeling_result.customModel.name,
+                'shortName':   modeling_result.customModel.shortName,
+                'url':         modeling_result.customModel.url,
+                'description': modeling_result.customModel.description,
+            }
+        }
+
     return {
         'id':                   modeling_result.id,
         'measurementContextId': modeling_result.measurementContextId,
@@ -265,6 +277,7 @@ def model_prediction_json(id):
         'type':                 modeling_result.type,
         'params':               modeling_result.params,
         'calculatedAt':         modeling_result.calculatedAt,
+        **custom_model_fields,
     }
 
 

@@ -260,7 +260,20 @@ class TestApiPages(PageTest):
             [mr.id for mr in measurement_context.modelingResults],
             [response_json['modelingResultId']],
         )
-        self.assertEqual(measurement_context.modelingResults[0].yValues, [100, 200])
+
+        modeling_result = measurement_context.modelingResults[0]
+        self.assertEqual(modeling_result.yValues, [100, 200])
+
+        # Check that the custom model information is available through the API
+        response = self.client.get(f"/api/v1/model-prediction/{modeling_result.id}.json")
+        response_json = self._get_json(response)
+        print(response_json)
+        self.assertEqual(response_json['customModel'], {
+            'name': 'Test model',
+            'shortName': 'TM',
+            'description': 'Test model',
+            'url': None,
+        })
 
         # Push another batch of data, overwrites the previous one by name:
         payload = {
