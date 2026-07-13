@@ -88,6 +88,7 @@ Page('.search-page', function($page) {
       success: function(response) {
         $resultsList.html(response);
         $searchInput.removeClass('loading-input');
+        initTooltips();
       }
     });
   }
