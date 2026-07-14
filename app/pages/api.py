@@ -1,5 +1,6 @@
 import re
 import json
+from datetime import datetime, UTC
 from io import StringIO
 
 from flask import (
@@ -244,7 +245,8 @@ def measurement_context_update_model_predictions(id):
         customModelId=custom_model.id,
         xValues=df[df.columns[0]].tolist(),
         yValues=df[df.columns[1]].tolist(),
-        yErrors=([] if len(df.columns) < 3 else df[df.columns[3]].tolist())
+        yErrors=([] if len(df.columns) < 3 else df[df.columns[3]].tolist()),
+        publishedAt=datetime.now(UTC),
     )
     g.db_session.add(modeling_result)
     g.db_session.commit()
