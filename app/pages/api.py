@@ -750,7 +750,10 @@ def _find_or_create_custom_model(study_id, model_data):
             url=model_data.get('url'),
             description=model_data.get('description'),
         )
-        g.db_session.add(custom_model)
-        g.db_session.flush()
+    else:
+        custom_model.update(**model_data)
+
+    g.db_session.add(custom_model)
+    g.db_session.flush()
 
     return custom_model
