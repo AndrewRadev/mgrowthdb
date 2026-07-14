@@ -257,6 +257,11 @@ def init_routes(app):
         view_func=api_pages.measurement_context_update_model_predictions,
         methods=["POST"],
     )
+    app.add_url_rule(
+        "/api/v1/measurement-context/<int:id>/model-predictions.json",
+        view_func=api_pages.measurement_context_delete_model_predictions,
+        methods=["DELETE"],
+    )
 
     app.add_url_rule("/api/v1/model-prediction/<int:id>.json", view_func=api_pages.model_prediction_json)
     app.add_url_rule("/api/v1/model-prediction/<int:id>.csv",  view_func=api_pages.model_prediction_csv)

@@ -241,7 +241,7 @@ class TestApiPages(PageTest):
         payload = {
             'apiKey': 'test1',
             'model': {
-                'name': 'Test model',
+                'name': 'Test model 1',
                 'shortName': 'TM',
                 'description': 'Test model',
             },
@@ -267,9 +267,8 @@ class TestApiPages(PageTest):
         # Check that the custom model information is available through the API
         response = self.client.get(f"/api/v1/model-prediction/{modeling_result.id}.json")
         response_json = self._get_json(response)
-        print(response_json)
         self.assertEqual(response_json['customModel'], {
-            'name': 'Test model',
+            'name': 'Test model 1',
             'shortName': 'TM',
             'description': 'Test model',
             'url': None,
@@ -278,7 +277,7 @@ class TestApiPages(PageTest):
         # Push another batch of data, overwrites the previous one by name:
         payload = {
             'apiKey': 'test1',
-            'model': {'name': 'Test model'},
+            'model': {'name': 'Test model 1'},
             'data': "time,value\n1,300\n2,400",
         }
         response = self.client.post(
@@ -309,11 +308,24 @@ class TestApiPages(PageTest):
             data=json.dumps(payload),
         )
         self.assertEqual(response.status, '200 OK')
-        response_json = self._get_json(response)
 
         self.db_session.commit()
 
         self.assertEqual(len(measurement_context.modelingResults), 2)
+
+        # Delete the first model's data:
+        payload = {'apiKey': 'test1', 'modelName': 'Test model 1'}
+        response = self.client.delete(
+            f"/api/v1/measurement-context/{measurement_context.id}/model-predictions.json",
+            data=json.dumps(payload),
+        )
+        response_json = self._get_json(response)
+        print(response_json)
+        self.assertEqual(response.status, '200 OK')
+        self.db_session.commit()
+
+        self.assertEqual(len(measurement_context.modelingResults), 1)
+        self.assertEqual(measurement_context.modelingResults[0].yValues, [500, 600])
 
     def test_non_published_measurement_endpoints(self):
         study        = self.create_study(publishedAt=None)

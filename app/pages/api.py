@@ -257,6 +257,43 @@ def measurement_context_update_model_predictions(id):
     return {'modelingResultId': modeling_result.id}
 
 
+def measurement_context_delete_model_predictions(id):
+    request_json = json.loads(request.data)
+    current_user = _get_current_user(request_json.get('apiKey'))
+
+    measurement_context = g.db_session.get(MeasurementContext, id)
+    if not measurement_context:
+        raise NotFound
+    if not measurement_context.study.manageable_by_user(current_user):
+        raise Forbidden
+
+    if 'modelName' not in request_json:
+        raise BadRequest("No 'modelName' given to delete the data of")
+
+    custom_model = g.db_session.scalars(
+        sql.select(CustomModel)
+        .where(
+            CustomModel.studyId == measurement_context.study.publicId,
+            CustomModel.name == request_json['modelName']
+        )
+    ).one()
+
+    modeling_results = g.db_session.scalars(
+        sql.select(ModelingResult)
+        .where(
+            ModelingResult.measurementContextId == measurement_context.id,
+            ModelingResult.customModelId == custom_model.id,
+        )
+    ).all()
+
+    for modeling_result in modeling_results:
+        g.db_session.delete(modeling_result)
+
+    g.db_session.commit()
+
+    return {'status': 'ok'}
+
+
 def model_prediction_json(id):
     current_user = _get_current_user()
     modeling_result = g.db_session.get(ModelingResult, id)
