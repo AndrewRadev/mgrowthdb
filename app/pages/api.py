@@ -229,6 +229,9 @@ def measurement_context_update_model_predictions(id):
         g.db_session.delete(modeling_result)
 
     df = pd.read_csv(StringIO(request_json['data']))
+    if prediction_units := request_json.get('units'):
+        metabolite_mass = _get_metabolite_mass(measurement_context)
+        result = convert_df_units(df, prediction_units, measurement_context.units, metabolite_mass)
 
     # Check for enough rows and columns:
     if len(df.columns) < 2:
