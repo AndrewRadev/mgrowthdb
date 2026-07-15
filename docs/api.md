@@ -791,6 +791,26 @@ curl -s "$ROOT_URL/api/v1/measurement-context/123/model-predictions.json" \
 
 The measurement context ID given in the example is arbitrary. Ideally, it's recommended to fetch data through the "experiment" endpoint, associate the data you're operating on with its measurement context ID, and then push predictions to the `model-predictions.json` endpoint. The response at this time only contains a `{'status': 'ok'}` payload if successful. In case of a validation error or missing required data, you should receive the appropriate HTTP status code and JSON describing the issue.
 
+To clear the model predictions for a particular custom model, we can send a `DELETE` request instead of a `POST` request. Example payload:
+
+```json
+{
+  "apiKey": "[redacted]",
+  "modelName": "My custom model"
+}
+```
+
+And example request:
+
+```bash
+curl -s "$ROOT_URL/api/v1/measurement-context/123/model-predictions.json" \
+    --request DELETE \
+    --header "Content-Type: application/json" \
+    --data @payload.json
+```
+
+Note that this is the same URL, but with a different `--request` flag that changes the HTTP method that is used to make the request.
+
 ## Workspaces
 
 A workspace is identified by two parameters:
