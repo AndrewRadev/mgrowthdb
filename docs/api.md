@@ -72,7 +72,7 @@ The data in mGrowthDB is publicly available, but in some cases, it may not be pu
 
 Workspaces allow more fine-grained access. You can provide an API key to get read and write access to workspaces that you own. You can find this key in your profile page and reset it if it becomes compromised.
 
-To pass the API key along to a request, you can attach it as the query parameter `apiKey`, or you can send it in a JSON payload. You can see examples of this in the "Workspaces" section.
+To pass the API key along to a request, you can attach it as the query parameter `apiKey`, or you can send it in a JSON payload. You can see examples of this in the "Workspaces" section. The API key can also be used to attach model predictions to measurement contexts that will be available for plotting on the web interface.
 
 ## Search
 
@@ -700,6 +700,8 @@ measurementContextId,subjectType,subjectName,subjectExternalId,time,value,std
 
 The database includes modeling functionality -- users can fit models in the application interface, or they can upload custom models. The modeling records will be returned when fetching measurement contexts in the `modelPredictionIds` key, which in the examples so far has been empty.
 
+### Fetching data
+
 If you have a model prediction id, you can fetch the JSON metadata that describes this fit and a CSV of its predictions from the `/model-prediction/` endpoint.
 
 Structure:
@@ -758,6 +760,36 @@ time,value,std
 1.809045226130653,7785.456559068567,
 [...196 more lines...]
 ```
+
+### Pushing data
+
+If you provide an API key, you can attach custom model predictions to individual measurement contexts from the API. This is similar to how you would use workspaces, described in the next section. Here is an example payload that can be sent to one of these endpoints:
+
+```json
+{
+  "apiKey": "[redacted]",
+  "units": "Cells/μL",
+  "data": "time,value,std\n0.0,2197.0,\n4.0,2105.0,\n8.0,2505.0,\n",
+  "model": {
+      "name": "My custom model",
+      "shortName": "MCM",
+      "url": "my-custom-model.example.com",
+      "description": "A custom model."
+  }
+}
+```
+
+Most of the model information is optional, only the "name" key is mandatory. To learn more about uploading data and defining a custom model, read the "Uploading custom model data" section in the "[Modeling interface](https://mgrowthdb.gbiomed.kuleuven.be/help/modeling-interface/)" section of the help files.
+
+We can save this file as `payload.json` and then trigger a curl request, passing it along like this:
+
+```bash
+curl -s "$ROOT_URL/api/v1/measurement-context/123/model-predictions.json" \
+    --header "Content-Type: application/json" \
+    --data @payload.json
+```
+
+The measurement context ID given in the example is arbitrary. Ideally, it's recommended to fetch data through the "experiment" endpoint, associate the data you're operating on with its measurement context ID, and then push predictions to the `model-predictions.json` endpoint. The response at this time only contains a `{'status': 'ok'}` payload if successful. In case of a validation error or missing required data, you should receive the appropriate HTTP status code and JSON describing the issue.
 
 ## Workspaces
 
