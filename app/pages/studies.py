@@ -44,33 +44,32 @@ def study_show_page(publicId):
 
 
 def study_experiments_fragment(publicId):
-    study = _fetch_study_for_visitor(
-        publicId,
-        check_user_visibility=False,
-        sql_options=(
+    study = _fetch_study_for_visitor(publicId)
+
+    db_query = (
+        sql.select(Experiment)
+        .where(Experiment.studyId == publicId)
+        .options(
             # Level 1:
-            sql.orm.selectinload(Study.experiments, Experiment.compartments),
-            sql.orm.selectinload(Study.experiments, Experiment.community),
-            sql.orm.selectinload(Study.experiments, Experiment.perturbations),
-            sql.orm.selectinload(Study.experiments, Experiment.bioreplicates),
+            sql.orm.selectinload(Experiment.compartments),
+            sql.orm.selectinload(Experiment.community),
+            sql.orm.selectinload(Experiment.perturbations),
+            sql.orm.selectinload(Experiment.bioreplicates),
             # Level 2:
-            sql.orm.selectinload(Study.experiments, Experiment.community, Community.strains),
-            sql.orm.selectinload(Study.experiments, Experiment.bioreplicates, Bioreplicate.measurementContexts),
+            sql.orm.selectinload(Experiment.community, Community.strains),
+            sql.orm.selectinload(Experiment.bioreplicates, Bioreplicate.measurementContexts),
             # Level 3:
             sql.orm.selectinload(
-                Study.experiments,
                 Experiment.bioreplicates,
                 Bioreplicate.measurementContexts,
                 MeasurementContext.measurements,
             ),
             sql.orm.selectinload(
-                Study.experiments,
                 Experiment.bioreplicates,
                 Bioreplicate.measurementContexts,
                 MeasurementContext.technique,
             ),
             sql.orm.selectinload(
-                Study.experiments,
                 Experiment.bioreplicates,
                 Bioreplicate.measurementContexts,
                 MeasurementContext.modelingResults,
@@ -78,10 +77,20 @@ def study_experiments_fragment(publicId):
         )
     )
 
-    if not study.visible_to_user(g.current_user):
-        raise NotFound
+    # TODO (2026-07-20) Extract to testable class
 
-    return render_template("pages/studies/_experiments.html", experiments=study.experiments)
+    if query := request.args.get('q'):
+        query_words = query.split()
+        like_expr = '%' + '%'.join(query_words) + '%'
+        query_clause = sql.or_(
+            Experiment.name.ilike(like_expr),
+            Experiment.description.ilike(like_expr),
+        )
+        db_query = db_query.where(query_clause)
+
+    experiments = g.db_session.scalars(db_query).all()
+
+    return render_template("pages/studies/_experiments.html", experiments=experiments)
 
 
 def study_manage_page(publicId):

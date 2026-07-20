@@ -1,73 +1,87 @@
 {% from 'utils/_strain_link.html' import render_strain_link %}
 {% from 'pages/experiments/_bioreplicates_list.html' import render_bioreplicates_list %}
 {% from 'pages/perturbations/_perturbation.html' import render_perturbation %}
+{% from 'pages/studies/_experiments_toc.html' import render_experiments_toc %}
 
-{% for experiment in experiments: %}
-  <div class="experiment-container">
-    <h2 id="experiment-{{ experiment.publicId }}">
-      Experiment {{ loop.index }}: {{ experiment.name }}
-    </h2>
+<div class="flex-row">
+  <div>
+    {% for experiment in experiments: %}
+      <div class="experiment-container">
+        <h2 id="experiment-{{ experiment.publicId }}">
+          Experiment {{ loop.index }}: {{ experiment.name }}
+        </h2>
 
-    {% if experiment.publicId: %}
-      <p class="small">
-        <strong>Public ID</strong>:
-        <a href="{{ url_for('experiment_show_page', publicId=experiment.publicId) }}">
-          {{ experiment.publicId }}
-        </a>
+        {% if experiment.publicId: %}
+          <p class="small">
+            <strong>Public ID</strong>:
+            <a href="{{ url_for('experiment_show_page', publicId=experiment.publicId) }}">
+              {{ experiment.publicId }}
+            </a>
+            <br>
+          </p>
+        {% endif %}
+
+        {% if experiment.description: %}
+          {{ experiment.description|format_text }}
+        {% endif %}
+
         <br>
-      </p>
-    {% endif %}
 
-    {% if experiment.description: %}
-      {{ experiment.description|format_text }}
-    {% endif %}
+        <h3>Compartments</h3>
 
-    <br>
+        <ol>
+          {% for compartment in experiment.compartments: %}
+            <li>
+              <strong>{{ compartment.name }}</strong>
 
-    <h3>Compartments</h3>
+              <br>
 
-    <ol>
-      {% for compartment in experiment.compartments: %}
-        <li>
-          <strong>{{ compartment.name }}</strong>
+              Medium:
+              {% if compartment.mediumUrl: %}
+                {{ compartment.mediumUrl|external_link(compartment.mediumName) }}
+              {% else: %}
+                {{ compartment.mediumName }}
+              {% endif %}
 
-          <br>
+              <br>
 
-          Medium:
-          {% if compartment.mediumUrl: %}
-            {{ compartment.mediumUrl|external_link(compartment.mediumName) }}
-          {% else: %}
-            {{ compartment.mediumName }}
-          {% endif %}
+              Properties: {{ compartment.properties_description|safe }}
+            </li>
+          {% endfor %}
+        </ol>
 
-          <br>
+        <h3>Community: {{ experiment.community.name }}</h3>
 
-          Properties: {{ compartment.properties_description|safe }}
-        </li>
-      {% endfor %}
-    </ol>
+        <ol>
+          {% for strain in experiment.community.strains|sort: %}
+            <li>{{ render_strain_link(strain) }}</li>
+          {% endfor %}
+        </ol>
 
-    <h3>Community: {{ experiment.community.name }}</h3>
+        {% if experiment.perturbations|length > 0: %}
+          <h3>Perturbations</h3>
 
-    <ol>
-      {% for strain in experiment.community.strains|sort: %}
-        <li>{{ render_strain_link(strain) }}</li>
-      {% endfor %}
-    </ol>
+          <ol>
+            {% for perturbation in experiment.perturbations: %}
+              <li>{{ render_perturbation(perturbation, link=True) }}</li>
+            {% endfor %}
+          </ol>
+        {% endif %}
 
-    {% if experiment.perturbations|length > 0: %}
-      <h3>Perturbations</h3>
+        <h3>Biological replicates</h3>
 
-      <ol>
-        {% for perturbation in experiment.perturbations: %}
-          <li>{{ render_perturbation(perturbation, link=True) }}</li>
-        {% endfor %}
-      </ol>
-    {% endif %}
-
-    <h3>Biological replicates</h3>
-
-    {{ render_bioreplicates_list(experiment) }}
+        {{ render_bioreplicates_list(experiment) }}
+      </div>
+    {% endfor %}
   </div>
-{% endfor %}
 
+  {% if experiments|length: %}
+    <div class="toc-container">
+      {{ render_experiments_toc(experiments) }}
+    </div>
+  {% else: %}
+    <p class="help">
+      No experiments found matching the given filter.
+    </p>
+  {% endif %}
+</div>
