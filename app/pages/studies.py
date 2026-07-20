@@ -46,6 +46,11 @@ def study_show_page(publicId):
 def study_experiments_fragment(publicId):
     study = _fetch_study_for_visitor(publicId)
 
+    total_experiment_count = g.db_session.scalars(
+        sql.select(sql.func.count(Experiment.publicId.distinct()))
+        .where(Experiment.studyId == study.publicId)
+    ).one()
+
     db_query = (
         sql.select(Experiment)
         .where(Experiment.studyId == publicId)
@@ -90,7 +95,11 @@ def study_experiments_fragment(publicId):
 
     experiments = g.db_session.scalars(db_query).all()
 
-    return render_template("pages/studies/_experiments.html", experiments=experiments)
+    return render_template(
+        "pages/studies/_experiments.html",
+        experiments=experiments,
+        total_experiment_count=total_experiment_count,
+    )
 
 
 def study_manage_page(publicId):

@@ -77,7 +77,7 @@
 
   {% if experiments|length: %}
     <div class="toc-container">
-      {{ render_experiments_toc(experiments) }}
+      {{ render_experiments_toc(experiments, total_experiment_count) }}
     </div>
   {% else: %}
     <p class="help">
