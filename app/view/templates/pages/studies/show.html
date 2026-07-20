@@ -1,10 +1,7 @@
 {% from 'utils/_dataframe.html' import render_dataframe %}
 {% from 'utils/_time_tag.html' import time_tag %}
-{% from 'utils/_strain_link.html' import render_strain_link %}
 {% from 'utils/_post_button.html' import post_button %}
 {% from 'pages/studies/_experiments_toc.html' import render_experiments_toc %}
-{% from 'pages/experiments/_bioreplicates_list.html' import render_bioreplicates_list %}
-{% from 'pages/perturbations/_perturbation.html' import render_perturbation %}
 {% from 'pages/search/_strains_and_metabolites.html' import render_strains_and_metabolites %}
 
 {% extends '_layout.html' %}
@@ -198,75 +195,16 @@
       {% endif %}
 
       <div class="flex-row">
-        <div class="experiments full">
-          {% for experiment in study.experiments: %}
-            <div class="experiment-container">
-              <h2 id="experiment-{{ experiment.publicId }}">
-                Experiment {{ loop.index }}: {{ experiment.name }}
-              </h2>
+        <div
+            data-url="{{ url_for('study_experiments_fragment', publicId=study.publicId) }}"
+            class="js-experiments experiments full">
+          <h2>
+            Loading experiments
 
-              {% if experiment.publicId: %}
-                <p class="small">
-                  <strong>Public ID</strong>:
-                  <a href="{{ url_for('experiment_show_page', publicId=experiment.publicId) }}">
-                    {{ experiment.publicId }}
-                  </a>
-                  <br>
-                </p>
-              {% endif %}
-
-              {% if experiment.description: %}
-                {{ experiment.description|format_text }}
-              {% endif %}
-
-              <br>
-
-              <h3>Compartments</h3>
-
-              <ol>
-                {% for compartment in experiment.compartments: %}
-                  <li>
-                    <strong>{{ compartment.name }}</strong>
-
-                    <br>
-
-                    Medium:
-                    {% if compartment.mediumUrl: %}
-                      {{ compartment.mediumUrl|external_link(compartment.mediumName) }}
-                    {% else: %}
-                      {{ compartment.mediumName }}
-                    {% endif %}
-
-                    <br>
-
-                    Properties: {{ compartment.properties_description|safe }}
-                  </li>
-                {% endfor %}
-              </ol>
-
-              <h3>Community: {{ experiment.community.name }}</h3>
-
-              <ol>
-                {% for strain in experiment.community.strains|sort: %}
-                  <li>{{ render_strain_link(strain) }}</li>
-                {% endfor %}
-              </ol>
-
-              {% if experiment.perturbations|length > 0: %}
-                <h3>Perturbations</h3>
-
-                <ol>
-                  {% for perturbation in experiment.perturbations: %}
-                    <li>{{ render_perturbation(perturbation, link=True) }}</li>
-                  {% endfor %}
-                </ol>
-              {% endif %}
-
-              <h3>Biological replicates</h3>
-
-              {{ render_bioreplicates_list(experiment) }}
-            </div>
-          {% endfor %}
+            <img
+                class="inline-loader-image loader-image"
+                src="{{ url_for('static', filename="images/loader.svg") }}" />
+          </h2>
         </div>
 
         <div class="toc-container">

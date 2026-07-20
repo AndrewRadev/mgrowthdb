@@ -83,6 +83,7 @@ def init_routes(app):
     )
 
     app.add_url_rule("/study/<string:publicId>/",                view_func=study_pages.study_show_page)
+    app.add_url_rule("/study/<string:publicId>/experiments",     view_func=study_pages.study_experiments_fragment)
     app.add_url_rule("/study/<string:publicId>.zip",             view_func=study_pages.study_download_data_zip, methods=["POST"])
     app.add_url_rule("/study/<string:publicId>/export/",         view_func=study_pages.study_export_page)
     app.add_url_rule("/study/<string:publicId>/export/preview",  view_func=study_pages.study_export_preview_fragment, methods=["POST"])

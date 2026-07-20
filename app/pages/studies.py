@@ -32,6 +32,25 @@ def study_show_page(publicId):
             # Level 1:
             sql.orm.selectinload(Study.experiments, Experiment.compartments),
             sql.orm.selectinload(Study.experiments, Experiment.community),
+            # Level 2:
+            sql.orm.selectinload(Study.experiments, Experiment.community, Community.strains),
+        )
+    )
+
+    if study.visible_to_user(g.current_user):
+        return render_template("pages/studies/show.html", study=study)
+    else:
+        return render_template("pages/studies/show_unpublished.html", study=study)
+
+
+def study_experiments_fragment(publicId):
+    study = _fetch_study_for_visitor(
+        publicId,
+        check_user_visibility=False,
+        sql_options=(
+            # Level 1:
+            sql.orm.selectinload(Study.experiments, Experiment.compartments),
+            sql.orm.selectinload(Study.experiments, Experiment.community),
             sql.orm.selectinload(Study.experiments, Experiment.perturbations),
             sql.orm.selectinload(Study.experiments, Experiment.bioreplicates),
             # Level 2:
@@ -59,10 +78,10 @@ def study_show_page(publicId):
         )
     )
 
-    if study.visible_to_user(g.current_user):
-        return render_template("pages/studies/show.html", study=study)
-    else:
-        return render_template("pages/studies/show_unpublished.html", study=study)
+    if not study.visible_to_user(g.current_user):
+        raise NotFound
+
+    return render_template("pages/studies/_experiments.html", experiments=study.experiments)
 
 
 def study_manage_page(publicId):
