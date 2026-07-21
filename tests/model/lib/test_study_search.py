@@ -6,6 +6,7 @@ from datetime import datetime, UTC
 from app.model.lib.study_search import StudySearch
 from tests.database_test import DatabaseTest
 
+
 class TestStudySearch(DatabaseTest):
     def test_user_permissions(self):
         user1 = self.create_user()
@@ -103,7 +104,7 @@ class TestStudySearch(DatabaseTest):
         self.create_study_strain(studyId=s3.publicId, ncbiId=blautia.ncbiId)
 
         # No connected strains, will not be returned:
-        s4 = self.create_study()
+        _s4 = self.create_study()
 
         search = StudySearch(self.db_session, user=admin, ncbiIds=[roseburia.ncbiId])
         self._assertEqualPublicIds(search.fetch_results(), [s2, s1])
@@ -141,7 +142,7 @@ class TestStudySearch(DatabaseTest):
         self.create_study_metabolite(studyId=s3.publicId, chebiId=trehalose.chebiId)
 
         # No connected metabolites, will not be returned:
-        s4 = self.create_study()
+        _s4 = self.create_study()
 
         search = StudySearch(self.db_session, user=admin, chebiIds=[glucose.chebiId])
         self._assertEqualPublicIds(search.fetch_results(), [s2, s1])
