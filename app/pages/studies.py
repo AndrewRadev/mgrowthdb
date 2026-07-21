@@ -16,12 +16,14 @@ from app.model.orm import (
     Experiment,
     MeasurementContext,
     Study,
+    StudyStrain,
     StudyUser,
     Submission,
 )
 from app.view.forms.experiment_export_form import ExperimentExportForm
 from app.view.forms.comparative_chart_form import ComparativeChartForm
 import app.model.lib.util as util
+from app.model.lib.experiment_search import ExperimentSearch
 
 
 def study_show_page(publicId):
@@ -51,10 +53,11 @@ def study_experiments_fragment(publicId):
         .where(Experiment.studyId == study.publicId)
     ).one()
 
-    db_query = (
-        sql.select(Experiment)
-        .where(Experiment.studyId == publicId)
-        .options(
+    search = ExperimentSearch(
+        g.db_session,
+        study=study,
+        query=request.args.get('q'),
+        sql_options=(
             # Level 1:
             sql.orm.selectinload(Experiment.compartments),
             sql.orm.selectinload(Experiment.community),
@@ -81,19 +84,7 @@ def study_experiments_fragment(publicId):
             ),
         )
     )
-
-    # TODO (2026-07-20) Extract to testable class
-
-    if query := request.args.get('q'):
-        query_words = query.split()
-        like_expr = '%' + '%'.join(query_words) + '%'
-        query_clause = sql.or_(
-            Experiment.name.ilike(like_expr),
-            Experiment.description.ilike(like_expr),
-        )
-        db_query = db_query.where(query_clause)
-
-    experiments = g.db_session.scalars(db_query).all()
+    experiments = search.fetch_results()
 
     return render_template(
         "pages/studies/_experiments.html",
