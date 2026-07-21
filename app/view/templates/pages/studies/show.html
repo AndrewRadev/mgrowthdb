@@ -217,6 +217,13 @@
       <div
           data-url="{{ url_for('study_experiments_fragment', publicId=study.publicId) }}"
           class="js-experiments experiments full">
+        <h2>
+          Loading experiments
+
+          <img
+              class="inline-loader-image loader-image"
+              src="{{ url_for('static', filename="images/loader.svg") }}" />
+        </h2>
       </div>
     </article>
   </div>
