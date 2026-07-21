@@ -31,11 +31,9 @@ def study_show_page(publicId):
         publicId,
         check_user_visibility=False,
         sql_options=(
-            # Level 1:
+            sql.orm.selectinload(Study.strains, StudyStrain.taxon),
             sql.orm.selectinload(Study.experiments, Experiment.compartments),
             sql.orm.selectinload(Study.experiments, Experiment.community),
-            # Level 2:
-            sql.orm.selectinload(Study.experiments, Experiment.community, Community.strains),
         )
     )
 
@@ -67,6 +65,11 @@ def study_experiments_fragment(publicId):
             sql.orm.selectinload(Experiment.community, Community.strains),
             sql.orm.selectinload(Experiment.bioreplicates, Bioreplicate.measurementContexts),
             # Level 3:
+            sql.orm.selectinload(
+                Experiment.community,
+                Community.strains,
+                StudyStrain.taxon,
+            ),
             sql.orm.selectinload(
                 Experiment.bioreplicates,
                 Bioreplicate.measurementContexts,
