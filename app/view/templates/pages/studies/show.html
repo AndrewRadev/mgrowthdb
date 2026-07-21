@@ -212,6 +212,34 @@
           <input class="flex-end" type="submit" value="🔍 Search" />
           <input class="flex-end white-button" type="reset" value="🧹 Clear" />
         </div>
+
+        <div class="form-row full">
+          <label class="flex-1">
+            <span>By microbial strain:</span>
+            <select
+                tabindex="2"
+                name="strainIds"
+                multiple="multiple"
+                class="strain-select js-strain-select">
+              {% for study_strain in study.strains: %}
+                <option value="{{ study_strain.id }}">{{ study_strain.name }} (NCBI:{{ study_strain.taxon.ncbiId }})</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <label class="flex-1">
+            <span>By metabolite:</span>
+            <select
+                tabindex="3"
+                name="metaboliteIds"
+                multiple="multiple"
+                class="metabolite-select js-metabolite-select">
+              {% for metabolite in study.metabolites: %}
+                <option value="{{ metabolite.id }}">{{ metabolite.name }} ({{ metabolite.chebiId }})</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
       </form>
 
       <div

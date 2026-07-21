@@ -7,12 +7,36 @@ Page('.study-page', function($page) {
     let $searchForm  = $page.find('.js-search-form');
 
     $page.on('keyup', 'input[name=q]', _.debounce(updateSearch, 200));
+    $page.on('change', '.js-strain-select,.js-metabolite-select', updateSearch)
     $searchForm.on('reset', function() {
       setTimeout(updateSearch, 1);
     });
 
     // Trigger initial update on page load:
     setTimeout(updateSearch, 1);
+
+    // Initialize selection of strains
+    let $strainSelect = $page.find('.js-strain-select');
+    $strainSelect.select2({
+      multiple: true,
+      width: '100%',
+      theme: 'custom',
+      templateResult: select2Highlighter,
+    });
+
+    // Initialize selection of metabolites
+    $page.find('.js-metabolite-select').each(function() {
+      let $select = $(this);
+
+      $select.select2({
+        multiple: true,
+        theme: 'custom',
+        width: '100%',
+        templateResult: select2Highlighter,
+      });
+
+      $select.trigger('change');
+    });
   }
 
   function updateSearch() {

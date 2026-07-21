@@ -48,6 +48,66 @@ class TestExperimentSearch(DatabaseTest):
         search = ExperimentSearch(self.db_session, study=s, query="emgdb000000000000000001")
         self._assertEqualPublicIds(search.fetch_results(), [e1])
 
+    def test_strains_or_metabolites(self):
+        s = self.create_study()
+
+        strain1 = self.create_study_strain(studyId=s.publicId)
+        strain2 = self.create_study_strain(studyId=s.publicId)
+        metabolite = self.create_study_metabolite(studyId=s.publicId)
+
+        e1 = self.create_experiment(studyId=s.publicId)
+        b1 = self.create_bioreplicate(experimentId=e1.publicId)
+        mc1 = self.create_measurement_context(
+            bioreplicateId=b1.id,
+            subjectId=strain1.id,
+            subjectType='strain',
+        )
+
+        e2 = self.create_experiment(studyId=s.publicId)
+        b2 = self.create_bioreplicate(experimentId=e2.publicId)
+        b3 = self.create_bioreplicate(experimentId=e2.publicId)
+        mc2 = self.create_measurement_context(
+            bioreplicateId=b2.id,
+            subjectId=strain1.id,
+            subjectType='strain',
+        )
+        mc3 = self.create_measurement_context(
+            bioreplicateId=b3.id,
+            subjectId=strain2.id,
+            subjectType='strain',
+        )
+        mc4 = self.create_measurement_context(
+            bioreplicateId=b3.id,
+            subjectId=metabolite.id,
+            subjectType='metabolite',
+        )
+
+        e3 = self.create_experiment(studyId=s.publicId)
+        b4 = self.create_bioreplicate(experimentId=e3.publicId)
+        mc5 = self.create_measurement_context(
+            bioreplicateId=b4.id,
+            subjectId=metabolite.id,
+            subjectType='metabolite',
+        )
+
+        search = ExperimentSearch(self.db_session, study=s, strain_ids=[strain1.id])
+        self._assertEqualPublicIds(search.fetch_results(), [e1, e2])
+
+        search = ExperimentSearch(self.db_session, study=s, strain_ids=[strain2.id])
+        self._assertEqualPublicIds(search.fetch_results(), [e2])
+
+        search = ExperimentSearch(self.db_session, study=s, metabolite_ids=[metabolite.id])
+        self._assertEqualPublicIds(search.fetch_results(), [e2, e3])
+
+        # Searching for both finds experiments with either one:
+        search = ExperimentSearch(
+            self.db_session,
+            study=s,
+            strain_ids=[strain2.id],
+            metabolite_ids=[metabolite.id],
+        )
+        self._assertEqualPublicIds(search.fetch_results(), [e2, e3])
+
     def _assertEqualPublicIds(self, list1, list2):
         get_public_id = lambda s: s.publicId
         self.assertEqual(

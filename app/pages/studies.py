@@ -55,6 +55,8 @@ def study_experiments_fragment(publicId):
         g.db_session,
         study=study,
         query=request.args.get('q'),
+        strain_ids=request.args.getlist('strainIds'),
+        metabolite_ids=request.args.getlist('metaboliteIds'),
         sql_options=(
             # Level 1:
             sql.orm.selectinload(Experiment.compartments),
