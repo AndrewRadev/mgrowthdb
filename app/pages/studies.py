@@ -15,6 +15,7 @@ from app.model.orm import (
     Community,
     Experiment,
     MeasurementContext,
+    ModelingResult,
     Study,
     StudyStrain,
     StudyUser,
@@ -37,10 +38,23 @@ def study_show_page(publicId):
         )
     )
 
-    if study.visible_to_user(g.current_user):
-        return render_template("pages/studies/show.html", study=study)
-    else:
+    if not study.visible_to_user(g.current_user):
         return render_template("pages/studies/show_unpublished.html", study=study)
+
+    study_model_types = g.db_session.scalars(
+        sql.select(ModelingResult.type)
+        .distinct()
+        .join(MeasurementContext)
+        .join(Bioreplicate)
+        .join(Study)
+        .where(Study.publicId == publicId)
+    ).all()
+
+    return render_template(
+        "pages/studies/show.html",
+        study=study,
+        study_model_types=study_model_types,
+    )
 
 
 def study_experiments_fragment(publicId):
@@ -57,6 +71,7 @@ def study_experiments_fragment(publicId):
         query=request.args.get('q'),
         strain_ids=request.args.getlist('strainIds'),
         metabolite_ids=request.args.getlist('metaboliteIds'),
+        modeling_types=request.args.getlist('modelingTypes'),
         sql_options=(
             # Level 1:
             sql.orm.selectinload(Experiment.compartments),

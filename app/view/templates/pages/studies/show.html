@@ -239,6 +239,38 @@
               {% endfor %}
             </select>
           </label>
+
+          {% if study_model_types: %}
+            <label class="flex-1">
+              <span>With model predictions:</span>
+              <select
+                  name="modelingTypes"
+                  multiple="multiple"
+                  tabindex="4"
+                  class="form-input-blue form-input-full js-modeling-type-select">
+                {% if 'easy_linear' in study_model_types: %}
+                  <option value="easy_linear">"Easy linear" method</option>
+                {% endif %}
+                {% if 'logistic' in study_model_types: %}
+                  <option value="logistic">Logistic model</option>
+                {% endif %}
+                {% if 'baranyi_roberts' in study_model_types: %}
+                  <option value="baranyi_roberts">Baranyi-Roberts model</option>
+                {% endif %}
+
+                {% if study.customModels: %}
+                  {% for m in study.customModels:  %}
+                    <option
+                        {{ "selected" if m.id == selectedCustomModelId }}
+                        value="custom_{{ m.id }}"
+                        data-custom-model-id="{{ m.id }}">
+                      {{ m.name }}
+                    </option>
+                  {% endfor %}
+                {% endif %}
+              </select>
+            </label>
+          {% endif %}
         </div>
       </form>
 

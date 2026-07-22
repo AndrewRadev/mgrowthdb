@@ -108,6 +108,33 @@ class TestExperimentSearch(DatabaseTest):
         )
         self._assertEqualPublicIds(search.fetch_results(), [e2, e3])
 
+    def test_modeling_types(self):
+        s = self.create_study()
+
+        e1 = self.create_experiment(studyId=s.publicId)
+        b1 = self.create_bioreplicate(experimentId=e1.publicId)
+        mc1 = self.create_measurement_context(bioreplicateId=b1.id)
+        mr1 = self.create_modeling_result(type='baranyi_roberts', measurementContextId=mc1.id)
+        mr2 = self.create_modeling_result(type='custom_1', measurementContextId=mc1.id)
+
+        e2 = self.create_experiment(studyId=s.publicId)
+        b2 = self.create_bioreplicate(experimentId=e2.publicId)
+        mc2 = self.create_measurement_context(bioreplicateId=b2.id)
+        mr3 = self.create_modeling_result(type='baranyi_roberts', measurementContextId=mc2.id)
+        mr4 = self.create_modeling_result(type='custom_2', measurementContextId=mc2.id)
+
+        search = ExperimentSearch(self.db_session, study=s, modeling_types=['baranyi_roberts'])
+        self._assertEqualPublicIds(search.fetch_results(), [e1, e2])
+
+        search = ExperimentSearch(self.db_session, study=s, modeling_types=['custom_1'])
+        self._assertEqualPublicIds(search.fetch_results(), [e1])
+
+        search = ExperimentSearch(self.db_session, study=s, modeling_types=['custom_2'])
+        self._assertEqualPublicIds(search.fetch_results(), [e2])
+
+        search = ExperimentSearch(self.db_session, study=s, modeling_types=['custom_1', 'custom_2'])
+        self._assertEqualPublicIds(search.fetch_results(), [e1, e2])
+
     def _assertEqualPublicIds(self, list1, list2):
         get_public_id = lambda s: s.publicId
         self.assertEqual(

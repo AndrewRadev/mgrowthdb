@@ -2,7 +2,12 @@ import re
 
 import sqlalchemy as sql
 
-from app.model.orm import Experiment, MeasurementContext, Bioreplicate
+from app.model.orm import (
+    Bioreplicate,
+    Experiment,
+    MeasurementContext,
+    ModelingResult,
+)
 
 
 class ExperimentSearch:
@@ -13,6 +18,7 @@ class ExperimentSearch:
         query=None,
         strain_ids=None,
         metabolite_ids=None,
+        modeling_types=None,
         sql_options=None,
     ):
         self.db_session = db_session
@@ -21,6 +27,7 @@ class ExperimentSearch:
         self.query          = (query or '').strip().lower()
         self.strain_ids     = strain_ids or []
         self.metabolite_ids = metabolite_ids or []
+        self.modeling_types = modeling_types or []
 
         self.sql_options = sql_options or ()
 
@@ -50,8 +57,10 @@ class ExperimentSearch:
         else:
             self.query_words = []
 
-        if self.strain_ids or self.metabolite_ids:
+        if self.strain_ids or self.metabolite_ids or self.modeling_types:
             db_query = db_query.join(Bioreplicate).join(MeasurementContext)
+            if self.modeling_types:
+                db_query = db_query.join(ModelingResult)
 
             strain_clause = sql.and_(
                 MeasurementContext.subjectId.in_(self.strain_ids),
@@ -68,6 +77,9 @@ class ExperimentSearch:
             db_query = db_query.where(strain_clause)
         elif self.metabolite_ids:
             db_query = db_query.where(metabolite_clause)
+
+        if self.modeling_types:
+            db_query = db_query.where(ModelingResult.type.in_(self.modeling_types))
 
         db_query = db_query.order_by(Experiment.publicId)
 
