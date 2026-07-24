@@ -48,6 +48,32 @@ class TestExperimentSearch(DatabaseTest):
         search = ExperimentSearch(self.db_session, study=s, query="emgdb000000000000000001")
         self._assertEqualPublicIds(search.fetch_results(), [e1])
 
+    def test_strains_through_community(self):
+        s = self.create_study()
+
+        strain1 = self.create_study_strain(studyId=s.publicId)
+        strain2 = self.create_study_strain(studyId=s.publicId)
+
+        c1 = self.create_community(studyId=s.publicId)
+        self.create_community_strain(strainId=strain1.id, communityId=c1.id)
+
+        c2 = self.create_community(studyId=s.publicId)
+        self.create_community_strain(strainId=strain2.id, communityId=c2.id)
+
+        c12 = self.create_community(studyId=s.publicId)
+        self.create_community_strain(strainId=strain1.id, communityId=c12.id)
+        self.create_community_strain(strainId=strain2.id, communityId=c12.id)
+
+        e1 = self.create_experiment(studyId=s.publicId, communityId=c1.id)
+        e2 = self.create_experiment(studyId=s.publicId, communityId=c2.id)
+        e3 = self.create_experiment(studyId=s.publicId, communityId=c12.id)
+
+        search = ExperimentSearch(self.db_session, study=s, strain_ids=[strain1.id])
+        self._assertEqualPublicIds(search.fetch_results(), [e1, e3])
+
+        search = ExperimentSearch(self.db_session, study=s, strain_ids=[strain2.id])
+        self._assertEqualPublicIds(search.fetch_results(), [e2, e3])
+
     def test_strains_or_metabolites(self):
         s = self.create_study()
 

@@ -4,9 +4,12 @@ import sqlalchemy as sql
 
 from app.model.orm import (
     Bioreplicate,
+    Community,
+    CommunityStrain,
     Experiment,
     MeasurementContext,
     ModelingResult,
+    StudyStrain,
 )
 
 
@@ -25,8 +28,8 @@ class ExperimentSearch:
         self.study      = study
 
         self.query          = (query or '').strip().lower()
-        self.strain_ids     = strain_ids or []
-        self.metabolite_ids = metabolite_ids or []
+        self.strain_ids     = [int(n) for n in (strain_ids or [])]
+        self.metabolite_ids = [int(n) for n in (metabolite_ids or [])]
         self.modeling_types = modeling_types or []
 
         self.sql_options = sql_options or ()
@@ -58,13 +61,27 @@ class ExperimentSearch:
             self.query_words = []
 
         if self.strain_ids or self.metabolite_ids or self.modeling_types:
-            db_query = db_query.join(Bioreplicate).join(MeasurementContext)
-            if self.modeling_types:
-                db_query = db_query.join(ModelingResult)
+            # Hack: We use left joins to avoid problems in tests where the
+            # entire hierarchy of data is not quite created consistently
+            db_query = db_query.join(Bioreplicate, isouter=True).join(MeasurementContext, isouter=True)
 
-            strain_clause = sql.and_(
-                MeasurementContext.subjectId.in_(self.strain_ids),
-                MeasurementContext.subjectType == 'strain',
+            if self.strain_ids:
+                db_query = (
+                    db_query
+                    .join(Community, isouter=True)
+                    .join(CommunityStrain, isouter=True)
+                    .join(StudyStrain, isouter=True)
+                )
+
+            if self.modeling_types:
+                db_query = db_query.join(ModelingResult, isouter=True)
+
+            strain_clause = sql.or_(
+                StudyStrain.id.in_(self.strain_ids),
+                sql.and_(
+                    MeasurementContext.subjectId.in_(self.strain_ids),
+                    MeasurementContext.subjectType == 'strain',
+                )
             )
             metabolite_clause = sql.and_(
                 MeasurementContext.subjectId.in_(self.metabolite_ids),
