@@ -28,6 +28,15 @@
     margin-left: 10px;
   }
 
+  .experiment-filter-form {
+    fieldset {
+      padding: 6px;
+    }
+    fieldset legend {
+      margin-bottom: -6px;
+    }
+  }
+
   .uncompare {
     .white-button {
       background-color: #eee;
