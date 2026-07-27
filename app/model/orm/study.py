@@ -151,6 +151,8 @@ class Study(OrmBase):
             return False
         elif user.isAdmin:
             return True
+        elif user.uuid == self.ownerUuid:
+            return True
         else:
             return user.uuid in self.managerUuids
 

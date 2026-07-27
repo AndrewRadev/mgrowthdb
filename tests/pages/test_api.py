@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 
 import sqlalchemy as sql
 
-from app.model.orm import WorkspaceEntry
+from app.model.orm import CustomModel, WorkspaceEntry
 from tests.page_test import PageTest
 
 
@@ -219,6 +219,113 @@ class TestApiPages(PageTest):
         response = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.json")
         response_json = self._get_json(response)
         self.assertEqual(response_json['modelPredictionIds'], [modeling_result.id])
+
+    def test_updating_model_predictions(self):
+        user = self.create_user(apiKey='test1')
+        study = self.create_study(
+            name='Example study',
+            publishedAt=datetime.now(UTC),
+            ownerUuid=user.uuid,
+        )
+        measurement_context = self.create_measurement_context(studyId=study.publicId)
+
+        self.db_session.commit()
+
+        response = self.client.get(f"/api/v1/measurement-context/{measurement_context.id}.json")
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.assertEqual(response_json['modelPredictionIds'], [])
+
+        # Push model prediction:
+        payload = {
+            'apiKey': 'test1',
+            'model': {
+                'name': 'Test model 1',
+                'shortName': 'TM',
+                'description': 'Test model',
+            },
+            'data': "time,value\n1,100\n2,200",
+        }
+        response = self.client.post(
+            f"/api/v1/measurement-context/{measurement_context.id}/model-predictions.json",
+            data=json.dumps(payload),
+        )
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.db_session.commit()
+
+        self.assertEqual(
+            [mr.id for mr in measurement_context.modelingResults],
+            [response_json['modelingResultId']],
+        )
+
+        modeling_result = measurement_context.modelingResults[0]
+        self.assertEqual(modeling_result.yValues, [100, 200])
+
+        # Check that the custom model information is available through the API
+        response = self.client.get(f"/api/v1/model-prediction/{modeling_result.id}.json")
+        response_json = self._get_json(response)
+        self.assertEqual(response_json['customModel'], {
+            'name': 'Test model 1',
+            'shortName': 'TM',
+            'description': 'Test model',
+            'url': None,
+        })
+
+        # Push another batch of data, overwrites the previous one by name:
+        payload = {
+            'apiKey': 'test1',
+            'model': {'name': 'Test model 1'},
+            'data': "time,value\n1,300\n2,400",
+        }
+        response = self.client.post(
+            f"/api/v1/measurement-context/{measurement_context.id}/model-predictions.json",
+            data=json.dumps(payload),
+        )
+        self.assertEqual(response.status, '200 OK')
+        response_json = self._get_json(response)
+
+        self.db_session.commit()
+
+        self.assertEqual(
+            [mr.id for mr in measurement_context.modelingResults],
+            [response_json['modelingResultId']],
+        )
+        self.assertEqual(measurement_context.modelingResults[0].yValues, [300, 400])
+        custom_model = measurement_context.modelingResults[0].customModel
+        self.assertEqual(custom_model.shortName, 'TM')
+
+        # Push another batch of data with a second new model:
+        payload = {
+            'apiKey': 'test1',
+            'model': {'name': 'Test model 2'},
+            'data': "time,value\n1,500\n2,600",
+        }
+        response = self.client.post(
+            f"/api/v1/measurement-context/{measurement_context.id}/model-predictions.json",
+            data=json.dumps(payload),
+        )
+        self.assertEqual(response.status, '200 OK')
+
+        self.db_session.commit()
+
+        self.assertEqual(len(measurement_context.modelingResults), 2)
+
+        # Delete the first model's data:
+        payload = {'apiKey': 'test1', 'modelName': 'Test model 1'}
+        response = self.client.delete(
+            f"/api/v1/measurement-context/{measurement_context.id}/model-predictions.json",
+            data=json.dumps(payload),
+        )
+        response_json = self._get_json(response)
+        print(response_json)
+        self.assertEqual(response.status, '200 OK')
+        self.db_session.commit()
+
+        self.assertEqual(len(measurement_context.modelingResults), 1)
+        self.assertEqual(measurement_context.modelingResults[0].yValues, [500, 600])
 
     def test_non_published_measurement_endpoints(self):
         study        = self.create_study(publishedAt=None)
@@ -751,7 +858,8 @@ class TestApiPages(PageTest):
         bad_payload = {"apiKey": "wrong-api-key", "entries": []}
         response = self.client.post(api_url, data=json.dumps(bad_payload))
         response_json = self._get_json(response)
-        self.assertIn("API key", response_json["error"])
+        self.assertEqual(response_json["error"], "400 Bad request")
+        self.assertIn("API key", response_json["description"])
 
         # Missing api key: Forbidden
         bad_payload = {"entries": []}
