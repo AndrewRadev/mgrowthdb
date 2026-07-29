@@ -8,21 +8,22 @@
     {% for experiment in experiments: %}
       <div class="experiment-container">
         <h2 id="experiment-{{ experiment.publicId }}">
-          Experiment {{ loop.index }}: {{ experiment.name }}
+          Experiment {{ loop.index }}:
+          {{ experiment.name|highlight(search.query_words) }}
         </h2>
 
         {% if experiment.publicId: %}
           <p class="small">
             <strong>Public ID</strong>:
             <a href="{{ url_for('experiment_show_page', publicId=experiment.publicId) }}">
-              {{ experiment.publicId }}
+              {{ experiment.publicId|highlight(search.query_words) }}
             </a>
             <br>
           </p>
         {% endif %}
 
         {% if experiment.description: %}
-          {{ experiment.description|format_text }}
+          {{ experiment.description|highlight(search.query_words)|format_text }}
         {% endif %}
 
         <br>
@@ -54,7 +55,9 @@
 
         <ol>
           {% for strain in experiment.community.strains|sort: %}
-            <li>{{ render_strain_link(strain) }}</li>
+            <li class="{{ "highlight" if strain.id in search.strain_ids }}">
+              {{ render_strain_link(strain) }}
+            </li>
           {% endfor %}
         </ol>
 
@@ -70,7 +73,7 @@
 
         <h3>Biological replicates</h3>
 
-        {{ render_bioreplicates_list(experiment) }}
+        {{ render_bioreplicates_list(experiment, search) }}
       </div>
     {% endfor %}
   </div>

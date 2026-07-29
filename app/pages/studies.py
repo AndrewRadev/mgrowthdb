@@ -108,6 +108,7 @@ def study_experiments_fragment(publicId):
 
     return render_template(
         "pages/studies/_experiments.html",
+        search=search,
         experiments=experiments,
         total_experiment_count=total_experiment_count,
     )

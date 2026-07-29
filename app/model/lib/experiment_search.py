@@ -104,10 +104,20 @@ class ExperimentSearch:
 
         return results
 
+    def context_matches(self, measurement_context):
+        if measurement_context.subjectType == 'strain' and measurement_context.subjectId in self.strain_ids:
+            return True
+        elif measurement_context.subjectType == 'metabolite' and measurement_context.subjectId in self.metabolite_ids:
+            return True
+        else:
+            return False
+
+    def modeling_result_matches(self, modeling_result):
+        return modeling_result.type in self.modeling_types
+
 
 def _replace_public_id_references(text):
     return re.sub(r'\bEMGDB0*(\d+)', _replace_experiment_reference, text, flags=re.IGNORECASE)
-
 
 def _replace_experiment_reference(m):
     return f"EMGDB{int(m[1]):09d}"
