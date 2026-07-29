@@ -16,8 +16,20 @@ Page('.export-page', function($page) {
     $select.trigger('change');
   });
 
+  $page.on('change', '.js-export-options-inputs input,select', updateFilter)
+  $page.on('keyup', 'input[name=q]', _.debounce(updateFilter, 200));
   $page.on('change', select2Selectors, updateFilter)
-  $page.on('change', '.js-filter-form', updateFilter);
+  $page.on('click', '.js-filter-form .js-reset', function() {
+    let $form = $(this).parents('form');
+
+    $form.find('input[name=q]').val(null);
+    $form.find(select2Selectors).each(function() {
+      $(this).val(null).trigger('change');
+    });
+
+    setTimeout(updateFilter, 1);
+  });
+
   $page.on('change', '.js-experiment-form', updatePreview);
   $page.on('keyup', 'input[name=custom_delimiter]', updatePreview);
 
@@ -54,12 +66,16 @@ Page('.export-page', function($page) {
     let $experimentForm = $page.find('.js-experiment-form');
 
     let $searchInput = $filterForm.find('input[name=q]');
+    let $headingLoader = $page.find('.js-experiments-heading .inline-loader-image');
+
     $searchInput.addClass('loading-input');
+    $headingLoader.removeClass('hidden');
 
     $filterForm.ajaxSubmit({
       success: function(response) {
         $experimentForm.html(response);
         $searchInput.removeClass('loading-input');
+        $headingLoader.addClass('hidden');
         updatePreview();
       }
     });
@@ -75,6 +91,9 @@ Page('.export-page', function($page) {
     let data = $filterForm.serializeArray();
     data.push(...$experimentForm.serializeArray());
 
+    let $headingLoader = $page.find('.js-preview-heading .inline-loader-image');
+    $headingLoader.removeClass('hidden');
+
     $.ajax({
       url: `/study/${studyId}/export/preview`,
       method: 'POST',
@@ -82,6 +101,7 @@ Page('.export-page', function($page) {
       data: data,
       success: function(response) {
         $page.find('.js-preview').html(response);
+        $headingLoader.addClass('hidden');
       }
     });
   }

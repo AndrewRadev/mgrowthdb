@@ -134,9 +134,20 @@ def study_export_page(publicId):
 def study_export_experiments_fragment(publicId):
     study = _fetch_study_for_visitor(publicId)
 
+    search = ExperimentSearch(
+        g.db_session,
+        study=study,
+        query=request.args.get('q'),
+        strain_ids=request.args.getlist('strainIds'),
+        metabolite_ids=request.args.getlist('metaboliteIds'),
+        modeling_types=request.args.getlist('modelingTypes'),
+        sql_options=(sql.orm.selectinload(Experiment.bioreplicates),)
+    )
+    experiments = search.fetch_results()
+
     return render_template(
         "pages/studies/export/_experiment_form.html",
-        experiments=study.experiments,
+        experiments=experiments,
     )
 
 

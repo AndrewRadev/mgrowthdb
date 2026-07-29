@@ -1,7 +1,14 @@
 <div class="flex-row columns">
   <div class="flex-column column-left">
     <div class="section-all-none">
-      <h2>Biological replicates</h3>
+      <h2 class="js-experiments-heading">
+        Biological replicates
+
+        <img
+            class="inline-loader-image loader-image hidden"
+            style="width: 22px; height: 22px;"
+            src="{{ url_for('static', filename="images/loader.svg") }}" />
+      </h2>
 
       <div class="form-row">
         <button type="submit" class="green-button full">
@@ -54,7 +61,14 @@
   </div>
 
   <div class="flex-column column-right">
-    <h2>Preview (first 5 rows)</h2>
+    <h2 class="js-preview-heading">
+      Preview (first 5 rows)
+
+      <img
+          class="inline-loader-image loader-image hidden"
+          style="width: 22px; height: 22px;"
+          src="{{ url_for('static', filename="images/loader.svg") }}" />
+    </h2>
 
     <div class="preview js-preview box">
       <p class="help margin-top-0">Loading preview...</p>
