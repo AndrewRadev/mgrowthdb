@@ -131,6 +131,15 @@ def study_export_page(publicId):
     )
 
 
+def study_export_experiments_fragment(publicId):
+    study = _fetch_study_for_visitor(publicId)
+
+    return render_template(
+        "pages/studies/export/_experiment_form.html",
+        experiments=study.experiments,
+    )
+
+
 def study_export_preview_fragment(publicId):
     # We only need the id here, but we call it to apply visibility checks:
     _fetch_study_for_visitor(publicId)
@@ -146,7 +155,10 @@ def study_export_preview_fragment(publicId):
             <pre>{csv}</pre>
         """)
 
-    return '\n'.join(csv_previews)
+    if csv_previews:
+        return '\n'.join(csv_previews)
+    else:
+        return """<p class="help margin-top-0">No experiments selected</p>"""
 
 
 def study_download_data_zip(publicId):
