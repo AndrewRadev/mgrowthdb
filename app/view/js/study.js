@@ -9,6 +9,11 @@ Page('.study-page', function($page) {
 
     $page.on('keyup', 'input[name=q]', _.debounce(updateFilter, 200));
     $page.on('change', select2Selectors, updateFilter)
+
+    $filterForm.on('submit', function(e) {
+      e.preventDefault();
+      updateFilter();
+    });
     $filterForm.on('reset', function() {
       $page.find(select2Selectors).each(function() {
         $(this).val(null).trigger('change');

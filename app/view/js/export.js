@@ -19,6 +19,11 @@ Page('.export-page', function($page) {
   $page.on('change', '.js-export-options-inputs input,select', updateFilter)
   $page.on('keyup', 'input[name=q]', _.debounce(updateFilter, 200));
   $page.on('change', select2Selectors, updateFilter)
+
+  $page.on('submit', '.js-filter-form', function(e) {
+    e.preventDefault();
+    updateFilter();
+  });
   $page.on('click', '.js-filter-form .js-reset', function() {
     let $form = $(this).parents('form');
 
