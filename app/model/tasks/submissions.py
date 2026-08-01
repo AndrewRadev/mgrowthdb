@@ -4,14 +4,13 @@ from celery.utils.log import get_task_logger
 
 from db import FLASK_DB
 from app.model.orm import Submission, Study
+from app.model.lib.average_measurements import create_average_measurements
 
 _LOGGER = get_task_logger(__name__)
 
 
 @shared_task
 def run_post_submission_jobs(submission_id):
-    from app.model.lib.submission_process import create_average_measurements
-
     db_session = FLASK_DB.session
 
     submission = db_session.get(Submission, submission_id)
