@@ -9,6 +9,23 @@ _LOGGER = get_task_logger(__name__)
 
 
 @shared_task
+def run_post_submission_jobs(submission_id):
+    from app.model.lib.submission_process import create_average_measurements
+
+    db_session = FLASK_DB.session
+
+    submission = db_session.get(Submission, submission_id)
+    study = submission.study
+
+    for experiment in study.experiments:
+        create_average_measurements(db_session, study, experiment)
+    db_session.commit()
+
+    if study.isPublished:
+        _export_submission_data(db_session, submission_id)
+
+
+@shared_task
 def export_submission_data(submission_id):
     db_session = FLASK_DB.session
     _export_submission_data(db_session, submission_id)

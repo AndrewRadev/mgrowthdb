@@ -17,6 +17,7 @@ from app.model.orm import (
 )
 from app.view.forms.submission_form import SubmissionForm
 from app.model.lib.submission_process import (
+    create_average_measurements,
     _clear_study,
     _save_project,
     _save_study,
@@ -24,7 +25,6 @@ from app.model.lib.submission_process import (
     _save_communities,
     _save_experiments,
     _save_study_techniques,
-    _create_average_measurements,
     _finalize_submission,
 )
 from tests.database_test import DatabaseTest
@@ -499,7 +499,7 @@ class TestSubmissionProcess(DatabaseTest):
             self.create_measurement(timeInSeconds=i, value=value, contextId=mc2.id)
 
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2"})
-        _create_average_measurements(self.db_session, study, experiment)
+        create_average_measurements(self.db_session, study, experiment)
         self.db_session.refresh(experiment)
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "Average(e1)"})
 
@@ -528,7 +528,7 @@ class TestSubmissionProcess(DatabaseTest):
 
         # Average bioreplicate doesn't get created:
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3"})
-        _create_average_measurements(self.db_session, study, experiment)
+        create_average_measurements(self.db_session, study, experiment)
         self.db_session.refresh(experiment)
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b1", "b2", "b3"})
 
@@ -567,7 +567,7 @@ class TestSubmissionProcess(DatabaseTest):
 
         # Average bioreplicate doesn't get created:
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b4"})
-        _create_average_measurements(self.db_session, study, experiment)
+        create_average_measurements(self.db_session, study, experiment)
         self.db_session.refresh(experiment)
         self.assertEqual({b.name for b in experiment.bioreplicates}, {"b4"})
 
