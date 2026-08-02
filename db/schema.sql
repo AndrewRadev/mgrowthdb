@@ -232,6 +232,7 @@ CREATE TABLE MeasurementContexts (
   subjectId int NOT NULL,
   subjectName varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   subjectExternalId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  growthRate decimal(20,3) DEFAULT NULL,
   PRIMARY KEY (id),
   KEY MeasurementContexts_fk_1 (bioreplicateId),
   KEY MeasurementContexts_fk_2 (compartmentId),
@@ -849,5 +850,6 @@ INSERT INTO MigrationVersions VALUES
 (106,'2026_06_09_113637_add_publication_date_to_studies','2026-06-09 10:35:16'),
 (107,'2026_06_27_151530_delete_modeling_requests','2026-06-27 13:23:03'),
 (108,'2026_06_27_154711_add_publication_type_to_studies','2026-06-27 14:14:42'),
-(110,'2026_08_01_115108_add_job_statuses_to_submissions','2026-08-01 09:56:10');
+(110,'2026_08_01_115108_add_job_statuses_to_submissions','2026-08-01 09:56:10'),
+(112,'2026_08_02_170359_add_growth_rate_to_measurement_contexts','2026-08-02 15:04:46');
 

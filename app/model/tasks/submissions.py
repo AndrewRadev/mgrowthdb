@@ -6,6 +6,7 @@ from celery.utils.log import get_task_logger
 from db import FLASK_DB
 from app.model.orm import Submission, Study
 from app.model.lib.average_measurements import create_average_measurements
+from app.model.lib.study_growth_rates import calculate_growth_rate
 
 _LOGGER = get_task_logger(__name__)
 
@@ -23,12 +24,16 @@ def run_post_submission_jobs(submission_id):
 
         submission.jobStatuses['calculateAverages'] = 'ready'
         flag_modified(submission, 'jobStatuses')
-
         db_session.commit()
 
     if submission.jobStatuses.get('calculateGrowthrates') == 'pending':
-        # TODO (2026-08-02)
-        pass
+        for experiment in study.experiments:
+            for measurement_context in experiment.measurementContexts:
+                calculate_growth_rate(db_session, experiment, measurement_context)
+
+        submission.jobStatuses['calculateGrowthrates'] = 'ready'
+        flag_modified(submission, 'jobStatuses')
+        db_session.commit()
 
     if study.isPublished:
         _export_submission_data(db_session, submission_id)

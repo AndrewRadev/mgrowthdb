@@ -117,6 +117,10 @@
                   </div>
 
                   {{ measurement_context.get_chart_label() }}
+
+                  {% if measurement_context.growthRate: %}
+                    <span>μ<sub>max</sub>: {{ measurement_context.growthRate }}</span>
+                  {% endif %}
                 </div>
 
                 {% if measurement_context.publishedModelingResults: %}

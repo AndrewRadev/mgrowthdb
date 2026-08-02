@@ -1,4 +1,5 @@
 from typing import List
+from decimal import Decimal
 
 import sqlalchemy as sql
 from sqlalchemy.orm import (
@@ -66,6 +67,8 @@ class MeasurementContext(OrmBase):
         subjectType,
         ('bioreplicate', 'strain', 'metabolite'),
     ), deferred=True)
+
+    growthRate: Mapped[Decimal] = mapped_column(sql.Numeric(20, 2), nullable=True)
 
     @property
     def readyModelingResults(self):
