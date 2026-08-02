@@ -248,6 +248,8 @@ def upload_step6_page(id):
         if request.files['data-template']:
             submission.dataFile = ExcelFile.from_upload(request.files['data-template'])
 
+        submission_form.update_calculations(request.form)
+
         submission.changelogText = request.form.get('changelogText')
         submission_form.save()
 

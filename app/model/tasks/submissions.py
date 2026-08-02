@@ -1,4 +1,5 @@
 import sqlalchemy as sql
+from sqlalchemy.orm.attributes import flag_modified
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
@@ -16,9 +17,18 @@ def run_post_submission_jobs(submission_id):
     submission = db_session.get(Submission, submission_id)
     study = submission.study
 
-    for experiment in study.experiments:
-        create_average_measurements(db_session, study, experiment)
-    db_session.commit()
+    if submission.jobStatuses.get('calculateAverages') == 'pending':
+        for experiment in study.experiments:
+            create_average_measurements(db_session, study, experiment)
+
+        submission.jobStatuses['calculateAverages'] = 'ready'
+        flag_modified(submission, 'jobStatuses')
+
+        db_session.commit()
+
+    if submission.jobStatuses.get('calculateGrowthrates') == 'pending':
+        # TODO (2026-08-02)
+        pass
 
     if study.isPublished:
         _export_submission_data(db_session, submission_id)

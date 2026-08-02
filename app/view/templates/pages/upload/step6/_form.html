@@ -110,13 +110,51 @@
     {% endif %}
   </div>
 
-  <br>
-
   <form
       class="simple-form step-form js-step-form"
       enctype="multipart/form-data"
       method="POST"
       action="{{ url_for('upload_step6_page', id=submission.id) }}">
+
+    <h3>Post-processing</h3>
+
+    <p>
+      Choose the actions to take after the data upload is done. These will be
+      performed in the background, and in the next step, you'll see their
+      status.
+    </p>
+
+    <label class="flex-row flex-gap-10">
+      <input
+          type="checkbox"
+          class="flex-start"
+          name="calculateAverages"
+          {{ "checked" if submission.studyDesign['calculateAverages'] }} />
+      <div>
+        Calculate averages
+        <p class="help small">
+          Biological replicates within an experiment will be averaged into an
+          "Average([experiment name])" bioreplicate record, as long as more than
+          half of their time points align. If only some time points are missing,
+          they will also be skipped in the average bioreplicate.
+        </p>
+      </div>
+    </label>
+
+    <label class="flex-row flex-gap-10">
+      <input
+          type="checkbox"
+          class="flex-start"
+          name="calculateGrowthrates"
+          {{ "checked" if submission.studyDesign['calculateGrowthrates'] }} />
+      <div>
+        Estimate growth rates
+        <p class="help small">
+          Maximum growth rates for <strong>batch</strong> experiments that measure strain or community growth will be estimated based on the "{{ "modeling-techniques"|help_link(text="Easy Linear", section="easy_linear") }}" method. Only data traces with at least <strong>6 observations</strong> will be analyzed.
+        </p>
+      </div>
+    </label>
+
     <input
         id="data-template-input"
         type="file"

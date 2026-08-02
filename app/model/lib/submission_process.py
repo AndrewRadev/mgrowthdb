@@ -5,6 +5,7 @@ from db import get_session, get_transaction
 
 import pandas as pd
 import sqlalchemy as sql
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.model.orm import (
     Bioreplicate,
@@ -449,7 +450,6 @@ def _save_measurements(db_session, study, submission_form):
 
     for _, df in sheets.items():
         Measurement.insert_from_csv_string(db_session, study, df.to_csv(index=False))
-
 
 
 def _finalize_submission(db_session, submission_form, study, project):

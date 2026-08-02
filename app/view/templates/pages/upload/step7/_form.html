@@ -87,6 +87,40 @@
 
     {% endif %}
 
+    {% if submission.jobStatuses: %}
+      <h3>Post-submission tasks</h3>
+
+      <p class="help small margin-top-0">
+        These tasks will run in the background and, when finished, will update
+        your study with the calculated data. They may take some time, but you
+        can view your study in the meantime.
+      </p>
+
+      <ul class="margin-top-0">
+        {% for job, state in submission.jobStatuses.items(): %}
+          <li>
+            <span
+                data-job="{{ job }}"
+                data-state="{{ state }}">
+              {% if state == 'ready': %}
+                <span data-tooltip="Ready">✅</span>
+              {% elif state == 'pending': %}
+                <span data-tooltip="Pending">⏳</span>
+              {% elif state == 'error': %}
+                <span data-tooltip="Error, please try resubmitting later, or reach out to us, since something unexpected has happened.">❌</span>
+              {% endif %}
+            </span>
+
+            {% if job == 'calculateAverages': %}
+              Calculating averages
+            {% elif job == 'calculateGrowthrates': %}
+              Estimating maximum growth rates
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
     <br>
 
     {% if submission.study is none or not submission.study.isPublished: %}
