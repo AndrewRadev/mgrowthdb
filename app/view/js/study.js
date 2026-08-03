@@ -51,6 +51,7 @@ Page('.study-page', function($page) {
       success: function(response) {
         $experiments.html(response);
         $searchInput.removeClass('loading-input');
+        initTooltips();
       }
     });
   }
