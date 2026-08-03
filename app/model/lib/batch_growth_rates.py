@@ -3,14 +3,19 @@ import tempfile
 from app.model.lib.r_script import RScript
 
 
-def calculate_growth_rate(db_session, experiment, measurement_context):
+def growth_can_be_estimated(experiment, measurement_context):
     if experiment.cultivationMode != 'batch':
         return False
-
     if measurement_context.subjectType not in ('bioreplicate', 'strain'):
         return False
-
     if measurement_context.technique.type == 'ph':
+        return False
+
+    return True
+
+
+def calculate_growth_rate(db_session, experiment, measurement_context):
+    if not growth_can_be_estimated(experiment, measurement_context):
         return False
 
     with tempfile.TemporaryDirectory() as tmp_dir_name:

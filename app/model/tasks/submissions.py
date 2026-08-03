@@ -6,7 +6,7 @@ from celery.utils.log import get_task_logger
 from db import FLASK_DB
 from app.model.orm import Submission, Study
 from app.model.lib.average_measurements import create_average_measurements
-from app.model.lib.study_growth_rates import calculate_growth_rate
+from app.model.lib.batch_growth_rates import calculate_growth_rate
 
 _LOGGER = get_task_logger(__name__)
 

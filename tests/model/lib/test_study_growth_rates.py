@@ -3,7 +3,7 @@ import tests.init  # noqa: F401
 from decimal import Decimal
 
 from tests.database_test import DatabaseTest
-from app.model.lib.study_growth_rates import calculate_growth_rate
+from app.model.lib.batch_growth_rates import calculate_growth_rate
 
 
 class TestStudyGrowthRates(DatabaseTest):
