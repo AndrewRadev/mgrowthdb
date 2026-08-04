@@ -24,7 +24,6 @@ function initCompareButtons($page) {
     ) {
       $container.find('.js-uncompare').removeClass('hidden');
       $container.find('.js-compare').addClass('hidden');
-      $container.parents('.js-table-row').addClass('highlight');
     }
   });
 
@@ -42,9 +41,6 @@ function initCompareButtons($page) {
       // Hide "compare" button, show "uncompare" button
       $wrapper.addClass('hidden');
       $container.find('.js-uncompare').removeClass('hidden');
-
-      // Highlight compared row
-      $container.parents('.js-table-row').addClass('highlight');
     });
   });
 
