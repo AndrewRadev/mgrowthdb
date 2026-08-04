@@ -1,4 +1,4 @@
-{% macro render_bioreplicates_list(experiment) %}
+{% macro render_bioreplicates_list(experiment, search=None) %}
   {% set study = experiment.study %}
 
   <ol class="bioreplicates-list">
@@ -74,7 +74,7 @@
                 {% set measurements = measurement_context.measurements %}
                 {% set technique    = measurement_context.technique %}
 
-                <div class="js-table-row">
+                <div class="js-table-row {{ "highlight" if search and search.context_matches(measurement_context) }}">
                   <div class="button-group" style="display: inline-block; margin-right: 6px;">
                     <span class="js-compare-container" data-context-ids="{{ measurement_context.id }}">
                       <span class="js-compare">
@@ -124,7 +124,7 @@
 
                   <ul class="small">
                     {% for modeling_result in measurement_context.publishedModelingResults: %}
-                      <li>
+                      <li class="{{ "highlight" if search and search.modeling_result_matches(modeling_result) }}">
                         <div class="button-group" style="display: inline-block; margin-right: 6px;">
                           <span class="js-compare-container" data-model-ids="{{ modeling_result.id }}">
                             <span class="js-compare" data-tooltip="Compare">

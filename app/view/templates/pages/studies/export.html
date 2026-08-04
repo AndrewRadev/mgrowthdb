@@ -18,17 +18,14 @@
 
       {% include 'pages/studies/_navigation_buttons.html' %}
 
-      <p>{{ study.description }}</p>
-
       <form
-          class="simple-form"
-          action="{{ url_for('study_download_data_zip', publicId=studyId) }}"
-          method="POST">
+          action="{{ url_for('study_export_experiments_fragment', publicId=study.publicId) }}"
+          class="simple-form experiment-filter-form margin-top-10 js-filter-form">
         <h2 style="margin-bottom: 0">
           Export options
         </h2>
 
-        <div class="flex-row columns">
+        <div class="flex-row columns js-export-options-inputs">
           <div class="section-delimiter measurement-inputs">
             <h4>Measurement units</h4>
 
@@ -108,69 +105,104 @@
           </div>
         </div>
 
-        <div class="flex-row columns">
-          <div class="flex-column column-left">
-            <div class="section-all-none">
-              <h2>Biological replicates</h3>
+        <h2 style="margin-bottom: 0">
+          Filter experiments
+        </h2>
 
-              <div class="form-row">
-                <button type="submit" class="green-button full">
-                  <span class="icon icon-inline icon-download-white"></span>
-                  Download ZIP file
-                </button>
-              </div>
+        <div class="form-row full">
+          <label class="full">
+            <span>By text:</span>
+            <input
+                type="text"
+                name="q"
+                tabindex="1"
+                autocomplete="off"
+                value="{{ request.args.get('q') or '' }}"
+                placeholder="Text included in the experiment"
+                class="form-input-full form-input-blue" />
+          </label>
 
-              <div class="form-row margin-top-10 small flex-row">
-                <button type="button" class="js-select-all white-button flex-1">
-                  Select all
-                </button>
-                <button type="button" class="js-select-none white-button flex-1">
-                  Select none
-                </button>
-                <button type="button" class="js-select-average white-button flex-1">
-                  Select averages
-                </button>
-              </div>
-            </div>
-
-            {% for experiment in study.experiments: %}
-              <div class="section-experiment">
-                <h4>Experiment: {{ experiment.name }}</h4>
-
-                {{ experiment.description|format_text }}
-
-                <div class="section-bioreplicates box">
-                  {% for bioreplicate in experiment.bioreplicates: %}
-                    <label>
-                      <input
-                          type="checkbox"
-                          class="{{ 'js-average' if bioreplicate.calculationType == 'average' }}"
-                          name="bioreplicates"
-                          value="{{ bioreplicate.id }}"
-                          checked />
-                      {{ bioreplicate.name }}
-                    </label>
-                  {% endfor %}
-                </div>
-              </div>
-            {% endfor %}
-
-            <div class="form-row submit-row margin-top-10">
-              <button type="submit" class="green-button full">
-                <span class="icon icon-inline icon-download-white"></span>
-                Download ZIP file
-              </button>
-            </div>
-          </div>
-
-          <div class="flex-column column-right">
-            <h2>Preview (first 5 rows)</h2>
-
-            <div class="preview js-preview box">
-
-            </div>
-          </div>
+          <input class="flex-end" type="submit" value="🔍 Search" />
+          <input class="flex-end white-button js-reset" type="button" value="🧹 Clear" />
         </div>
+
+        <div class="form-row full">
+          {% if study.strains: %}
+            <label class="flex-1">
+              <span>By microbial strain:</span>
+              <select
+                  tabindex="2"
+                  name="strainIds"
+                  multiple="multiple"
+                  class="strain-select js-strain-select">
+                {% for study_strain in study.strains: %}
+                  <option value="{{ study_strain.id }}">{{ study_strain.name }} (NCBI:{{ study_strain.taxon.ncbiId }})</option>
+                {% endfor %}
+              </select>
+            </label>
+          {% endif %}
+
+          {% if study.metabolites: %}
+            <label class="flex-1">
+              <span>By metabolite:</span>
+              <select
+                  tabindex="3"
+                  name="metaboliteIds"
+                  multiple="multiple"
+                  class="metabolite-select js-metabolite-select">
+                {% for metabolite in study.metabolites: %}
+                  <option value="{{ metabolite.id }}">{{ metabolite.name }} ({{ metabolite.chebiId }})</option>
+                {% endfor %}
+              </select>
+            </label>
+          {% endif %}
+
+          {% if study_model_types: %}
+            <label class="flex-1">
+              <span>With model predictions:</span>
+              <select
+                  name="modelingTypes"
+                  multiple="multiple"
+                  tabindex="4"
+                  class="form-input-blue form-input-full js-modeling-type-select">
+                {% if 'easy_linear' in study_model_types: %}
+                  <option value="easy_linear">"Easy linear" method</option>
+                {% endif %}
+                {% if 'logistic' in study_model_types: %}
+                  <option value="logistic">Logistic model</option>
+                {% endif %}
+                {% if 'baranyi_roberts' in study_model_types: %}
+                  <option value="baranyi_roberts">Baranyi-Roberts model</option>
+                {% endif %}
+
+                {% if study.customModels: %}
+                  {% for m in study.customModels:  %}
+                    <option
+                        {{ "selected" if m.id == selectedCustomModelId }}
+                        value="custom_{{ m.id }}"
+                        data-custom-model-id="{{ m.id }}">
+                    {{ m.name }}
+                    </option>
+                  {% endfor %}
+                {% endif %}
+              </select>
+            </label>
+          {% endif %}
+        </div>
+      </form>
+
+      <form
+          class="simple-form js-experiment-form"
+          action="{{ url_for('study_download_data_zip', publicId=studyId) }}"
+          method="POST">
+        <h2>
+          Loading export form
+
+          <img
+              class="inline-loader-image loader-image"
+              style="width: 22px; height: 22px;"
+              src="{{ url_for('static', filename="images/loader.svg") }}" />
+        </h2>
       </form>
     </article>
   </div>

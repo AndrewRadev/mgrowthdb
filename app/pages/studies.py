@@ -15,13 +15,16 @@ from app.model.orm import (
     Community,
     Experiment,
     MeasurementContext,
+    ModelingResult,
     Study,
+    StudyStrain,
     StudyUser,
     Submission,
 )
 from app.view.forms.experiment_export_form import ExperimentExportForm
 from app.view.forms.comparative_chart_form import ComparativeChartForm
 import app.model.lib.util as util
+from app.model.lib.experiment_search import ExperimentSearch
 
 
 def study_show_page(publicId):
@@ -29,40 +32,86 @@ def study_show_page(publicId):
         publicId,
         check_user_visibility=False,
         sql_options=(
-            # Level 1:
+            sql.orm.selectinload(Study.strains, StudyStrain.taxon),
             sql.orm.selectinload(Study.experiments, Experiment.compartments),
             sql.orm.selectinload(Study.experiments, Experiment.community),
-            sql.orm.selectinload(Study.experiments, Experiment.perturbations),
-            sql.orm.selectinload(Study.experiments, Experiment.bioreplicates),
+        )
+    )
+
+    if not study.visible_to_user(g.current_user):
+        return render_template("pages/studies/show_unpublished.html", study=study)
+
+    study_model_types = g.db_session.scalars(
+        sql.select(ModelingResult.type)
+        .distinct()
+        .join(MeasurementContext)
+        .join(Bioreplicate)
+        .join(Study)
+        .where(Study.publicId == publicId)
+    ).all()
+
+    return render_template(
+        "pages/studies/show.html",
+        study=study,
+        study_model_types=study_model_types,
+    )
+
+
+def study_experiments_fragment(publicId):
+    study = _fetch_study_for_visitor(publicId)
+
+    total_experiment_count = g.db_session.scalars(
+        sql.select(sql.func.count(Experiment.publicId.distinct()))
+        .where(Experiment.studyId == study.publicId)
+    ).one()
+
+    search = ExperimentSearch(
+        g.db_session,
+        study=study,
+        query=request.args.get('q'),
+        strain_ids=request.args.getlist('strainIds'),
+        metabolite_ids=request.args.getlist('metaboliteIds'),
+        modeling_types=request.args.getlist('modelingTypes'),
+        sql_options=(
+            # Level 1:
+            sql.orm.selectinload(Experiment.compartments),
+            sql.orm.selectinload(Experiment.community),
+            sql.orm.selectinload(Experiment.perturbations),
+            sql.orm.selectinload(Experiment.bioreplicates),
             # Level 2:
-            sql.orm.selectinload(Study.experiments, Experiment.community, Community.strains),
-            sql.orm.selectinload(Study.experiments, Experiment.bioreplicates, Bioreplicate.measurementContexts),
+            sql.orm.selectinload(Experiment.community, Community.strains),
+            sql.orm.selectinload(Experiment.bioreplicates, Bioreplicate.measurementContexts),
             # Level 3:
             sql.orm.selectinload(
-                Study.experiments,
+                Experiment.community,
+                Community.strains,
+                StudyStrain.taxon,
+            ),
+            sql.orm.selectinload(
                 Experiment.bioreplicates,
                 Bioreplicate.measurementContexts,
                 MeasurementContext.measurements,
             ),
             sql.orm.selectinload(
-                Study.experiments,
                 Experiment.bioreplicates,
                 Bioreplicate.measurementContexts,
                 MeasurementContext.technique,
             ),
             sql.orm.selectinload(
-                Study.experiments,
                 Experiment.bioreplicates,
                 Bioreplicate.measurementContexts,
                 MeasurementContext.modelingResults,
             ),
         )
     )
+    experiments = search.fetch_results()
 
-    if study.visible_to_user(g.current_user):
-        return render_template("pages/studies/show.html", study=study)
-    else:
-        return render_template("pages/studies/show_unpublished.html", study=study)
+    return render_template(
+        "pages/studies/_experiments.html",
+        search=search,
+        experiments=experiments,
+        total_experiment_count=total_experiment_count,
+    )
 
 
 def study_manage_page(publicId):
@@ -83,6 +132,26 @@ def study_export_page(publicId):
     )
 
 
+def study_export_experiments_fragment(publicId):
+    study = _fetch_study_for_visitor(publicId)
+
+    search = ExperimentSearch(
+        g.db_session,
+        study=study,
+        query=request.args.get('q'),
+        strain_ids=request.args.getlist('strainIds'),
+        metabolite_ids=request.args.getlist('metaboliteIds'),
+        modeling_types=request.args.getlist('modelingTypes'),
+        sql_options=(sql.orm.selectinload(Experiment.bioreplicates),)
+    )
+    experiments = search.fetch_results()
+
+    return render_template(
+        "pages/studies/export/_experiment_form.html",
+        experiments=experiments,
+    )
+
+
 def study_export_preview_fragment(publicId):
     # We only need the id here, but we call it to apply visibility checks:
     _fetch_study_for_visitor(publicId)
@@ -98,7 +167,10 @@ def study_export_preview_fragment(publicId):
             <pre>{csv}</pre>
         """)
 
-    return '\n'.join(csv_previews)
+    if csv_previews:
+        return '\n'.join(csv_previews)
+    else:
+        return """<p class="help margin-top-0">No experiments selected</p>"""
 
 
 def study_download_data_zip(publicId):

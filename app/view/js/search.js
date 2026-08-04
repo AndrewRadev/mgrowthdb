@@ -51,7 +51,7 @@ Page('.search-page', function($page) {
   }
 
   // Trigger initial update on page load:
-  updateSearch()
+  setTimeout(updateSearch, 1);
 
   $page.on('click', '.js-load-more', function(e) {
     e.preventDefault();

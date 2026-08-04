@@ -1,0 +1,90 @@
+{% from 'utils/_strain_link.html' import render_strain_link %}
+{% from 'pages/experiments/_bioreplicates_list.html' import render_bioreplicates_list %}
+{% from 'pages/perturbations/_perturbation.html' import render_perturbation %}
+{% from 'pages/studies/_experiments_toc.html' import render_experiments_toc %}
+
+<div class="flex-row">
+  <div>
+    {% for experiment in experiments: %}
+      <div class="experiment-container">
+        <h2 id="experiment-{{ experiment.publicId }}">
+          Experiment {{ loop.index }}:
+          {{ experiment.name|highlight(search.query_words) }}
+        </h2>
+
+        {% if experiment.publicId: %}
+          <p class="small">
+            <strong>Public ID</strong>:
+            <a href="{{ url_for('experiment_show_page', publicId=experiment.publicId) }}">
+              {{ experiment.publicId|highlight(search.query_words) }}
+            </a>
+            <br>
+          </p>
+        {% endif %}
+
+        {% if experiment.description: %}
+          {{ experiment.description|highlight(search.query_words)|format_text }}
+        {% endif %}
+
+        <br>
+
+        <h3>Compartments</h3>
+
+        <ol>
+          {% for compartment in experiment.compartments: %}
+            <li>
+              <strong>{{ compartment.name }}</strong>
+
+              <br>
+
+              Medium:
+              {% if compartment.mediumUrl: %}
+                {{ compartment.mediumUrl|external_link(compartment.mediumName) }}
+              {% else: %}
+                {{ compartment.mediumName }}
+              {% endif %}
+
+              <br>
+
+              Properties: {{ compartment.properties_description|safe }}
+            </li>
+          {% endfor %}
+        </ol>
+
+        <h3>Community: {{ experiment.community.name }}</h3>
+
+        <ol>
+          {% for strain in experiment.community.strains|sort: %}
+            <li class="{{ "highlight" if strain.id in search.strain_ids }}">
+              {{ render_strain_link(strain) }}
+            </li>
+          {% endfor %}
+        </ol>
+
+        {% if experiment.perturbations|length > 0: %}
+          <h3>Perturbations</h3>
+
+          <ol>
+            {% for perturbation in experiment.perturbations: %}
+              <li>{{ render_perturbation(perturbation, link=True) }}</li>
+            {% endfor %}
+          </ol>
+        {% endif %}
+
+        <h3>Biological replicates</h3>
+
+        {{ render_bioreplicates_list(experiment, search) }}
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if experiments|length: %}
+    <div class="toc-container">
+      {{ render_experiments_toc(experiments, total_experiment_count) }}
+    </div>
+  {% else: %}
+    <p class="help">
+      No experiments found matching the given filter.
+    </p>
+  {% endif %}
+</div>

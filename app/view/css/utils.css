@@ -319,6 +319,36 @@ form.simple-form {
     }
   }
 
+  fieldset {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+  }
+
+  .form-row.small-input-row {
+    padding: 6px;
+    padding-top: 0;
+    font-size: 12px;
+
+    label span {
+      font-size: 12px;
+    }
+
+    select {
+      padding: 0.4rem;
+    }
+
+    input[type="text"] {
+      padding: 0.5rem;
+    }
+
+    input[type="submit"],
+    input[type="reset"],
+    button {
+      padding: 0.5rem;
+    }
+  }
+
+
   input[type="reset"],
   button[type="reset"] {
     cursor: pointer;
