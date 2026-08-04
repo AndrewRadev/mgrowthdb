@@ -18,6 +18,9 @@ def run_post_submission_jobs(submission_id):
     submission = db_session.get(Submission, submission_id)
     study = submission.study
 
+    if study.isPublished:
+        _export_submission_data(db_session, submission_id)
+
     if submission.jobStatuses.get('calculateAverages') == 'pending':
         for experiment in study.experiments:
             create_average_measurements(db_session, study, experiment)
@@ -34,9 +37,6 @@ def run_post_submission_jobs(submission_id):
         submission.jobStatuses['calculateGrowthrates'] = 'ready'
         flag_modified(submission, 'jobStatuses')
         db_session.commit()
-
-    if study.isPublished:
-        _export_submission_data(db_session, submission_id)
 
 
 @shared_task
