@@ -68,13 +68,14 @@
             {% endif %}
           </strong>
 
-          <ul class="measurement-techniques">
+          <ul class="measurement-contexts">
             {% for measurement_context in measurement_contexts: %}
-              <li class="measurement-context-container">
+              <li
+                  class="measurement-context-container {{ "highlight" if search and search.context_matches(measurement_context) }}">
                 {% set measurements = measurement_context.measurements %}
                 {% set technique    = measurement_context.technique %}
 
-                <div class="js-table-row {{ "highlight" if search and search.context_matches(measurement_context) }}">
+                <div class="js-table-row">
                   <div class="button-group" style="display: inline-block; margin-right: 6px;">
                     <span class="js-compare-container" data-context-ids="{{ measurement_context.id }}">
                       <span class="js-compare">
@@ -119,64 +120,76 @@
                   {{ measurement_context.get_chart_label() }}
                 </div>
 
+                {% if measurement_context.growthRate: %}
+                  <div>
+                    μ<sub>max</sub> = {{ measurement_context.growthRate }} h<sup>-1</sup>
+                    <span
+                        class="icon icon-inline icon-small icon-info-gray"
+                        data-tooltip="Maximum growth rate, estimated with the &quot;Easy Linear&quot; method. Read more about it in the help documentation.">
+                    </span>
+                  </div>
+                {% endif %}
+
                 {% if measurement_context.publishedModelingResults: %}
-                  <h4 class="small">Models:</h4>
+                  <div>
+                    <strong class="small">Models:</strong>
 
-                  <ul class="small">
-                    {% for modeling_result in measurement_context.publishedModelingResults: %}
-                      <li class="{{ "highlight" if search and search.modeling_result_matches(modeling_result) }}">
-                        <div class="button-group" style="display: inline-block; margin-right: 6px;">
-                          <span class="js-compare-container" data-model-ids="{{ modeling_result.id }}">
-                            <span class="js-compare" data-tooltip="Compare">
-                              <a
-                                  href="#"
-                                  class="white-button small-button"
-                                  style="vertical-align: bottom"
-                                  data-tooltip="Compare">
-                                <span class="flex-row icon icon-arrows-diff"></span>
-                              </a>
+                    <ul class="modeling-results small">
+                      {% for modeling_result in measurement_context.publishedModelingResults: %}
+                        <li class="{{ "highlight" if search and search.modeling_result_matches(modeling_result) }}">
+                          <div class="button-group" style="display: inline-block; margin-right: 6px;">
+                            <span class="js-compare-container" data-model-ids="{{ modeling_result.id }}">
+                              <span class="js-compare" data-tooltip="Compare">
+                                <a
+                                    href="#"
+                                    class="white-button small-button"
+                                    style="vertical-align: bottom"
+                                    data-tooltip="Compare">
+                                  <span class="flex-row icon icon-arrows-diff"></span>
+                                </a>
+                              </span>
+
+                              <span class="js-uncompare uncompare hidden">
+                                <a
+                                    href="#"
+                                    class="white-button small-button"
+                                    style="vertical-align: bottom"
+                                    data-tooltip="Comparing, click to remove from comparison">
+                                  <span class="flex-row icon icon-arrows-left-right"></span>
+                                </a>
+                              </span>
                             </span>
 
-                            <span class="js-uncompare uncompare hidden">
-                              <a
-                                  href="#"
-                                  class="white-button small-button"
-                                  style="vertical-align: bottom"
-                                  data-tooltip="Comparing, click to remove from comparison">
-                                <span class="flex-row icon icon-arrows-left-right"></span>
-                              </a>
-                            </span>
-                          </span>
-
-                          {% set visualize_url = url_for(
+                            {% set visualize_url = url_for(
                             'study_visualize_page',
                             publicId=study.publicId,
                             selectedExperimentId=experiment.publicId,
                             selectedTechniqueId=technique.id,
                             l=measurement_context.id,
                             lm=modeling_result.id
-                          ) %}
+                            ) %}
 
-                          <a
-                              href="{{ visualize_url }}"
-                              class="white-button small-button"
-                              data-tooltip="Visualize">
-                            <span class="flex-row icon icon-chart"></span>
-                          </a>
+                            <a
+                                href="{{ visualize_url }}"
+                                class="white-button small-button"
+                                data-tooltip="Visualize">
+                              <span class="flex-row icon icon-chart"></span>
+                            </a>
 
-                          <a
-                              href="{{ url_for('model_prediction_csv', id=modeling_result.id) }}"
-                              class="white-button small-button"
-                              download="model_predictions_{{ modeling_result.id }}.csv"
-                              data-tooltip="Download model predictions">
-                            <span class="flex-row icon icon-download-black"></span>
-                          </a>
-                        </div>
+                            <a
+                                href="{{ url_for('model_prediction_csv', id=modeling_result.id) }}"
+                                class="white-button small-button"
+                                download="model_predictions_{{ modeling_result.id }}.csv"
+                                data-tooltip="Download model predictions">
+                              <span class="flex-row icon icon-download-black"></span>
+                            </a>
+                          </div>
 
-                        {{ modeling_result.model_name }}
-                      </li>
-                    {% endfor %}
-                  </ul>
+                          {{ modeling_result.model_name }}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
                 {% endif %}
               </li>
             {% endfor %}

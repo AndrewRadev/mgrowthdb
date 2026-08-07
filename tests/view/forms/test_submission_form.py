@@ -188,6 +188,35 @@ class TestSubmissionForm(DatabaseTest):
             ['glucose', 'trehalose'],
         )
 
+    def test_calculation_flags(self):
+        submission_form = SubmissionForm.create(db_session=self.db_session, user_uuid='test_user')
+        submission = submission_form.submission
+
+        # By default, we calculate everything
+        self.assertTrue(submission.studyDesign['calculateAverages'])
+        self.assertTrue(submission.studyDesign['calculateGrowthrates'])
+        self.assertEqual(submission.jobStatuses, {})
+
+        submission_form.update_calculations({'calculateAverages': False, 'calculateGrowthrates': True})
+
+        self.assertFalse(submission.studyDesign['calculateAverages'])
+        self.assertTrue(submission.studyDesign['calculateGrowthrates'])
+        self.assertEqual(submission.jobStatuses, {'calculateGrowthrates': 'pending'})
+
+        # Missing flags means being set to False:
+        submission_form.update_calculations({'calculateAverages': True})
+
+        self.assertTrue(submission_form.submission.studyDesign['calculateAverages'])
+        self.assertFalse(submission_form.submission.studyDesign['calculateGrowthrates'])
+        self.assertEqual(submission.jobStatuses, {'calculateAverages': 'pending'})
+
+        # Stringy arguments (from checkboxes) are also True:
+        submission_form.update_calculations({'calculateGrowthrates': 'on'})
+
+        self.assertFalse(submission_form.submission.studyDesign['calculateAverages'])
+        self.assertTrue(submission_form.submission.studyDesign['calculateGrowthrates'])
+        self.assertEqual(submission.jobStatuses, {'calculateGrowthrates': 'pending'})
+
     def test_technique_descriptions(self):
         submission_form = SubmissionForm.create(db_session=self.db_session, user_uuid='test_user')
 

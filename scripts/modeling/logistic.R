@@ -1,5 +1,5 @@
-library("growthrates")
-library("jsonlite")
+library("growthrates", quietly=TRUE)
+library("jsonlite", quietly=TRUE)
 
 args <- commandArgs(TRUE)
 

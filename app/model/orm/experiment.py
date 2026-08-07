@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Literal
 
 import sqlalchemy as sql
 from sqlalchemy.orm import (
@@ -43,7 +43,12 @@ class Experiment(OrmBase):
     studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.publicId'), nullable=False)
     study: Mapped['Study'] = relationship(back_populates='experiments')
 
-    cultivationMode: Mapped[str] = mapped_column(sql.String(50))
+    cultivationMode: Mapped[Literal[
+        'batch',
+        'fed-batch',
+        'chemostat',
+        'other',
+    ]] = mapped_column(sql.String(50))
 
     experimentCompartments: Mapped[List['ExperimentCompartment']] = relationship(
         back_populates='experiment',
