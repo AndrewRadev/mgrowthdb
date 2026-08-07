@@ -39,6 +39,23 @@ class TestStudyStrain(DatabaseTest):
         results, _ = StudyStrain.search_by_name(self.db_session, ' ')
         self.assertEqual(all_records, [r['text'] for r in results])
 
+    def test_search_with_starting_bracket(self):
+        self.create_study_strain(taxon=dict(ncbiId="1", name="Clostridioides difficile"))
+        self.create_study_strain(taxon=dict(ncbiId="2", name="[Clostridium] hiranonis"))
+
+        # Results match an optional starting bracket
+        results, _ = StudyStrain.search_by_name(self.db_session, 'Clost')
+        self.assertEqual(
+            ['Clostridioides difficile (NCBI:1)', '[Clostridium] hiranonis (NCBI:2)'],
+            [r['text'] for r in results]
+        )
+
+        results, _ = StudyStrain.search_by_name(self.db_session, 'Clostridium')
+        self.assertEqual(
+            ['[Clostridium] hiranonis (NCBI:2)'],
+            [r['text'] for r in results]
+        )
+
     def test_search_by_multiple_words(self):
         self.create_study_strain(taxon=dict(ncbiId="1", name="Salmonella enterica serovar Infantis"))
         self.create_study_strain(taxon=dict(ncbiId="2", name="Salmonella enterica serovar Moscow"))

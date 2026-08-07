@@ -32,6 +32,23 @@ class TestTaxon(DatabaseTest):
         results, _ = Taxon.search_by_name(self.db_session, ' ')
         self.assertEqual([], [r['text'] for r in results])
 
+    def test_search_with_starting_bracket(self):
+        self.create_taxon(ncbiId="1", name="Clostridioides difficile")
+        self.create_taxon(ncbiId="2", name="[Clostridium] hiranonis")
+
+        # Results match an optional starting bracket, ordered by name
+        results, _ = Taxon.search_by_name(self.db_session, 'Clost')
+        self.assertEqual(
+            ['[Clostridium] hiranonis (NCBI:2)', 'Clostridioides difficile (NCBI:1)'],
+            [r['text'] for r in results]
+        )
+
+        results, _ = Taxon.search_by_name(self.db_session, 'Clostridium')
+        self.assertEqual(
+            ['[Clostridium] hiranonis (NCBI:2)'],
+            [r['text'] for r in results]
+        )
+
     def test_search_by_multiple_words(self):
         self.create_taxon(ncbiId="1", name="Salmonella enterica serovar Infantis")
         self.create_taxon(ncbiId="2", name="Salmonella enterica serovar Moscow")

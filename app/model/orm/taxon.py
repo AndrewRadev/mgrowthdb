@@ -45,13 +45,18 @@ class Taxon(OrmBase):
 
         term_pattern = '%'.join(term.split()) + '%'
 
+        clauses = [sql.func.lower(Taxon.name).like(term_pattern)]
+        if not term_pattern.startswith('['):
+            # Special case: match strain names with a starting bracket
+            clauses.append(sql.func.lower(Taxon.name).like('[' + term_pattern))
+
         results = db_session.execute(
             sql.select(
                 Taxon.ncbiId,
                 Taxon.name,
             )
             .distinct()
-            .where(sql.func.lower(Taxon.name).like(term_pattern))
+            .where(sql.or_(*clauses))
             .order_by(sql.func.lower(Taxon.name).asc())
             .limit(limit)
             .offset(offset)
