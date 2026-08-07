@@ -1,27 +1,15 @@
 #! /usr/bin/env python3
 
 import os
-from datetime import datetime
 
-from db import get_cli_connection_params
-
-connection_params = get_cli_connection_params()
-
-timestamp = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-
-# Redirect stdout before exec-ing
-backup_path = f"var/backups/{timestamp}_backup.sql"
-print(f"Creating backup: {backup_path}")
-
-fdout = os.open(backup_path, os.O_WRONLY | os.O_CREAT)
-STDOUT = 1
-os.dup2(fdout, STDOUT)
-
-os.execv(
-    '/usr/bin/mysqldump', [
-        '/usr/bin/mysqldump',
-        *connection_params,
-        '-u',
-        'root',
-    ]
+from app.model.lib.backups import (
+    generate_backup_filename,
+    create_backup,
+    clean_backups,
 )
+
+filename = generate_backup_filename()
+
+os.makedirs('var/backups', exist_ok=True)
+create_backup(f"var/backups/{filename}")
+clean_backups('var/backups', max_count=10)
