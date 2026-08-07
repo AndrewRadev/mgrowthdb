@@ -3,8 +3,9 @@ import os
 from celery import Celery, Task
 from celery.schedules import crontab
 
-from app.model.tasks.tracking import aggregate_page_visits
+from app.model.tasks.backups import create_backups
 from app.model.tasks.submissions import publish_eligible_studies
+from app.model.tasks.tracking import aggregate_page_visits
 
 
 def init_celery(app):
@@ -41,6 +42,12 @@ def init_celery(app):
                 'task': 'app.model.tasks.tracking.aggregate_page_visits',
                 # 1pm UTC on Sunday:
                 'schedule': crontab(hour=13, minute=0, day_of_week='sunday'),
+                'args': (),
+            },
+            'create-backups': {
+                'task': 'app.model.tasks.backups.create_backups',
+                # 2pm UTC on Sunday:
+                'schedule': crontab(hour=14, minute=0, day_of_week='sunday'),
                 'args': (),
             },
             'publish-eligible-studies': {
