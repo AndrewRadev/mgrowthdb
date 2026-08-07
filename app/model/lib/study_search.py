@@ -12,7 +12,7 @@ from app.model.orm import (
 )
 
 
-class StudySearch():
+class StudySearch:
     def __init__(
         self,
         db_session,

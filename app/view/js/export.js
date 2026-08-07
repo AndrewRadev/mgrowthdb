@@ -1,45 +1,113 @@
 Page('.export-page', function($page) {
   let studyId = $page.data('studyId');
+  let select2Selectors = '.js-strain-select,.js-metabolite-select'
 
-  let $form    = $page.find('form');
-  let $preview = $page.find('.js-preview');
+  // Initialize select filters:
+  $page.find(select2Selectors).each(function() {
+    let $select = $(this);
 
-  $form.on('change', function() { updatePreview($form); });
-  $form.on('keyup', 'input[name=custom_delimiter]', function() { updatePreview($form); });
+    $select.select2({
+      multiple: true,
+      theme: 'custom',
+      width: '100%',
+      templateResult: select2Highlighter,
+    });
 
-  updatePreview($form);
-
-  $form.on('focus', 'input[name=custom_delimiter]', function() {
-    $form.find('input[name=delimiter][value=custom]').prop('checked', true);
+    $select.trigger('change');
   });
 
-  $form.on('click', '.js-select-all', function() {
+  $page.on('change', '.js-export-options-inputs input,select', updateFilter)
+  $page.on('keyup', 'input[name=q]', _.debounce(updateFilter, 200));
+  $page.on('change', select2Selectors, updateFilter)
+
+  $page.on('submit', '.js-filter-form', function(e) {
+    e.preventDefault();
+    updateFilter();
+  });
+  $page.on('click', '.js-filter-form .js-reset', function() {
+    let $form = $(this).parents('form');
+
+    $form.find('input[name=q]').val(null);
+    $form.find(select2Selectors).each(function() {
+      $(this).val(null).trigger('change');
+    });
+
+    setTimeout(updateFilter, 1);
+  });
+
+  $page.on('change', '.js-experiment-form', updatePreview);
+  $page.on('keyup', 'input[name=custom_delimiter]', updatePreview);
+
+  updateFilter();
+
+  $page.on('focus', 'input[name=custom_delimiter]', function() {
+    $page.find('input[name=delimiter][value=custom]').prop('checked', true);
+  });
+
+  $page.on('click', '.js-select-all', function() {
+    let $form = $(this).parents('form');
+
     $form.find('.section-experiment input[type=checkbox]').prop('checked', true);
-    updatePreview($form);
+    updatePreview();
   });
 
-  $form.on('click', '.js-select-average', function() {
+  $page.on('click', '.js-select-average', function() {
+    let $form = $(this).parents('form');
+
     $form.find('.section-experiment input[type=checkbox]').prop('checked', false);
     $form.find('.section-experiment input[type=checkbox].js-average').prop('checked', true);
-    updatePreview($form);
+    updatePreview();
   });
 
-  $form.on('click', '.js-select-none', function() {
+  $page.on('click', '.js-select-none', function() {
+    let $form = $(this).parents('form');
+
     $form.find('.section-experiment input[type=checkbox]').prop('checked', false);
-    updatePreview($form);
+    updatePreview();
   });
 
-  function updatePreview($form) {
+  function updateFilter() {
+    let $filterForm  = $page.find('.js-filter-form');
+    let $experimentForm = $page.find('.js-experiment-form');
+
+    let $searchInput = $filterForm.find('input[name=q]');
+    let $headingLoader = $page.find('.js-experiments-heading .inline-loader-image');
+
+    $searchInput.addClass('loading-input');
+    $headingLoader.removeClass('hidden');
+
+    $filterForm.ajaxSubmit({
+      success: function(response) {
+        $experimentForm.html(response);
+        $searchInput.removeClass('loading-input');
+        $headingLoader.addClass('hidden');
+        updatePreview();
+      }
+    });
+  }
+
+  function updatePreview() {
+    // Form with CSV options:
+    let $filterForm = $page.find('.js-filter-form');
+
+    // Form with bioreplicates:
+    let $experimentForm = $page.find('.js-experiment-form');
+
+    let data = $filterForm.serializeArray();
+    data.push(...$experimentForm.serializeArray());
+
+    let $headingLoader = $page.find('.js-preview-heading .inline-loader-image');
+    $headingLoader.removeClass('hidden');
+
     $.ajax({
       url: `/study/${studyId}/export/preview`,
       method: 'POST',
       dataType: 'html',
-      data: $form.serializeArray(),
+      data: data,
       success: function(response) {
-        $preview.html(response);
+        $page.find('.js-preview').html(response);
+        $headingLoader.addClass('hidden');
       }
-    })
-
-    $form.find('.js-export-url').val($form.prop('action') + '?' + $form.serialize())
+    });
   }
 });

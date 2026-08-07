@@ -62,6 +62,8 @@ class Submission(OrmBase):
 
     changelogText: Mapped[sql.String] = mapped_column(sql.String, nullable=True)
 
+    jobStatuses: Mapped[sql.JSON] = mapped_column(sql.JSON, nullable=False)
+
     @hybrid_property
     def isPublished(self):
         return self.publishedAt != None

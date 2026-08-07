@@ -1,11 +1,11 @@
 import io
 import copy
-import itertools
 from datetime import datetime, timedelta, time, UTC
 from db import get_session, get_transaction
 
 import pandas as pd
 import sqlalchemy as sql
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.model.orm import (
     Bioreplicate,
@@ -27,7 +27,7 @@ from app.model.orm import (
 )
 from app.model.lib.util import group_by_unique_name, is_non_negative_float, find_duplicates
 from app.model.lib.conversion import convert_time
-from app.model.tasks.submissions import export_submission_data
+from app.model.tasks.submissions import run_post_submission_jobs
 
 
 def persist_submission_to_database(submission_form):
@@ -57,18 +57,13 @@ def persist_submission_to_database(submission_form):
         db_trans_session.flush()
 
         _save_measurements(db_trans_session, study, submission_form)
-
-        for experiment in study.experiments:
-            _create_average_measurements(db_trans_session, study, experiment)
-
         _finalize_submission(db_trans_session, submission_form, study, project)
 
         db_trans_session.commit()
 
-        if study.isPublished:
-            export_submission_data.delay(submission.id)
+    run_post_submission_jobs.delay(submission.id)
 
-        return []
+    return []
 
 
 # TODO (2025-05-11) Test (separate read_data_file, operate on dfs)
@@ -187,7 +182,6 @@ def validate_data_file(submission_form, data_file=None):
                 errors.append(f"{sheet_name}: Time points are not unique for bioreplicate {b}, compartment {c}: {duplicates_description}")
 
     return errors
-
 
 def _save_study(db_session, submission_form, user_uuid=None):
     submission = submission_form.submission
@@ -456,166 +450,6 @@ def _save_measurements(db_session, study, submission_form):
 
     for _, df in sheets.items():
         Measurement.insert_from_csv_string(db_session, study, df.to_csv(index=False))
-
-
-def _create_average_measurements(db_session, study, experiment):
-    bioreplicate_ids = [b.id for b in experiment.bioreplicates if not b.calculationType]
-
-    # The averaged measurements will be parented by a custom-generated bioreplicate:
-    average_bioreplicate = Bioreplicate(
-        name=f"Average({experiment.name})",
-        calculationType='average',
-        experiment=experiment,
-    )
-    db_session.add(average_bioreplicate)
-
-    has_measurements = False
-
-    for technique in study.measurementTechniques:
-        for compartment in experiment.compartments:
-            # We'll average values separately over techniques and compartments:
-            measurement_contexts = db_session.scalars(
-                sql.select(MeasurementContext)
-                .distinct()
-                .join(Measurement)
-                .where(
-                    MeasurementContext.compartmentId == compartment.id,
-                    MeasurementContext.bioreplicateId.in_(bioreplicate_ids),
-                    MeasurementContext.techniqueId == technique.id,
-                    Measurement.value.is_not(None),
-                )
-                .order_by(MeasurementContext.subjectType, MeasurementContext.subjectId)
-            ).all()
-
-            # If there is a single context for this cluster of measurements, there is nothing to average:
-            if len(measurement_contexts) <= 1:
-                continue
-
-            # Only average the shared time points, if any
-            common_time_points = None
-            max_time_point_count = 0
-
-            for measurement_context in measurement_contexts:
-                time_points = [m.timeInSeconds for m in measurement_context.measurements]
-                if len(time_points) > max_time_point_count:
-                    max_time_point_count = len(time_points)
-
-                if common_time_points is None:
-                    common_time_points = frozenset(time_points)
-                else:
-                    common_time_points = common_time_points.intersection(time_points)
-
-            if common_time_points is None or len(common_time_points) <= (max_time_point_count // 2):
-                continue
-
-            if technique.subjectType == 'bioreplicate':
-                # A single context for a group of bioreplicates
-                _create_average_measurement_context(
-                    db_session,
-                    common_time_points=common_time_points,
-                    parent_records=(study, technique, compartment),
-                    measurement_contexts=measurement_contexts,
-                    average_bioreplicate=average_bioreplicate,
-                    subject_id=average_bioreplicate.id,
-                    subject_type='bioreplicate',
-                    subject_name=average_bioreplicate.name,
-                    subject_external_id=None,
-                )
-                has_measurements = True
-            else:
-                grouped_contexts = itertools.groupby(
-                    measurement_contexts,
-                    lambda mc: (mc.subjectId, mc.subjectType, mc.subjectName, mc.subjectExternalId),
-                )
-
-                for key, subject_contexts in grouped_contexts:
-                    subject_contexts = list(subject_contexts)
-                    (
-                        subject_id,
-                        subject_type,
-                        subject_name,
-                        subject_external_id,
-                    ) = key
-
-                    # If there is a single context for this cluster of
-                    # measurements, there is nothing to average:
-                    if len(subject_contexts) <= 1:
-                        continue
-
-                    # One context for each subject:
-                    _create_average_measurement_context(
-                        db_session,
-                        common_time_points=common_time_points,
-                        parent_records=(study, technique, compartment),
-                        measurement_contexts=list(subject_contexts),
-                        average_bioreplicate=average_bioreplicate,
-                        subject_id=subject_id,
-                        subject_type=subject_type,
-                        subject_name=subject_name,
-                        subject_external_id=subject_external_id,
-                    )
-                    has_measurements = True
-
-    if not has_measurements:
-        db_session.delete(average_bioreplicate)
-
-
-def _create_average_measurement_context(
-    db_session,
-    common_time_points,
-    parent_records,
-    measurement_contexts,
-    average_bioreplicate,
-    subject_id,
-    subject_type,
-    subject_name,
-    subject_external_id=None,
-):
-    (study, technique, compartment) = parent_records
-
-    # Collect average measurement values for the given contexts:
-    measurement_rows = db_session.execute(
-        sql.select(
-            Measurement.timeInSeconds,
-            sql.func.avg(Measurement.value),
-            sql.func.std(Measurement.value),
-        )
-        .where(
-            Measurement.contextId.in_([mc.id for mc in measurement_contexts]),
-            Measurement.timeInSeconds.in_(common_time_points),
-        )
-        .group_by(Measurement.timeInSeconds)
-        .order_by(Measurement.timeInSeconds)
-    ).all()
-
-    if len(measurement_rows) == 0:
-        # We do not want to create unnecessary contexts
-        return
-
-    # Create a parent context for the individual measurements:
-    average_context = MeasurementContext(
-        study=study,
-        bioreplicate=average_bioreplicate,
-        compartment=compartment,
-        subjectId=subject_id,
-        subjectType=subject_type,
-        subjectName=subject_name,
-        subjectExternalId=subject_external_id,
-        technique=technique,
-        calculationType='average',
-    )
-    db_session.add(average_context)
-
-    # Create individual measurements
-    for (t, value, std) in measurement_rows:
-        measurement = Measurement(
-            timeInSeconds=t,
-            value=value,
-            std=std,
-            context=average_context,
-            study=study,
-        )
-        db_session.add(measurement)
 
 
 def _finalize_submission(db_session, submission_form, study, project):

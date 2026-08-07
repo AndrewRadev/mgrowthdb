@@ -1,0 +1,77 @@
+<div class="flex-row columns">
+  <div class="flex-column column-left">
+    <div class="section-all-none">
+      <h2 class="js-experiments-heading">
+        Biological replicates
+
+        <img
+            class="inline-loader-image loader-image hidden"
+            style="width: 22px; height: 22px;"
+            src="{{ url_for('static', filename="images/loader.svg") }}" />
+      </h2>
+
+      <div class="form-row">
+        <button type="submit" class="green-button full">
+          <span class="icon icon-inline icon-download-white"></span>
+          Download ZIP file
+        </button>
+      </div>
+
+      <div class="form-row margin-top-10 small flex-row">
+        <button type="button" class="js-select-all white-button flex-1">
+          Select all
+        </button>
+        <button type="button" class="js-select-none white-button flex-1">
+          Select none
+        </button>
+        <button type="button" class="js-select-average white-button flex-1">
+          Select averages
+        </button>
+      </div>
+    </div>
+
+    {% for experiment in experiments: %}
+      <div class="section-experiment">
+        <h4>Experiment: {{ experiment.name }}</h4>
+
+        {{ experiment.description|format_text }}
+
+        <div class="section-bioreplicates box">
+          {% for bioreplicate in experiment.bioreplicates: %}
+            <label>
+              <input
+                  type="checkbox"
+                  class="{{ 'js-average' if bioreplicate.calculationType == 'average' }}"
+                  name="bioreplicates"
+                  value="{{ bioreplicate.id }}"
+                  checked />
+              {{ bioreplicate.name }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="form-row submit-row margin-top-10">
+      <button type="submit" class="green-button full">
+        <span class="icon icon-inline icon-download-white"></span>
+        Download ZIP file
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-column column-right">
+    <h2 class="js-preview-heading">
+      Preview (first 5 rows)
+
+      <img
+          class="inline-loader-image loader-image hidden"
+          style="width: 22px; height: 22px;"
+          src="{{ url_for('static', filename="images/loader.svg") }}" />
+    </h2>
+
+    <div class="preview js-preview box">
+      <p class="help margin-top-0">Loading preview...</p>
+    </div>
+  </div>
+</div>

@@ -40,6 +40,9 @@ DEFAULT_STUDY_DESIGN = {
     'compartments':   [],
     'communities':    [],
     'experiments':    [],
+
+    'calculateAverages':    True,
+    'calculateGrowthrates': True,
 }
 """
 The structure of a Submission's `studyDesign` field. Any parameters given to
@@ -223,6 +226,18 @@ class SubmissionForm:
             del study_design['csrf_token']
 
         self.submission.studyDesign = study_design
+
+    def update_calculations(self, data):
+        self.submission.jobStatuses = {}
+
+        for flag in ('calculateAverages', 'calculateGrowthrates'):
+            if data.get(flag, False):
+                self.submission.studyDesign[flag] = True
+                self.submission.jobStatuses[flag] = 'pending'
+            else:
+                self.submission.studyDesign[flag] = False
+
+        flag_modified(self.submission, 'jobStatuses')
 
     def fetch_taxa(self):
         strains = self.submission.studyDesign['strains']

@@ -1,7 +1,18 @@
-{% macro render_experiments_toc(experiments) %}
+{% macro render_experiments_toc(experiments, total_experiment_count=None) %}
+  {% set experiment_count = experiments|length %}
 
   <div class="box experiments-toc scroll-shadows">
-    <h2>Experiments</h2>
+    <h2>
+      Experiments
+
+      {% if total_experiment_count is not none: %}
+        {% if total_experiment_count != experiment_count: %}
+          ({{ experiment_count }}/{{ total_experiment_count }})
+        {% else: %}
+          ({{ experiment_count }})
+        {% endif %}
+      {% endif %}
+    </h2>
 
     <ol>
       {% for experiment in experiments: %}

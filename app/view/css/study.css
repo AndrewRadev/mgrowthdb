@@ -22,6 +22,21 @@
     margin-top: 0;
   }
 
+  .loader-image {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+  }
+
+  .experiment-filter-form {
+    fieldset {
+      padding: 6px;
+    }
+    fieldset legend {
+      margin-bottom: -6px;
+    }
+  }
+
   .uncompare {
     .white-button {
       background-color: #eee;
@@ -52,13 +67,30 @@
     gap: 20px;
     margin-top: 20px;
 
-    .measurement-context-container {
+    ul.measurement-contexts {
+      list-style: none;
+      padding-left: 4px;
+    }
+
+    li.measurement-context-container {
       margin-top: 6px;
+      padding-left: 6px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+      border-left: 2px solid var(--dark-blue);
+    }
+
+    ul.modeling-results {
+      padding-left: 24px;
     }
 
     .bioreplicates-list li {
       margin-top: 6px;
     }
+  }
+
+  .highlight {
+    background-color: var(--light-blue);
   }
 
   .experiments-toc {
