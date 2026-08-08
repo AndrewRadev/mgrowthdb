@@ -3,7 +3,9 @@ import re
 import sqlalchemy as sql
 
 from app.model.orm import (
+    Experiment,
     Metabolite,
+    Project,
     Study,
     StudyMetabolite,
     StudyStrain,
@@ -53,8 +55,8 @@ class StudySearch:
 
         db_query = (
             sql.select(Study)
-            .group_by(Study.publicId)
             .join(StudyUser, isouter=True)
+            .group_by(Study.publicId)
             .where(publish_clause, publication_type_clause)
             .limit(self.per_page)
             .offset(self.offset)
@@ -75,11 +77,16 @@ class StudySearch:
             #
             like_expr = '%' + '%'.join(self.query_words) + '%'
 
+            db_query       = db_query.join(Experiment, isouter=True).join(Project)
+            db_count_query = db_count_query.join(Experiment, isouter=True).join(Project)
+
             query_clause = sql.or_(
                 Study.name.ilike(like_expr),
                 Study.authorCache.like(like_expr),
                 Study.description.ilike(like_expr),
                 Study.publicId.in_(self.query_words),
+                Experiment.publicId.in_(self.query_words),
+                Project.publicId.in_(self.query_words),
             )
 
             db_query       = db_query.where(query_clause)
@@ -143,8 +150,25 @@ class StudySearch:
 
 
 def _replace_public_id_references(text):
-    return re.sub(r'\bSMGDB0*(\d+)', _replace_study_reference, text, flags=re.IGNORECASE)
+    replacements = [
+        (r'\bSMGDB0*(\d+)', _replace_study_reference),
+        (r'\bEMGDB0*(\d+)', _replace_experiment_reference),
+        (r'\bPMGDB0*(\d+)', _replace_project_reference),
+    ]
+
+    for regex, callback in replacements:
+        text = re.sub(regex, callback, text, flags=re.IGNORECASE)
+
+    return text
 
 
 def _replace_study_reference(m):
     return f"SMGDB{int(m[1]):08d}"
+
+
+def _replace_experiment_reference(m):
+    return f"EMGDB{int(m[1]):09d}"
+
+
+def _replace_project_reference(m):
+    return f"PMGDB{int(m[1]):06d}"

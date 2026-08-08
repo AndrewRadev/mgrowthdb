@@ -71,10 +71,16 @@ class TestStudySearch(DatabaseTest):
     def test_public_id_query(self):
         admin = self.create_user(isAdmin=True)
 
-        s1  = self.create_study(publicId="SMGDB00000001")
-        s2  = self.create_study(publicId="SMGDB00000002")
+        p1 = self.create_project(publicId="PMGDB000001")
+
+        s1  = self.create_study(publicId="SMGDB00000001", projectUuid=p1.uuid)
+        s2  = self.create_study(publicId="SMGDB00000002", projectUuid=p1.uuid)
         s30 = self.create_study(publicId="SMGDB00000030")
 
+        e1 = self.create_experiment(publicId="EMGDB000000001", studyId="SMGDB00000001")
+        e2 = self.create_experiment(publicId="EMGDB000000002", studyId="SMGDB00000002")
+
+        # Different formats of identifier:
         search = StudySearch(self.db_session, user=admin, query="SMGDB00000001")
         self._assertEqualPublicIds(search.fetch_results(), [s1])
 
@@ -86,6 +92,21 @@ class TestStudySearch(DatabaseTest):
 
         search = StudySearch(self.db_session, user=admin, query="smgdb000000000000000001")
         self._assertEqualPublicIds(search.fetch_results(), [s1])
+
+        # Searching by multiple study ids:
+        search = StudySearch(self.db_session, user=admin, query="smgdb1 smgdb2")
+        self._assertEqualPublicIds(search.fetch_results(), [s2, s1])
+
+        # Searching by experiment:
+        search = StudySearch(self.db_session, user=admin, query="emgdb1")
+        self._assertEqualPublicIds(search.fetch_results(), [s1])
+
+        search = StudySearch(self.db_session, user=admin, query="emgdb2")
+        self._assertEqualPublicIds(search.fetch_results(), [s2])
+
+        # Searching by project:
+        search = StudySearch(self.db_session, user=admin, query="PMGDB000001")
+        self._assertEqualPublicIds(search.fetch_results(), [s2, s1])
 
     def test_strain_query(self):
         admin = self.create_user(isAdmin=True)
