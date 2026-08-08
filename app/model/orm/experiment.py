@@ -70,6 +70,10 @@ class Experiment(OrmBase):
         viewonly=True,
     )
 
+    @property
+    def nameWithId(self):
+        return f"[{self.publicId}] {self.name}"
+
     def get_df(self, db_session):
         from app.model.orm import (
             Bioreplicate,

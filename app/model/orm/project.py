@@ -33,6 +33,10 @@ class Project(OrmBase):
     studies:      Mapped[List['Study']]       = relationship(back_populates="project")
 
     @property
+    def nameWithId(self):
+        return f"[{self.publicId}] {self.name}"
+
+    @property
     def studyUuids(self):
         return [s.uuid for s in self.studies]
 

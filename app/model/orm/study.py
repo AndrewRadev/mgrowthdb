@@ -177,6 +177,9 @@ class Study(OrmBase):
             .limit(1)
         ).one_or_none()
 
+    def find_queried_experiments(self, query_words):
+        return [e for e in self.experiments if e.publicId in query_words]
+
     def fetch_grouped_measurement_subjects(self, db_session):
         from app.model.orm import MeasurementContext, MeasurementTechnique, StudyTechnique
 

@@ -65,6 +65,30 @@
           {% endif %}
         </p>
 
+        {% if search.query_words: %}
+          {% if study.project.publicId in search.query_words: %}
+            <p class="small">
+              <strong>Project</strong>:
+              <a href="{{ url_for('project_show_page', publicId=study.project.publicId) }}">
+                {{ study.project.nameWithId|highlight(search.query_words) }}
+              </a>
+            </p>
+          {% endif %}
+
+          {% set matching_experiments = study.find_queried_experiments(search.query_words) %}
+          {% if matching_experiments: %}
+            <p class="small">
+              {% for experiment in matching_experiments: %}
+                <strong>Experiment</strong>:
+                <a href="{{ url_for('experiment_show_page', publicId=experiment.publicId) }}">
+                  {{ experiment.nameWithId|highlight(search.query_words) }}
+                </a>
+                <br>
+              {% endfor %}
+            </p>
+          {% endif %}
+        {% endif %}
+
         <p class="small">
           {% if study.studyTechniques: %}
             <strong>Measurement techniques</strong>:
