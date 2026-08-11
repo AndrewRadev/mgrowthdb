@@ -9,6 +9,7 @@ from flask import (
     session,
 )
 import sqlalchemy as sql
+import pandas as pd
 
 from app.model.orm import MeasurementContext, ModelingResult
 from app.view.forms.comparative_chart_form import ComparativeChartForm
@@ -76,6 +77,33 @@ def comparison_show_page():
         chart_form=chart_form,
         data_source=data_source,
     )
+
+
+def comparison_download_csv():
+    url_context_ids = util.parse_comma_separated_request_ids('l')
+    url_context_ids += util.parse_comma_separated_request_ids('r')
+
+    if url_context_ids:
+        context_ids = url_context_ids
+    else:
+        compare_data = init_compare_data(session)
+        context_ids = compare_data['contexts']
+
+    measurement_contexts = g.db_session.scalars(
+        sql.select(MeasurementContext)
+        .where(MeasurementContext.id.in_(context_ids))
+    ).all()
+
+    dfs = []
+    for mc in measurement_contexts:
+        df = mc.get_df(g.db_session)
+        df.insert(0, 'measurementContext', mc.id)
+        df.insert(0, 'bioreplicate', mc.bioreplicate.name)
+        df.insert(0, 'experiment', mc.experiment.publicId)
+        df.insert(0, 'study', mc.experiment.study.publicId)
+        dfs.append(df)
+
+    return pd.concat(dfs).to_csv(index=False)
 
 
 def comparison_update_json(action):

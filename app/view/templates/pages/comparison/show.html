@@ -24,18 +24,35 @@
         the checkbox to add them to the chart and compare values.
       </p>
 
-      {% if data_source == 'session': %}
-        <div style="float: right;">
-          {{ post_button("Clear collected comparisons", url_for("comparison_clear_action")) }}
-        </div>
-        <div style="clear: both;"></div>
-      {% else: %}
+      {% if data_source == 'link' %}
         <p class="notice-message">
           Currently showing a comparison between specific measurements from a
           permalink. Click on the "Compare" button in the side menu to show
           your collected measurements instead.
         </p>
       {% endif %}
+
+      <div class="flex-row flex-gap-10 margin-top-10">
+        <div>
+          <a
+            download
+            class="green-button"
+            href="{{ url_for("comparison_download_csv", l=request.args.get('l'), r=request.args.get('r')) }}">
+            <span class="icon icon-inline icon-download-white"></span>
+            Download measurement data
+          </a>
+        </div>
+
+        {% if data_source == 'session': %}
+          <div class="flex-right">
+            <form action="{{ url_for("comparison_clear_action") }}" method="POST">
+              <button class="white-button" type="submit">
+                🧹 Clear collected comparisons
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
 
       <form class="js-chart-form">
         {% for (study, records) in records_by_study.items(): %}
