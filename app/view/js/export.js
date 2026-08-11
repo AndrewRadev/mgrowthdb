@@ -17,7 +17,7 @@ Page('.export-page', function($page) {
   });
 
   $page.on('change', '.js-export-options-inputs input,select', updateFilter)
-  $page.on('keyup', 'input[name=q]', _.debounce(updateFilter, 200));
+  $page.on('keyup', 'input[name=q]', _.debounce(updateFilter, 300));
   $page.on('change', select2Selectors, updateFilter)
 
   $page.on('submit', '.js-filter-form', function(e) {

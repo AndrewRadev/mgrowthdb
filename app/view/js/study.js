@@ -1,13 +1,15 @@
 Page('.study-page', function($page) {
   initCompareButtons($page);
 
+  let lastUpdateId = 0;
+
   let $experiments = $('.js-experiments');
   let select2Selectors = '.js-strain-select,.js-metabolite-select,.js-modeling-type-select'
 
   if ($experiments.length > 0) {
     let $filterForm  = $page.find('.js-filter-form');
 
-    $page.on('keyup', 'input[name=q]', _.debounce(updateFilter, 200));
+    $page.on('keyup', 'input[name=q]', _.debounce(updateFilter, 300));
     $page.on('change', select2Selectors, updateFilter)
 
     $filterForm.on('submit', function(e) {
@@ -35,12 +37,13 @@ Page('.study-page', function($page) {
         width: '100%',
         templateResult: select2Highlighter,
       });
-
-      $select.trigger('change');
     });
   }
 
   function updateFilter() {
+    let updateId = lastUpdateId + 1;
+    lastUpdateId = updateId;
+
     let $filterForm  = $page.find('.js-filter-form');
     let $experiments = $page.find('.js-experiments');
 
@@ -49,6 +52,12 @@ Page('.study-page', function($page) {
 
     $filterForm.ajaxSubmit({
       success: function(response) {
+        if (updateId != lastUpdateId) {
+          // Then this callback was not the last triggered one, cancel it to
+          // avoid overwriting a later trigger:
+          return;
+        }
+
         $experiments.html(response);
         $searchInput.removeClass('loading-input');
         initTooltips();
