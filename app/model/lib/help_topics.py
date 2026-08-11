@@ -54,7 +54,9 @@ class HelpTopics:
             excerpts = []
             ranges = []
 
-            for match in re.finditer(regex, text):
+            title = name.replace('-', ' ').title()
+
+            for match in re.finditer(regex, title + ' ' + text):
                 start_index = max(match.start() - 30, 0)
                 end_index   = min(match.end() + 30, len(text))
 
