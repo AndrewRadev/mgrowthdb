@@ -69,6 +69,7 @@ class MeasurementContext(OrmBase):
     ), deferred=True)
 
     growthRate: Mapped[Decimal] = mapped_column(sql.Numeric(20, 2), nullable=True)
+    auc:        Mapped[Decimal] = mapped_column(sql.Numeric(21, 2), nullable=True)
 
     @property
     def readyModelingResults(self):
@@ -164,3 +165,21 @@ class MeasurementContext(OrmBase):
         db_session._measurement_subject_cache[cache_key] = subject
 
         return db_session._measurement_subject_cache[cache_key]
+
+    def update_auc(self):
+        last_time  = 0
+        last_value = 0.0
+        auc        = 0.0
+
+        for measurement in sorted(self.measurements, key=lambda m: m.timeInSeconds):
+            if measurement.value is None:
+                continue
+            value = float(measurement.value)
+            time = measurement.timeInSeconds
+
+            auc += (value + last_value) * (time - last_time) / 2.0
+
+            last_time = time
+            last_value = value
+
+        self.auc = auc
