@@ -167,19 +167,35 @@ class MeasurementContext(OrmBase):
         return db_session._measurement_subject_cache[cache_key]
 
     def update_auc(self):
-        last_time  = 0
-        last_value = 0.0
-        auc        = 0.0
+        self.auc = self.calculate_auc()
+
+    def calculate_auc(self):
+        last_time  = None
+        last_value = None
+        auc_values = []
 
         for measurement in sorted(self.measurements, key=lambda m: m.timeInSeconds):
             if measurement.value is None:
                 continue
+
+            if measurement.value <= 0.0:
+                continue
+
             value = float(measurement.value)
             time = measurement.timeInSeconds
 
-            auc += (value + last_value) * (time - last_time) / 2.0
+            # Skip the first measurement and just record it
+            if last_time is None:
+                last_time = time
+                last_value = value
+                continue
+
+            auc_values.append((value + last_value) * (time - last_time) / 2.0)
 
             last_time = time
             last_value = value
 
-        self.auc = auc
+        if auc_values:
+            return np.sum(auc_values)
+        else:
+            return 0.0

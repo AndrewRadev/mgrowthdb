@@ -8,7 +8,7 @@ def pp(input):
     print(json.dumps(input, indent=2))
 
 
-def calculate_api_interactions(metric, experiment_data, strain_associations):
+def calculate_api_interactions(metric, experiment_data, strain_associations, short_names):
     """
     Calculate interactions between the given strains from experiment data
     retrieved though the API
@@ -21,6 +21,9 @@ def calculate_api_interactions(metric, experiment_data, strain_associations):
     :param strain_associations:
         List of tuples, each of which has the form:
         (<strain name>, <measurement label>, <list of experiment names>)
+    :param short_names:
+        A dictionary of strain names to their short names for visualization
+        purposes.
     """
     assert(metric in ('growthRate', 'auc'))
 
@@ -30,7 +33,7 @@ def calculate_api_interactions(metric, experiment_data, strain_associations):
     strains, mono, pairs = _collect_cultures(metric, experiment_data, strain_associations)
     pairs = _calculate_ratios(strains, mono, pairs)
 
-    _save_chart("tmp.dot", pairs)
+    _save_chart("tmp.dot", pairs, short_names)
 
     return pairs
 
@@ -55,6 +58,9 @@ def _collect_cultures(metric, experiment_data, strain_associations):
         co_measurements = []
 
         for experiment in experiment_data:
+            if experiment['name'] not in experiment_names:
+                continue
+
             experiment_strain_names = {s['name'] for s in experiment['communityStrains']}
             experiment_strain_names = all_strains.intersection(experiment_strain_names)
 
@@ -79,6 +85,7 @@ def _collect_cultures(metric, experiment_data, strain_associations):
                         continue
 
                     value = measurement_context[metric]
+                    print(measurement_label, f"{value:e}")
 
                     if other_strain:
                         pairs[f"{strain} with {other_strain}"].append(value)
@@ -99,7 +106,10 @@ def _calculate_ratios(strains, mono, pairs):
             pair_values = pairs[f"{strain} with {other_strain}"]
             mono_values = mono[strain]
 
-            log_ratio = float(np.log(np.mean(pair_values) / np.mean(mono_values)))
+            if len(pair_values) == 0:
+                continue
+
+            log_ratio = float(np.log10(np.mean(pair_values) / np.mean(mono_values)))
             p_value = ttest_ind(pair_values, mono_values).pvalue
 
             if p_value < 0.001:
@@ -116,7 +126,7 @@ def _calculate_ratios(strains, mono, pairs):
     return ratios
 
 
-def _save_chart(filename, pairs):
+def _save_chart(filename, pairs, short_names):
     with open(filename, 'w') as f:
         print("""
             digraph G {
@@ -133,13 +143,20 @@ def _save_chart(filename, pairs):
             if p_symbol == "":
                 continue
 
-            size = z_scores[i] + 1
+            size = (z_scores[i] + 1.1) * 1.5
 
             if log_ratio > 0:
                 color = "darkgreen"
             elif log_ratio <= 0:
                 color = "brown"
 
-            print(f"\"{first}\" -> \"{second}\" [label=\"{p_symbol}\", penwidth=\"{size}\", color=\"{color}\"]", file=f)
+            edge = ' -> '.join((short_names[second], short_names[first]))
+            label = ', '.join((
+                f"label=\"{p_symbol}\"",
+                f"penwidth=\"{size}\"",
+                f"color=\"{color}\"",
+            ))
+
+            print(f"{edge} [{label}]", file=f)
 
         print("}", file=f)

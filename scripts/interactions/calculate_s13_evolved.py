@@ -30,30 +30,18 @@ strain_associations = [
     (
         "Agrobacterium tumefaciens str. MWF001",
         "Agrobacterium tumefaciens str. MWF001 plate counts",
-        ["At", "At+Ct", "At+Oa", "At+Ms"],
+        ["Evolved At", "Evolved AtCt"],
     ),
     (
         "Comamonas testosteroni str. MWF001",
         "Comamonas testosteroni str. MWF001 plate counts",
-        ["Ct", "At+Ct", "CtOa", "MsOa"],
-    ),
-    (
-        "Microbacterium saperdae str. MWF001",
-        "Microbacterium saperdae str. MWF001 plate counts",
-        ["Ms", "At+Ms", "Ct+Ms", "MsOa"],
-    ),
-    (
-        "Ochrobactrum anthropi str. MWF001",
-        "Ochrobactrum anthropi str. MWF001 plate counts",
-        ["Oa", "At+Oa", "CtOa", "MsOa"],
+        ["Evolved Ct", "Evolved AtCt"],
     ),
 ]
 
 short_names = {
     "Agrobacterium tumefaciens str. MWF001": "At",
     "Comamonas testosteroni str. MWF001": "Ct",
-    "Microbacterium saperdae str. MWF001": "Ms",
-    "Ochrobactrum anthropi str. MWF001": "Oa",
 }
 
 interactions = calculate_api_interactions(
