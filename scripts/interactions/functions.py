@@ -1,4 +1,7 @@
 import json
+import tempfile
+import subprocess
+import requests
 
 import numpy as np
 from scipy.stats import ttest_ind, zscore
@@ -8,7 +11,19 @@ def pp(input):
     print(json.dumps(input, indent=2))
 
 
-def calculate_api_interactions(metric, experiment_data, strain_associations, short_names):
+def get_json(root_url, endpoint):
+    response = requests.get(f"{root_url}/{endpoint}.json")
+    response.raise_for_status()
+    return response.json()
+
+
+def get_df(root_url, endpoint):
+    response = requests.get(f"{root_url}/{endpoint}.csv")
+    response.raise_for_status()
+    return pd.read_csv(BytesIO(response.content))
+
+
+def calculate_api_interactions(metric, experiment_data, strain_associations):
     """
     Calculate interactions between the given strains from experiment data
     retrieved though the API
@@ -21,9 +36,6 @@ def calculate_api_interactions(metric, experiment_data, strain_associations, sho
     :param strain_associations:
         List of tuples, each of which has the form:
         (<strain name>, <measurement label>, <list of experiment names>)
-    :param short_names:
-        A dictionary of strain names to their short names for visualization
-        purposes.
     """
     assert(metric in ('growthRate', 'auc'))
 
@@ -32,8 +44,6 @@ def calculate_api_interactions(metric, experiment_data, strain_associations, sho
 
     strains, mono, pairs = _collect_cultures(metric, experiment_data, strain_associations)
     pairs = _calculate_ratios(strains, mono, pairs)
-
-    _save_chart("tmp.dot", pairs, short_names)
 
     return pairs
 
@@ -85,7 +95,6 @@ def _collect_cultures(metric, experiment_data, strain_associations):
                         continue
 
                     value = measurement_context[metric]
-                    print(measurement_label, f"{value:e}")
 
                     if other_strain:
                         pairs[f"{strain} with {other_strain}"].append(value)
@@ -126,8 +135,44 @@ def _calculate_ratios(strains, mono, pairs):
     return ratios
 
 
-def _save_chart(filename, pairs, short_names):
-    with open(filename, 'w') as f:
+def save_html_table(output_filename, pairs, short_names={}):
+    with open(output_filename, 'w') as f:
+        print("""
+            <style>
+              th, td {
+                border: 1px solid black;
+                padding: 6px;
+              }
+            </style>
+
+            <table>
+              <tr>
+                <th>Focal strain</th>
+                <th>Other strain</th>
+                <th>Log ratio</th>
+                <th>P-value</th>
+                <th></th>
+              </tr>
+        """, file=f)
+
+        for first, second, log_ratio, p_value, p_symbol in sorted(pairs):
+            print(f"""
+                <tr>
+                    <td>{short_names.get(first, first)}</td>
+                    <td>{short_names.get(second, second)}</td>
+                    <td>{log_ratio:.5f}</td>
+                    <td>{p_value:.5f}</td>
+                    <td>{p_symbol}</td>
+                </tr>
+            """, file=f)
+
+        print("""
+            </table>
+        """, file=f)
+
+
+def save_chart(output_filename, pairs, short_names):
+    with tempfile.NamedTemporaryFile(mode='w', delete_on_close=False) as f:
         print("""
             digraph G {
             graph [layout=dot rankdir=TD]
@@ -136,8 +181,6 @@ def _save_chart(filename, pairs, short_names):
 
         abs_log_ratios = [np.abs(log_ratio) for (_, _, log_ratio, _, _) in pairs]
         z_scores = zscore(abs_log_ratios)
-
-        print(z_scores)
 
         for i, (first, second, log_ratio, p_value, p_symbol) in enumerate(pairs):
             if p_symbol == "":
@@ -160,3 +203,6 @@ def _save_chart(filename, pairs, short_names):
             print(f"{edge} [{label}]", file=f)
 
         print("}", file=f)
+        f.close()
+
+        subprocess.run(['dot', '-Tsvg', f.name, f"-o{output_filename}"])
