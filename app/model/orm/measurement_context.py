@@ -196,6 +196,6 @@ class MeasurementContext(OrmBase):
             last_value = value
 
         if auc_values:
-            return np.sum(auc_values)
+            return sum(auc_values)
         else:
             return 0.0
