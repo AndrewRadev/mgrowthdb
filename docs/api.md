@@ -33,7 +33,7 @@ Successful results will be returned with an HTTP status code of `200`. A request
 
 ### Types of values
 
-Decimal values will be encoded as strings, since JSON doesn't technically support floating-point values.
+Decimal values will be encoded as strings, since JSON doesn't technically support floating-point values. The strings may be in exponential format. JSON parsers should be able to handle the conversion automatically.
 
 Timestamps are encoded as ISO 8601-formatted strings. All timestamps should be in UTC (timezone +00:00). In the structure descriptions below, they'll be indicated as `datetime`.
 
@@ -87,9 +87,14 @@ You can use the "search" endpoint to locate studies with specific properties. At
     id: number,
     experimentId: "EMGDBxxx",
     studyId: "SMGDBxxx",
+    bioreplicateId: number,
+    bioreplicateName: string,
     techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
     techniqueOriginalUnits: Unit,
     techniqueUnits: Unit,
+    label: string,
+    growthRate?: number,
+    auc?: number,
     subject: {
       type: "bioreplicate"|"strain"|"metabolite",
       name: string,
@@ -126,9 +131,14 @@ Output:
   "measurementTimeUnits": "h",
   "measurementContexts": [
     {
-      "id": 3478,
-      "experimentId": "EMGDB000000028",
+      "id": 3460,
+      "experimentId": "EMGDB000000026",
       "studyId": "SMGDB00000004",
+      "bioreplicateId": 60339,
+      "bioreplicateName": "FP_14",
+      "growthRate": "0.676",
+      "auc": "1.627100e+14",
+      "label": "Faecalibacterium prausnitzii A2-165 qPCR counts",
       "techniqueType": "qpcr",
       "techniqueOriginalUnits": "Cells/mL",
       "techniqueUnits": "Cells/mL",
@@ -140,15 +150,20 @@ Output:
     },
     ["...13 more entries..."],
     {
-      "id": 5256,
+      "id": 17009,
       "experimentId": "EMGDB000000042",
       "studyId": "SMGDB00000005",
+      "bioreplicateId": 62266,
+      "bioreplicateName": "A6_CS2_V7",
+      "growthRate": null,
+      "auc": "5.663950e+07",
+      "label": "Faecalibacterium duncaniae A2-165 FC counts",
       "techniqueType": "fc",
       "techniqueOriginalUnits": "Cells/μL",
       "techniqueUnits": "Cells/mL",
       "subject": {
         "type": "strain",
-        "name": "Faecalibacterium duncaniae",
+        "name": "Faecalibacterium duncaniae A2-165",
         "NCBId": 411483
       }
     },
@@ -179,9 +194,14 @@ curl -s "$ROOT_URL/api/v1/search.json?metaboliteChebiIds=17012"
   "measurementTimeUnits": "h",
   "measurementContexts": [
     {
-      "id": 3107,
+      "id": 13844,
       "experimentId": "EMGDB000000021",
       "studyId": "SMGDB00000002",
+      "bioreplicateId": 61248,
+      "bioreplicateName": "RI_MUCIN_1",
+      "growthRate": null,
+      "auc": "5.550480e+05",
+      "label": "N-acetylneuraminic acid",
       "techniqueType": "metabolite",
       "techniqueOriginalUnits": "mM",
       "techniqueUnits": "mM",
@@ -345,9 +365,13 @@ Output structure (note that compartment values encoded as decimal numbers are re
       id: number,
       experimentId: "EMGDBxxx",
       studyId: "SMGDBxxx",
+      bioreplicateId: number,
+      bioreplicateName: string,
       techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
       techniqueOriginalUnits: Unit,
       techniqueUnits: Unit,
+      growthRate?: number,
+      auc?: number,
       subject: {
         type: "bioreplicate"|"strain"|"metabolite",
         name: string,
@@ -428,23 +452,27 @@ Example output:
       "isAverage": true,
       "measurementContexts": [
         {
-          "id": 1431,
+          "id": 14060,
+          "growthRate": "0.336",
+          "auc": "4.045930e+05",
+          "label": "Community OD",
           "techniqueType": "od",
           "techniqueOriginalUnits": "",
           "techniqueUnits": "",
           "subject": {
-            "id": 60111,
             "type": "bioreplicate",
             "name": "Average(BT_MUCIN)"
           }
         },
         {
-          "id": 1432,
+          "id": 14061,
+          "growthRate": null,
+          "auc": "2.233690e+06",
+          "label": "Community pH",
           "techniqueType": "ph",
           "techniqueOriginalUnits": "",
           "techniqueUnits": "",
           "subject": {
-            "id": 60111,
             "type": "bioreplicate",
             "name": "Average(BT_MUCIN)"
           }
@@ -475,6 +503,7 @@ Metadata structure:
   techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
   techniqueOriginalUnits: Unit,
   techniqueUnits: Unit,
+  growthRate?: number,
   subject: {
     type: "bioreplicate"|"strain"|"metabolite",
     name: string,
@@ -507,6 +536,7 @@ Example output:
   "measurementCount": 14,
   "measurementTimeUnits": "h"
   "modelPredictionIds": [],
+  "growthRate": null,
   "subject": {
     "type": "strain",
     "name": "Bacteroides thetaiotaomicron VPI-5482",
@@ -560,6 +590,7 @@ curl -s "$ROOT_URL/api/v1/measurement-context/1314.csv"
   "measurementCount": 14,
   "measurementTimeUnits": "h"
   "modelPredictionIds": [],
+  "growthRate": null,
   "subject": {
     "type": "metabolite",
     "name": "succinate",
@@ -603,9 +634,15 @@ Output structure:
   measurementTimeUnits: "h",
   measurementContexts: [{
     id: number,
+    experimentId: "EMGDBxxx",
+    studyId: "SMGDBxxx",
+    bioreplicateId: number,
+    bioreplicateName: string,
     techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
     techniqueOriginalUnits: Unit,
     techniqueUnits: Unit,
+    growthRate?: number,
+    auc?: number,
     subject: {
       type: "bioreplicate"|"strain"|"metabolite",
       name: string,
@@ -619,81 +656,105 @@ Output structure:
 The CSV for a biological replicate includes additional context about the subject of each measurement: its type and name, and external database identifier, if applicable. This information can be seen in the JSON metadata, but it's included in the CSV for convenience.
 
 ```bash
-curl -s "$ROOT_URL/api/v1/bioreplicate/1314.json"
-curl -s "$ROOT_URL/api/v1/bioreplicate/1314.csv"
+curl -s "$ROOT_URL/api/v1/bioreplicate/61248.json"
+curl -s "$ROOT_URL/api/v1/bioreplicate/61248.csv"
 ```
 
 ```json
 {
-  "id": 60332,
-  "experimentId": "EMGDB000000023",
+  "id": 61248,
+  "experimentId": "EMGDB000000021",
   "studyId": "SMGDB00000002",
-  "name": "Average(BTRI_MUCIN)",
-  "biosampleUrl": null,
-  "isAverage": true,
+  "name": "RI_MUCIN_1",
+  "biosampleUrl": "",
+  "isAverage": false,
   "measurementTimeUnits": "h",
   "measurementContexts": [
     {
-      "id": 3364,
+      "id": 13646,
+      "growthRate": "0.238",
+      "auc": "1.178930e+05",
+      "label": "Community OD",
       "techniqueType": "od",
       "techniqueOriginalUnits": "",
       "techniqueUnits": "",
       "subject": {
         "type": "bioreplicate",
-        "name": "Average(BTRI_MUCIN)"
+        "name": "RI_MUCIN_1"
       }
     },
-    ["...17 more entries..."]
+    ["...13 more entries..."]
   ]
 }
 ```
 
 ```
 measurementContextId,subjectType,subjectName,subjectExternalId,time,value,std
-3328,bioreplicate,Average(BT_WC),,0.0,0.006,0.001
-3328,bioreplicate,Average(BT_WC),,4.0,0.034,0.0
-3328,bioreplicate,Average(BT_WC),,8.0,0.406,0.001
-3328,bioreplicate,Average(BT_WC),,12.0,0.796,0.002
-3328,bioreplicate,Average(BT_WC),,16.0,0.965,0.001
-3328,bioreplicate,Average(BT_WC),,24.0,0.705,0.002
-3328,bioreplicate,Average(BT_WC),,28.0,0.659,0.003
-3328,bioreplicate,Average(BT_WC),,32.0,0.657,0.0
-3328,bioreplicate,Average(BT_WC),,38.0,0.868,0.006
-3328,bioreplicate,Average(BT_WC),,48.0,0.909,0.003
-3328,bioreplicate,Average(BT_WC),,60.0,0.921,0.004
-3328,bioreplicate,Average(BT_WC),,72.0,0.92,0.002
-3328,bioreplicate,Average(BT_WC),,96.0,0.909,0.002
-3328,bioreplicate,Average(BT_WC),,120.0,0.905,0.001
-3329,bioreplicate,Average(BT_WC),,0.0,6.613,0.019
-3329,bioreplicate,Average(BT_WC),,4.0,6.623,0.019
-3329,bioreplicate,Average(BT_WC),,8.0,6.15,0.0
-3329,bioreplicate,Average(BT_WC),,12.0,5.42,0.0
-3329,bioreplicate,Average(BT_WC),,16.0,5.073,0.024
-3329,bioreplicate,Average(BT_WC),,24.0,5.027,0.019
-3329,bioreplicate,Average(BT_WC),,28.0,4.97,0.0
-3329,bioreplicate,Average(BT_WC),,32.0,4.983,0.019
-3329,bioreplicate,Average(BT_WC),,38.0,5.023,0.019
-3329,bioreplicate,Average(BT_WC),,48.0,5.14,0.0
-3329,bioreplicate,Average(BT_WC),,60.0,5.09,0.0
-3329,bioreplicate,Average(BT_WC),,72.0,5.09,0.0
-3329,bioreplicate,Average(BT_WC),,96.0,5.14,0.0
-3329,bioreplicate,Average(BT_WC),,120.0,5.113,0.024
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,0.0,2619.0,477.072
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,4.0,36072.333,1522.018
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,12.0,1003028.333,30201.503
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,16.0,1106725.0,85176.706
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,24.0,857815.0,62848.275
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,28.0,778893.333,47670.388
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,32.0,962915.0,55489.511
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,38.0,675345.0,26650.222
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,48.0,348478.333,102905.344
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,60.0,111021.667,28523.155
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,72.0,45606.667,13966.714
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,96.0,13413.333,4155.786
-3330,strain,Bacteroides thetaiotaomicron VPI-5482,NCBI:226186,120.0,3215.0,461.808
-3331,metabolite,pyruvate,CHEBI:15361,0.0,9.663,0.061
-3331,metabolite,pyruvate,CHEBI:15361,4.0,9.69,0.127
-[...218 more lines...]
+13646,bioreplicate,RI_MUCIN_1,,0.0,0.017,
+13646,bioreplicate,RI_MUCIN_1,,4.0,0.017,
+13646,bioreplicate,RI_MUCIN_1,,8.0,0.015,
+13646,bioreplicate,RI_MUCIN_1,,12.0,0.029,
+13646,bioreplicate,RI_MUCIN_1,,16.0,0.161,
+13646,bioreplicate,RI_MUCIN_1,,20.0,0.329,
+13646,bioreplicate,RI_MUCIN_1,,24.0,0.521,
+13646,bioreplicate,RI_MUCIN_1,,28.0,0.726,
+13646,bioreplicate,RI_MUCIN_1,,32.0,0.655,
+13646,bioreplicate,RI_MUCIN_1,,36.0,0.482,
+13646,bioreplicate,RI_MUCIN_1,,40.0,0.403,
+13646,bioreplicate,RI_MUCIN_1,,48.0,0.32,
+13646,bioreplicate,RI_MUCIN_1,,56.0,0.262,
+13646,bioreplicate,RI_MUCIN_1,,72.0,0.228,
+13646,bioreplicate,RI_MUCIN_1,,96.0,0.23,
+13646,bioreplicate,RI_MUCIN_1,,120.0,0.231,
+13647,bioreplicate,RI_MUCIN_1,,0.0,6.65,
+13647,bioreplicate,RI_MUCIN_1,,4.0,6.61,
+13647,bioreplicate,RI_MUCIN_1,,8.0,6.65,
+13647,bioreplicate,RI_MUCIN_1,,12.0,6.65,
+13647,bioreplicate,RI_MUCIN_1,,16.0,6.53,
+13647,bioreplicate,RI_MUCIN_1,,20.0,6.27,
+13647,bioreplicate,RI_MUCIN_1,,24.0,5.88,
+13647,bioreplicate,RI_MUCIN_1,,28.0,5.63,
+13647,bioreplicate,RI_MUCIN_1,,32.0,5.8,
+13647,bioreplicate,RI_MUCIN_1,,36.0,5.84,
+13647,bioreplicate,RI_MUCIN_1,,40.0,5.8,
+13647,bioreplicate,RI_MUCIN_1,,48.0,5.8,
+13647,bioreplicate,RI_MUCIN_1,,56.0,5.84,
+13647,bioreplicate,RI_MUCIN_1,,72.0,5.93,
+13647,bioreplicate,RI_MUCIN_1,,96.0,5.93,
+13647,bioreplicate,RI_MUCIN_1,,120.0,5.89,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,0.0,511000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,4.0,15000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,8.0,164000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,12.0,3950000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,16.0,75840000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,20.0,115960000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,24.0,272940000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,28.0,502510000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,32.0,500270000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,36.0,346240000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,40.0,319180000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,56.0,97855000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,72.0,51150000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,96.0,38280000.0,
+13701,strain,Roseburia intestinalis L1-82,NCBI:536231,120.0,31990000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,0.0,0.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,4.0,1200000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,8.0,750000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,12.0,4250000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,16.0,7550000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,20.0,21300000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,24.0,126550000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,28.0,169250000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,32.0,169400000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,36.0,111200000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,40.0,88350000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,56.0,26600000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,72.0,18800000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,96.0,13750000.0,
+13703,strain,Roseburia intestinalis L1-82,NCBI:536231,120.0,12350000.0,
+13844,metabolite,N-acetylneuraminic acid,CHEBI:17012,0.0,1.33,
+13844,metabolite,N-acetylneuraminic acid,CHEBI:17012,4.0,1.33,
+[...130 more lines...]
 ```
 
 ## Model predictions
