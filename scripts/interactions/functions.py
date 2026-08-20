@@ -97,9 +97,9 @@ def _collect_cultures(metric, experiment_data, strain_associations):
                     value = measurement_context[metric]
 
                     if other_strain:
-                        pairs[f"{strain} with {other_strain}"].append(value)
+                        pairs[f"{strain} with {other_strain}"].append(float(value))
                     else:
-                        mono[strain].append(value)
+                        mono[strain].append(float(value))
 
     return all_strains, mono, pairs
 
@@ -171,8 +171,8 @@ def save_html_table(output_filename, pairs, short_names={}):
         """, file=f)
 
 
-def save_chart(output_filename, pairs, short_names):
-    with tempfile.NamedTemporaryFile(mode='w', delete_on_close=False) as f:
+def save_chart(output_prefix, pairs, short_names):
+    with open(f"{output_prefix}.dot", 'w') as f:
         print("""
             digraph G {
             graph [layout=dot rankdir=TD]
@@ -205,4 +205,4 @@ def save_chart(output_filename, pairs, short_names):
         print("}", file=f)
         f.close()
 
-        subprocess.run(['dot', '-Tsvg', f.name, f"-o{output_filename}"])
+        subprocess.run(['dot', '-Tsvg', f.name, f"-o{output_prefix}.svg"])
