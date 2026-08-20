@@ -33,7 +33,7 @@ Successful results will be returned with an HTTP status code of `200`. A request
 
 ### Types of values
 
-Decimal values will be encoded as strings, since JSON doesn't technically support floating-point values. The strings may be in exponential format. JSON parsers should be able to handle the conversion automatically.
+Decimal values will be encoded as strings, since JSON doesn't technically support floating-point values. The strings may be in exponential format. Make sure to explicitly parse them into numbers if your JSON parser does not automatically infer it.
 
 Timestamps are encoded as ISO 8601-formatted strings. All timestamps should be in UTC (timezone +00:00). In the structure descriptions below, they'll be indicated as `datetime`.
 
@@ -93,8 +93,8 @@ You can use the "search" endpoint to locate studies with specific properties. At
     techniqueOriginalUnits: Unit,
     techniqueUnits: Unit,
     label: string,
-    growthRate?: number,
-    auc?: number,
+    growthRate?: string,
+    auc?: string,
     subject: {
       type: "bioreplicate"|"strain"|"metabolite",
       name: string,
@@ -370,8 +370,8 @@ Output structure (note that compartment values encoded as decimal numbers are re
       techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
       techniqueOriginalUnits: Unit,
       techniqueUnits: Unit,
-      growthRate?: number,
-      auc?: number,
+      growthRate?: string,
+      auc?: string,
       subject: {
         type: "bioreplicate"|"strain"|"metabolite",
         name: string,
@@ -503,7 +503,8 @@ Metadata structure:
   techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
   techniqueOriginalUnits: Unit,
   techniqueUnits: Unit,
-  growthRate?: number,
+  growthRate?: string,
+  auc?: string,
   subject: {
     type: "bioreplicate"|"strain"|"metabolite",
     name: string,
@@ -641,8 +642,8 @@ Output structure:
     techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
     techniqueOriginalUnits: Unit,
     techniqueUnits: Unit,
-    growthRate?: number,
-    auc?: number,
+    growthRate?: string,
+    auc?: string,
     subject: {
       type: "bioreplicate"|"strain"|"metabolite",
       name: string,
