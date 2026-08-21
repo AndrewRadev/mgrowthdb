@@ -149,7 +149,7 @@ class Measurement(OrmBase):
 
         # Calculate AUC:
         for _, context in context_cache.items():
-            context.update_auc()
+            context.auc = context.calculate_auc()
             db_session.add(context)
 
         db_session.commit()

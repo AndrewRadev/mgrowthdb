@@ -166,9 +166,6 @@ class MeasurementContext(OrmBase):
 
         return db_session._measurement_subject_cache[cache_key]
 
-    def update_auc(self):
-        self.auc = self.calculate_auc()
-
     def calculate_auc(self):
         last_time  = None
         last_value = None
