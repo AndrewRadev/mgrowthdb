@@ -34,15 +34,16 @@ short_names = {
     "Blautia hydrogenotrophica DSM 10507":   "BH",
 }
 
-interactions = calculate_api_interactions(
-    metric='auc',
-    technique='fc',
-    experiment_pairs=experiment_pairs,
-    experiment_data=experiment_data,
-)
+for metric in ('auc', 'growthRate'):
+    interactions = calculate_api_interactions(
+        metric=metric,
+        technique='fc',
+        experiment_pairs=experiment_pairs,
+        experiment_data=experiment_data,
+    )
 
-# from scripts.interactions.functions import pp
-# pp(interactions)
+    # from scripts.interactions.functions import pp
+    # pp(interactions)
 
-save_html_table(f"s07.html", interactions, short_names)
-save_chart(f"s07", interactions, short_names)
+    save_html_table(f"s07_{metric}.html", interactions, short_names)
+    save_chart(f"s07_{metric}", interactions, short_names)

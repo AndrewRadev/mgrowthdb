@@ -175,7 +175,10 @@ def _extract_measurements(metric, technique, strain, experiment):
             if measurement_context['subject']['name'] != strain:
                 continue
 
-            measurements.append(float(measurement_context[metric]))
+            measurement = measurement_context[metric]
+            assert measurement is not None
+
+            measurements.append(float(measurement))
 
     return measurements
 
