@@ -1,4 +1,5 @@
 import json
+import requests
 from io import BytesIO
 
 import numpy as np
@@ -6,11 +7,10 @@ import pandas as pd
 from scipy.stats import ttest_ind
 
 from scripts.interactions.functions import (
-    get_json,
     calculate_api_interactions,
-    pp,
-    save_chart,
     save_html_table,
+    save_chart,
+    get_json,
 )
 
 root_url = 'http://localhost:8081/api/v1'
@@ -19,30 +19,27 @@ root_url = 'http://localhost:8081/api/v1'
 experiment_id_data = get_json(root_url, "study/SMGDB00000014")["experiments"]
 experiment_data = [get_json(root_url, f"experiment/{e["id"]}") for e in experiment_id_data]
 
-for concentration in '0.1', '0.75':
-    strain_associations = [
-        (
-            "Agrobacterium tumefaciens str. MWF001",
-            "Agrobacterium tumefaciens str. MWF001 plate counts",
-            [f"At_LA_{concentration}_mono", f"At_Ct_LA_{concentration}_co"],
-        ),
-        (
-            "Comamonas testosteroni str. MWF001",
-            "Comamonas testosteroni str. MWF001 plate counts",
-            [f"Ct_LA_{concentration}_mono", f"At_Ct_LA_{concentration}_co"],
-        ),
-    ]
+experiment_pairs = {
+    "At_LA_0.1_mono":  "At_Ct_LA_0.1_co",
+    "Ct_LA_0.1_mono":  "At_Ct_LA_0.1_co",
+    "At_LA_0.75_mono": "At_Ct_LA_0.75_co",
+    "Ct_LA_0.75_mono": "At_Ct_LA_0.75_co",
+}
 
-    interactions = calculate_api_interactions(
-        metric='auc',
-        experiment_data=experiment_data,
-        strain_associations=strain_associations,
-    )
+short_names = {
+    "Agrobacterium tumefaciens str. MWF001": "At",
+    "Comamonas testosteroni str. MWF001":    "Ct",
+}
 
-    short_names = {
-        "Agrobacterium tumefaciens str. MWF001": "At",
-        "Comamonas testosteroni str. MWF001": "Ct",
-    }
+interactions = calculate_api_interactions(
+    metric='auc',
+    technique='plates',
+    experiment_pairs=experiment_pairs,
+    experiment_data=experiment_data,
+)
 
-    save_html_table(f"s14_{concentration}.html", interactions, short_names)
-    save_chart(f"s14_{concentration}", interactions, short_names)
+from scripts.interactions.functions import pp
+pp(interactions)
+
+save_html_table(f"s14.html", interactions, short_names)
+save_chart(f"s14", interactions, short_names)
