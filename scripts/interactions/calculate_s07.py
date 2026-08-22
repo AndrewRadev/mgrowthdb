@@ -9,6 +9,7 @@ from scipy.stats import ttest_ind
 from scripts.interactions.functions import (
     calculate_api_interactions,
     save_html_table,
+    save_latex_table,
     save_chart,
     get_json,
 )
@@ -46,4 +47,5 @@ for metric in ('auc', 'growthRate'):
     # pp(interactions)
 
     save_html_table(f"s07_{metric}.html", interactions, short_names)
+    save_latex_table(f"s07_{metric}.latex", interactions, short_names)
     save_chart(f"s07_{metric}", interactions, short_names)

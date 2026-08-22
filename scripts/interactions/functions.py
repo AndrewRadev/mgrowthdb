@@ -104,6 +104,35 @@ def save_html_table(output_filename, interactions, short_names={}):
         """, file=f)
 
 
+def save_latex_table(output_filename, interactions, short_names={}):
+    with open(output_filename, 'w') as f:
+        print(r"""
+            \begin{tabular}{ ||l|l|r|r|l|| }
+            \hline
+            Focal strain & Other strain & Log-ratio & P-value & \\
+            \hline
+        """, file=f)
+
+        sorted_interactions = sorted(interactions, key=lambda i: (i['focal_strain'], i['other_strain']))
+
+        for interaction in sorted_interactions:
+            focal_strain = interaction['focal_strain']
+            other_strain = interaction['other_strain']
+
+            print(' & '.join([
+                short_names.get(focal_strain, focal_strain),
+                short_names.get(other_strain, other_strain),
+                f"{interaction['log_ratio']:.5f}",
+                f"{interaction['p_value']:.3e}",
+                interaction['p_symbol'],
+            ]) + r'\\', file=f)
+
+        print(r"""
+            \hline
+            \end{tabular}
+        """, file=f)
+
+
 def save_chart(output_prefix, interactions, short_names):
     with open(f"{output_prefix}.dot", 'w') as f:
         print("""

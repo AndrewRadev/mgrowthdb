@@ -9,6 +9,7 @@ from scipy.stats import ttest_ind
 from scripts.interactions.functions import (
     calculate_api_interactions,
     save_html_table,
+    save_latex_table,
     save_chart,
     get_json,
 )
@@ -41,5 +42,6 @@ interactions = calculate_api_interactions(
 from scripts.interactions.functions import pp
 pp(interactions)
 
-save_html_table(f"s14.html", interactions, short_names)
-save_chart(f"s14", interactions, short_names)
+save_html_table("s14.html", interactions, short_names)
+save_latex_table("s14.latex", interactions, short_names)
+save_chart("s14", interactions, short_names)
