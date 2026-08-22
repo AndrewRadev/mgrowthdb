@@ -103,7 +103,10 @@ def comparison_download_csv():
         df.insert(0, 'study', mc.experiment.study.publicId)
         dfs.append(df)
 
-    return pd.concat(dfs).to_csv(index=False)
+    if len(dfs):
+        return pd.concat(dfs).to_csv(index=False)
+    else:
+        return ""
 
 
 def comparison_update_json(action):
