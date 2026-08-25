@@ -32,33 +32,38 @@ def calculate_api_interactions(metric, technique, experiment_data, experiment_pa
         for name, group in itertools.groupby(experiment_data, lambda e: e['name'])
     }
 
-    for mono_name, co_name in experiment_pairs.items():
-        mono_exp = experiments_by_name[mono_name]
-        co_exp   = experiments_by_name[co_name]
+    for target_name, combined_name in experiment_pairs.items():
+        if not isinstance(combined_name, tuple):
+            combined_name = (combined_name,)
 
-        mono_strains = [s['name'] for s in mono_exp['communityStrains']]
-        co_strains   = [s['name'] for s in co_exp['communityStrains']]
+        target_bioreplicates   = experiments_by_name[target_name]['bioreplicates']
+        combined_bioreplicates = [
+            b
+            for name in list(combined_name)
+            for b in experiments_by_name[name]['bioreplicates']
+        ]
 
-        assert len(mono_strains) == 1
-        assert len(co_strains) == 2
+        focal_strains    = {s['name'] for s in experiments_by_name[target_name]['communityStrains']}
+        combined_strains = {s['name'] for s in experiments_by_name[combined_name[0]]['communityStrains']}
 
-        focal_strain = mono_strains[0]
-        assert focal_strain in co_strains
+        other_strains = list(combined_strains - focal_strains)
+        assert len(other_strains) == 1
 
-        other_strain = list(set(co_strains) - {focal_strain})[0]
+        other_strain = other_strains[0]
 
-        mono_values = _extract_measurements(metric, technique, focal_strain, mono_exp)
-        co_values   = _extract_measurements(metric, technique, focal_strain, co_exp)
+        for focal_strain in focal_strains:
+            mono_values = _extract_measurements(metric, technique, focal_strain, target_bioreplicates)
+            co_values   = _extract_measurements(metric, technique, focal_strain, combined_bioreplicates)
 
-        log_ratio, p_value, p_symbol = _calculate_ratio(mono_values, co_values)
+            log_ratio, p_value, p_symbol = _calculate_ratio(mono_values, co_values)
 
-        interactions.append({
-            'focal_strain': focal_strain,
-            'other_strain': other_strain,
-            'log_ratio':    log_ratio,
-            'p_value':      p_value,
-            'p_symbol':     p_symbol,
-        })
+            interactions.append({
+                'focal_strain': focal_strain,
+                'other_strain': other_strain,
+                'log_ratio':    log_ratio,
+                'p_value':      p_value,
+                'p_symbol':     p_symbol,
+            })
 
     return interactions
 
@@ -133,7 +138,7 @@ def save_latex_table(output_filename, interactions, short_names={}):
         """, file=f)
 
 
-def save_chart(output_prefix, interactions, short_names):
+def save_chart(output_prefix, interactions, short_names={}):
     with open(f"{output_prefix}.dot", 'w') as f:
         print("""
             digraph G {
@@ -162,7 +167,7 @@ def save_chart(output_prefix, interactions, short_names):
             first = short_names.get(focal_strain, focal_strain)
             second = short_names.get(other_strain, other_strain)
 
-            edge = ' -> '.join((second, first))
+            edge = f'"{second}" -> "{first}"'
             label = ', '.join((
                 f"label=\"{interaction['p_symbol']}\"",
                 f"penwidth=\"{size}\"",
@@ -187,10 +192,10 @@ def pp(input):
     print(json.dumps(input, indent=2))
 
 
-def _extract_measurements(metric, technique, strain, experiment):
+def _extract_measurements(metric, technique, strain, bioreplicates):
     measurements = []
 
-    for bioreplicate in experiment['bioreplicates']:
+    for bioreplicate in bioreplicates:
         # Ignore computed bioreplicates
         if bioreplicate['isAverage']:
             continue
