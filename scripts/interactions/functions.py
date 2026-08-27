@@ -4,7 +4,7 @@ import requests
 import itertools
 
 import numpy as np
-from scipy.stats import ttest_ind, zscore
+from scipy.stats import ttest_ind, zscore, false_discovery_control
 
 
 def calculate_api_interactions(metric, technique, experiment_data, experiment_pairs):
@@ -32,7 +32,7 @@ def calculate_api_interactions(metric, technique, experiment_data, experiment_pa
         for name, group in itertools.groupby(experiment_data, lambda e: e['name'])
     }
 
-    for target_name, combined_name in experiment_pairs.items():
+    for target_name, combined_name in experiment_pairs:
         if not isinstance(combined_name, tuple):
             combined_name = (combined_name,)
 
@@ -85,6 +85,8 @@ def save_html_table(output_filename, interactions, short_names={}):
                 <th>Log ratio</th>
                 <th>P-value</th>
                 <th></th>
+                <th>Adjusted P-value</th>
+                <th></th>
               </tr>
         """, file=f)
 
@@ -94,13 +96,26 @@ def save_html_table(output_filename, interactions, short_names={}):
             focal_strain = interaction['focal_strain']
             other_strain = interaction['other_strain']
 
+            log_ratio = interaction['log_ratio']
+            color = 'auto'
+
+            if interaction['adj_p_symbol'] != '':
+                if log_ratio > 0:
+                    color = 'green'
+                elif log_ratio < 0:
+                    color = 'red'
+
             print(f"""
                 <tr>
                     <td>{short_names.get(focal_strain, focal_strain)}</td>
                     <td>{short_names.get(other_strain, other_strain)}</td>
-                    <td>{interaction['log_ratio']:.5f}</td>
+                    <td style="color: {color}">
+                        {interaction['log_ratio']:.5f}
+                    </td>
                     <td>{interaction['p_value']:.5f}</td>
                     <td>{interaction['p_symbol']}</td>
+                    <td>{interaction['adj_p_value']:.5f}</td>
+                    <td>{interaction['adj_p_symbol']}</td>
                 </tr>
             """, file=f)
 
@@ -150,7 +165,7 @@ def save_chart(output_prefix, interactions, short_names={}):
         z_scores = zscore(abs_log_ratios)
 
         for i, interaction in enumerate(interactions):
-            if interaction['p_symbol'] == "":
+            if interaction['adj_p_symbol'] == "":
                 continue
 
             size = (z_scores[i] + 1.1) * 1.5
@@ -169,7 +184,7 @@ def save_chart(output_prefix, interactions, short_names={}):
 
             edge = f'"{second}" -> "{first}"'
             label = ', '.join((
-                f"label=\"{interaction['p_symbol']}\"",
+                f"label=\"{interaction['adj_p_symbol']}\"",
                 f"penwidth=\"{size}\"",
                 f"color=\"{color}\"",
             ))
@@ -180,6 +195,26 @@ def save_chart(output_prefix, interactions, short_names={}):
         f.close()
 
         subprocess.run(['dot', '-Tsvg', f.name, f"-o{output_prefix}.svg"])
+
+
+def adjust_p_values(interactions, method='bh'):
+    adj_p_values = false_discovery_control([i['p_value'] for i in interactions], method=method)
+
+    for i, adj_p_value in enumerate(adj_p_values):
+        interactions[i]['adj_p_value'] = adj_p_value
+
+        if adj_p_value < 0.001:
+            p_symbol = '***'
+        elif adj_p_value < 0.01:
+            p_symbol = '**'
+        elif adj_p_value < 0.05:
+            p_symbol = '*'
+        else:
+            p_symbol = ''
+
+        interactions[i]['adj_p_symbol'] = p_symbol
+
+    return interactions
 
 
 def get_json(root_url, endpoint):
@@ -219,7 +254,7 @@ def _extract_measurements(metric, technique, strain, bioreplicates):
 
 def _calculate_ratio(mono_values, co_values):
     log_ratio = float(np.log10(np.mean(co_values) / np.mean(mono_values)))
-    p_value = ttest_ind(co_values, mono_values).pvalue
+    p_value = float(ttest_ind(co_values, mono_values).pvalue)
 
     if p_value < 0.001:
         p_symbol = '***'
