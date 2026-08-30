@@ -168,6 +168,11 @@ class MeasurementContext(OrmBase):
         return db_session._measurement_subject_cache[cache_key]
 
     def calculate_auc(self):
+        """
+        This function can be called directly to calculate the AUC of a
+        measurement context, but it will normally be called when a measurement
+        context is created and its value will be stored in self.auc
+        """
         times = []
         values = []
 
