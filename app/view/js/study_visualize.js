@@ -17,7 +17,7 @@ Page('.study-visualize-page', function($page) {
   function updateTraceFilter($filterInput) {
     let query = $.trim($filterInput.val() || '').toLowerCase();
     let query_words = query.split(/\s+/);
-    let query_regex = new RegExp(query_words.map((w) => RegExp.escape(w)).join('.*?'))
+    let query_regex = new RegExp(query_words.map((w) => RegExp.escape(w)).join('.*?'), 'i')
 
     $('.js-trace-row').each(function() {
       let $row = $(this);
