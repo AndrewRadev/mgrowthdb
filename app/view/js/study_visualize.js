@@ -2,6 +2,34 @@ Page('.study-visualize-page', function($page) {
   let studyId = $page.data('studyId')
   let $form   = $page.find('.js-chart-form');
 
+  let $filterInput = $('.js-filter-input');
+  if ($filterInput.length > 0 && $filterInput.val().trim().length > 0) {
+    setTimeout(function() {
+      updateTraceFilter($filterInput);
+    }, 1);
+  }
+
+  $page.on('keyup', '.js-filter-input', _.debounce(function() {
+    let $filterInput = $(this);
+    updateTraceFilter($filterInput);
+  }, 300));
+
+  function updateTraceFilter($filterInput) {
+    let query = $.trim($filterInput.val() || '').toLowerCase();
+    let query_words = query.split(/\s+/);
+    let query_regex = new RegExp(query_words.map((w) => RegExp.escape(w)).join('.*?'), 'i')
+
+    $('.js-trace-row').each(function() {
+      let $row = $(this);
+
+      if ($row.text().match(query_regex)) {
+        $row.removeClass('hidden');
+      } else {
+        $row.addClass('hidden');
+      }
+    })
+  }
+
   updateChart($form).then(function() {
     let checkboxesChanged = false;
 
@@ -127,6 +155,32 @@ Page('.study-visualize-page', function($page) {
   function updateChart($form) {
     let selectedExperimentId = $form.find('select[name="experimentId"]').val();
 
+    if (selectedExperimentId) {
+      filterByExperiment($form, selectedExperimentId);
+    }
+
+    // Update chart:
+
+    let $chart = $form.find('.chart');
+
+    let width          = Math.floor($chart.width());
+    let scrollPosition = $(document).scrollTop();
+
+    return $.ajax({
+      url: `/study/${studyId}/visualize/chart?width=${width}`,
+      dataType: 'html',
+      method: 'POST',
+      data: $form.serializeArray(),
+      success: function(response) {
+        $chart.html(response);
+        $(document).scrollTop(scrollPosition);
+
+        updateTabLinks();
+      }
+    })
+  }
+
+  function filterByExperiment($form, selectedExperimentId) {
     $form.find('.js-experiment-container').addClass('hidden');
     $form.find('.js-trace-row').addClass('hidden');
 
@@ -175,26 +229,6 @@ Page('.study-visualize-page', function($page) {
       // Show everything
       $form.find('.js-trace-row').removeClass('hidden');
     }
-
-    // Update chart:
-
-    let $chart = $form.find('.chart');
-
-    let width          = Math.floor($chart.width());
-    let scrollPosition = $(document).scrollTop();
-
-    return $.ajax({
-      url: `/study/${studyId}/visualize/chart?width=${width}`,
-      dataType: 'html',
-      method: 'POST',
-      data: $form.serializeArray(),
-      success: function(response) {
-        $chart.html(response);
-        $(document).scrollTop(scrollPosition);
-
-        updateTabLinks();
-      }
-    })
   }
 
   // Take the permalink parameters, set them onto the tab links:

@@ -1,7 +1,17 @@
 {% macro render_chart_form_averages(form, study) %}
 
+  <div class="form-row margin-bottom-10">
+    <label class="full">
+      <span>Filter</span>
+      <input
+          type="text"
+          name="traceFilter"
+          class="form-input-blue form-input-full js-filter-input" />
+    </label>
+  </div>
+
   <div class="trace-group experiment-container scroll-shadows" style="max-height: 400px;">
-    <div class="form-row js-trace-row">
+    <div class="form-row">
       <button
           type="button"
           class="white-button small-button smaller js-select-all">

@@ -147,6 +147,13 @@ class Measurement(OrmBase):
 
         db_session.commit()
 
+        # Calculate AUC:
+        for _, context in context_cache.items():
+            context.auc = context.calculate_auc()
+            db_session.add(context)
+
+        db_session.commit()
+
         # Prune measurement contexts that only have empty values:
         measurements = []
 

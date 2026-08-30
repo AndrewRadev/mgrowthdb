@@ -135,8 +135,10 @@ def experiment_json(publicId):
                 'measurementContexts': [
                     {
                         'id': mc.id,
+                        'growthRate': mc.growthRate and float(mc.growthRate),
+                        'auc': mc.auc,
                         **_measurement_technique_fields(mc),
-                        **_measurement_subject_fields(mc)
+                        **_measurement_subject_fields(mc),
                     }
                     for mc in b.measurementContexts
                 ]
@@ -177,6 +179,8 @@ def measurement_context_json(id):
         'measurementCount':     measurement_count,
         'measurementTimeUnits': 'h',
         'modelPredictionIds':   [mr.id for mr in measurement_context.modelingResults],
+        'growthRate':           measurement_context.growthRate and float(measurement_context.growthRate),
+        'auc':                  measurement_context.auc,
         **_measurement_technique_fields(measurement_context),
         **_measurement_subject_fields(measurement_context),
     }
@@ -358,7 +362,9 @@ def bioreplicate_json(id):
         'measurementTimeUnits': 'h',
         'measurementContexts': [
             {
-                'id': mc.id,
+                'id':         mc.id,
+                'growthRate': mc.growthRate and float(mc.growthRate),
+                'auc':        mc.auc,
                 **_measurement_technique_fields(mc),
                 **_measurement_subject_fields(mc),
             }
@@ -434,6 +440,8 @@ def search_json():
                 'studyId':          mc.studyId,
                 'bioreplicateId':   mc.bioreplicate.id,
                 'bioreplicateName': mc.bioreplicate.name,
+                'growthRate':       mc.growthRate and float(mc.growthRate),
+                'auc':              mc.auc,
                 **_measurement_technique_fields(mc),
                 **_measurement_subject_fields(mc),
             }
@@ -613,6 +621,7 @@ def _measurement_technique_fields(measurement_context):
     requested_units = _convert_unit_label_to_requested(measurement_technique.units, metabolite_mass)
 
     fields = {
+        'label':                  measurement_technique.csv_column_name(measurement_context.subjectName),
         'techniqueType':          measurement_technique.type,
         'techniqueOriginalUnits': measurement_technique.units,
         'techniqueUnits':         requested_units,

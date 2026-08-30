@@ -1,3 +1,5 @@
+import tests.init  # noqa: F401
+
 import unittest
 import tempfile
 from pathlib import Path

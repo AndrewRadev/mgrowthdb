@@ -300,6 +300,12 @@ class TestMeasurement(DatabaseTest):
             ]
         )
 
+        # AUC calculations:
+        self.assertEqual(
+            sorted([mc.auc for mc in experiment.measurementContexts]),
+            [54000.0, 72000.0, 2222220000000.0]
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

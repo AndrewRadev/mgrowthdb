@@ -1,6 +1,7 @@
 from typing import List
 from decimal import Decimal
 
+import numpy as np
 import sqlalchemy as sql
 from sqlalchemy.orm import (
     Mapped,
@@ -69,6 +70,7 @@ class MeasurementContext(OrmBase):
     ), deferred=True)
 
     growthRate: Mapped[Decimal] = mapped_column(sql.Numeric(20, 2), nullable=True)
+    auc:        Mapped[Decimal] = mapped_column(sql.Numeric(21, 2), nullable=True)
 
     @property
     def readyModelingResults(self):
@@ -164,3 +166,21 @@ class MeasurementContext(OrmBase):
         db_session._measurement_subject_cache[cache_key] = subject
 
         return db_session._measurement_subject_cache[cache_key]
+
+    def calculate_auc(self):
+        """
+        This function can be called directly to calculate the AUC of a
+        measurement context, but it will normally be called when a measurement
+        context is created and its value will be stored in self.auc
+        """
+        times = []
+        values = []
+
+        for measurement in sorted(self.measurements, key=lambda m: m.timeInSeconds):
+            if measurement.value is None:
+                continue
+
+            times.append(measurement.timeInSeconds)
+            values.append(float(measurement.value))
+
+        return np.trapezoid(values, times)
