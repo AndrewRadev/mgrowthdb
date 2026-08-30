@@ -10,7 +10,10 @@ from scipy.stats import ttest_ind, zscore, false_discovery_control
 def calculate_api_interactions(metric, technique, experiment_data, experiment_pairs):
     """
     Calculate interactions between the given strains from experiment data
-    retrieved though the API
+    retrieved though the API. The strength of the interaction is estimated
+    based on the log10-ratio of the focal strain's AUC when the other strain is
+    present and the AUC when the other strain is not present (e.g. co-culture +
+    monoculture or combined culture + dropout culture).
 
     :param metric: Either "growthRate" or "auc"
     :param technique: Type of the (strain-level) technique
