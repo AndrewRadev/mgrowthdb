@@ -1,6 +1,7 @@
 from typing import List
 from decimal import Decimal
 
+import numpy as np
 import sqlalchemy as sql
 from sqlalchemy.orm import (
     Mapped,
@@ -167,32 +168,14 @@ class MeasurementContext(OrmBase):
         return db_session._measurement_subject_cache[cache_key]
 
     def calculate_auc(self):
-        last_time  = None
-        last_value = None
-        auc_values = []
+        times = []
+        values = []
 
         for measurement in sorted(self.measurements, key=lambda m: m.timeInSeconds):
             if measurement.value is None:
                 continue
 
-            if measurement.value <= 0.0:
-                continue
+            times.append(measurement.timeInSeconds)
+            values.append(float(measurement.value))
 
-            value = float(measurement.value)
-            time = measurement.timeInSeconds
-
-            # Skip the first measurement and just record it
-            if last_time is None:
-                last_time = time
-                last_value = value
-                continue
-
-            auc_values.append((value + last_value) * (time - last_time) / 2.0)
-
-            last_time = time
-            last_value = value
-
-        if auc_values:
-            return sum(auc_values)
-        else:
-            return 0.0
+        return np.trapezoid(values, times)
