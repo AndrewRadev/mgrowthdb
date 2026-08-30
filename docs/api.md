@@ -33,8 +33,6 @@ Successful results will be returned with an HTTP status code of `200`. A request
 
 ### Types of values
 
-Decimal values will be encoded as strings, since JSON doesn't technically support floating-point values. The strings may be in exponential format. Make sure to explicitly parse them into numbers if your JSON parser does not automatically infer it.
-
 Timestamps are encoded as ISO 8601-formatted strings. All timestamps should be in UTC (timezone +00:00). In the structure descriptions below, they'll be indicated as `datetime`.
 
 Public IDs of studies, experiments, and projects, are also strings, but have a specific structure, a zero-padded number prefixed by "SMGDB", "EMGDB", and "PMGDB", respectively
@@ -93,8 +91,8 @@ You can use the "search" endpoint to locate studies with specific properties. At
     techniqueOriginalUnits: Unit,
     techniqueUnits: Unit,
     label: string,
-    growthRate?: string,
-    auc?: string,
+    growthRate?: number,
+    auc?: number,
     subject: {
       type: "bioreplicate"|"strain"|"metabolite",
       name: string,
@@ -136,8 +134,8 @@ Output:
       "studyId": "SMGDB00000004",
       "bioreplicateId": 60339,
       "bioreplicateName": "FP_14",
-      "growthRate": "0.676",
-      "auc": "1.627100e+14",
+      "growthRate": 0.676,
+      "auc": 162710000000000.0,
       "label": "Faecalibacterium prausnitzii A2-165 qPCR counts",
       "techniqueType": "qpcr",
       "techniqueOriginalUnits": "Cells/mL",
@@ -156,7 +154,7 @@ Output:
       "bioreplicateId": 62266,
       "bioreplicateName": "A6_CS2_V7",
       "growthRate": null,
-      "auc": "5.663950e+07",
+      "auc": 56639500.0,
       "label": "Faecalibacterium duncaniae A2-165 FC counts",
       "techniqueType": "fc",
       "techniqueOriginalUnits": "Cells/μL",
@@ -200,7 +198,7 @@ curl -s "$ROOT_URL/api/v1/search.json?metaboliteChebiIds=17012"
       "bioreplicateId": 61248,
       "bioreplicateName": "RI_MUCIN_1",
       "growthRate": null,
-      "auc": "5.550480e+05",
+      "auc": 555048.0,
       "label": "N-acetylneuraminic acid",
       "techniqueType": "metabolite",
       "techniqueOriginalUnits": "mM",
@@ -370,8 +368,8 @@ Output structure (note that compartment values encoded as decimal numbers are re
       techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
       techniqueOriginalUnits: Unit,
       techniqueUnits: Unit,
-      growthRate?: string,
-      auc?: string,
+      growthRate?: number,
+      auc?: number,
       subject: {
         type: "bioreplicate"|"strain"|"metabolite",
         name: string,
@@ -453,8 +451,8 @@ Example output:
       "measurementContexts": [
         {
           "id": 14060,
-          "growthRate": "0.336",
-          "auc": "4.045930e+05",
+          "growthRate": 0.336,
+          "auc": 404593.0,
           "label": "Community OD",
           "techniqueType": "od",
           "techniqueOriginalUnits": "",
@@ -467,7 +465,7 @@ Example output:
         {
           "id": 14061,
           "growthRate": null,
-          "auc": "2.233690e+06",
+          "auc": 2233690.0,
           "label": "Community pH",
           "techniqueType": "ph",
           "techniqueOriginalUnits": "",
@@ -503,8 +501,8 @@ Metadata structure:
   techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
   techniqueOriginalUnits: Unit,
   techniqueUnits: Unit,
-  growthRate?: string,
-  auc?: string,
+  growthRate?: number,
+  auc?: number,
   subject: {
     type: "bioreplicate"|"strain"|"metabolite",
     name: string,
@@ -642,8 +640,8 @@ Output structure:
     techniqueType: "fc"|"od"|"plates"|"16s"|"qpcr"|"ph"|"metabolite",
     techniqueOriginalUnits: Unit,
     techniqueUnits: Unit,
-    growthRate?: string,
-    auc?: string,
+    growthRate?: number,
+    auc?: number,
     subject: {
       type: "bioreplicate"|"strain"|"metabolite",
       name: string,
@@ -673,8 +671,8 @@ curl -s "$ROOT_URL/api/v1/bioreplicate/61248.csv"
   "measurementContexts": [
     {
       "id": 13646,
-      "growthRate": "0.238",
-      "auc": "1.178930e+05",
+      "growthRate": 0.238,
+      "auc": 117893.0,
       "label": "Community OD",
       "techniqueType": "od",
       "techniqueOriginalUnits": "",

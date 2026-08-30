@@ -135,8 +135,8 @@ def experiment_json(publicId):
                 'measurementContexts': [
                     {
                         'id': mc.id,
-                        'growthRate': mc.growthRate,
-                        'auc': _format_auc(mc.auc),
+                        'growthRate': mc.growthRate and float(mc.growthRate),
+                        'auc': mc.auc,
                         **_measurement_technique_fields(mc),
                         **_measurement_subject_fields(mc),
                     }
@@ -179,8 +179,8 @@ def measurement_context_json(id):
         'measurementCount':     measurement_count,
         'measurementTimeUnits': 'h',
         'modelPredictionIds':   [mr.id for mr in measurement_context.modelingResults],
-        'growthRate':           measurement_context.growthRate,
-        'auc':                  _format_auc(measurement_context.auc),
+        'growthRate':           measurement_context.growthRate and float(measurement_context.growthRate),
+        'auc':                  measurement_context.auc,
         **_measurement_technique_fields(measurement_context),
         **_measurement_subject_fields(measurement_context),
     }
@@ -363,8 +363,8 @@ def bioreplicate_json(id):
         'measurementContexts': [
             {
                 'id':         mc.id,
-                'growthRate': mc.growthRate,
-                'auc':        _format_auc(mc.auc),
+                'growthRate': mc.growthRate and float(mc.growthRate),
+                'auc':        mc.auc,
                 **_measurement_technique_fields(mc),
                 **_measurement_subject_fields(mc),
             }
@@ -440,8 +440,8 @@ def search_json():
                 'studyId':          mc.studyId,
                 'bioreplicateId':   mc.bioreplicate.id,
                 'bioreplicateName': mc.bioreplicate.name,
-                'growthRate':       mc.growthRate,
-                'auc':              _format_auc(mc.auc),
+                'growthRate':       mc.growthRate and float(mc.growthRate),
+                'auc':              mc.auc,
                 **_measurement_technique_fields(mc),
                 **_measurement_subject_fields(mc),
             }
@@ -766,10 +766,3 @@ def _find_or_create_custom_model(study_id, model_data):
     g.db_session.flush()
 
     return custom_model
-
-
-def _format_auc(auc):
-    if auc is None or auc <= 0.0:
-        return None
-
-    return f"{auc:e}"
