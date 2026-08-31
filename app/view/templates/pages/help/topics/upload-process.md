@@ -94,7 +94,7 @@ In step 2, all microbial strains that your study examines should be described:
 
 The textual input completes species and strains from an NCBI export. As you type, you should see a dropdown with names that match your text input. If you don't find your specific strain or you have a custom strain, you can use the "Add custom strain" button to define them. In that case, please provide a short description with information for your strain that might be relevant to your study.
 
-<h2 id="step-3">Step 3: Measurement methods</h2>
+<h2 id="step-3">Step 3: Measurement techniques</h2>
 
 <div class="image-container" style="width: 50%; float: right; margin-left: 20px; margin-top: 20px;">
     <img
