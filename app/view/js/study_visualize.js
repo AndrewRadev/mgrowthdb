@@ -139,8 +139,11 @@ Page('.study-visualize-page', function($page) {
     e.preventDefault();
 
     let contextIds = [];
-    $('.js-traces-list [data-context-id]').each(function() {
-      contextIds.push($(this).data('contextId'));
+    $('.js-measurement-toggle:checked').each(function() {
+      let [traceType, traceId] = $(this).attr('id').split('|');
+      if (traceType == 'measurementContext') {
+        contextIds.push(traceId);
+      }
     });
 
     updateCompareData('add', contextIds);

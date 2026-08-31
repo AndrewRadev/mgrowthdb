@@ -38,11 +38,11 @@
     {% set url = url + url_for('comparison_show_page') %}
     {% set url = url + '?' + chart_form.permalink_query(in_study=False) %}
 
-    <button type="button" class="js-copy-button copy-button green-button small-button small">
-      Copy 📋
+    <button
+        type="button"
+        class="js-copy-button green-button">
+      📋 Copy link to page
     </button>
-    <a href="{{ url }}" class="js-permalink url-box">
-      Link to this page
-    </a>
+    <input type="text" class="hidden" value="{{ url }}" />
   </div>
 </div>

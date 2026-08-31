@@ -659,4 +659,5 @@ form.simple-form {
 .icon.icon-upload-orange     { background-image: url('/static/images/icons/upload-orange.svg'); }
 .icon.icon-history           { background-image: url('/static/images/icons/history.svg'); }
 .icon.icon-arrows-diff       { background-image: url('/static/images/icons/arrows-diff.svg'); }
+.icon.icon-arrows-diff-white { background-image: url('/static/images/icons/arrows-diff-white.svg'); }
 .icon.icon-arrows-left-right { background-image: url('/static/images/icons/arrows-left-right.svg'); }

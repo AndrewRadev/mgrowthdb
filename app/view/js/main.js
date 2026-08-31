@@ -77,11 +77,12 @@ $(document).ready(function() {
 
     navigator.clipboard.writeText(value);
 
+    let previousText = $button.text();
     $button.text('Copied ✅');
     $button.prop('disabled', true);
 
     setTimeout(function () {
-      $button.text('Copy 📋');
+      $button.text(previousText);
       $button.prop('disabled', false);
     }, 2000);
   });

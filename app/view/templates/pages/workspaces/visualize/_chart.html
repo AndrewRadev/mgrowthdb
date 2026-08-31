@@ -34,17 +34,15 @@
   </div>
 
   <div class="permalink-container flex-row margin-top-10 copy-button-wrapper">
-    {% set base_url = request.root_url.removesuffix('/') %}
-    {% set base_url = base_url + url_for('workspaces_visualize_page', orcidId=workspace.user.orcidId, name=workspace.name) %}
+    {% set url = request.root_url.removesuffix('/') %}
+    {% set url = url + url_for('workspaces_visualize_page', orcidId=workspace.user.orcidId, name=workspace.name) %}
+    {% set url = url + '?' + chart_form.permalink_query(in_study=False) %}
 
-    <button type="button" class="js-copy-button copy-button green-button small-button small">
-      Copy 📋
+    <button
+        type="button"
+        class="js-copy-button green-button">
+      📋 Copy link to page
     </button>
-
-    <a
-        href="{{ base_url }}?{{ chart_form.permalink_query(in_study=False) }}"
-        class="js-permalink url-box">
-      Link to this page
-    </a>
+    <input type="text" class="hidden" value="{{ url }}" />
   </div>
 </div>
