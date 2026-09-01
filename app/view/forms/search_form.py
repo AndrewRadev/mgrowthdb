@@ -8,11 +8,12 @@ class SearchFormClause(FlaskForm):
         csrf = False
 
     option = SelectField('option', choices=[
-        'Study Name',
+        'Study name',
         'Study ID',
-        'Project Name',
+        'Project name',
         'Project ID',
-        'Microbial Strain',
+        'Experiment ID',
+        'Microbial strain',
         'NCBI ID',
         'Metabolites',
         'chEBI ID',

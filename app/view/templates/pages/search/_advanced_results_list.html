@@ -10,7 +10,7 @@
             {{ study.nameWithId }}
           </a>
 
-          <div class="flex-row flex-right flex-gap-10">
+          <div class="flex-row flex-right flex-gap-10 flex-start">
             {% if not study.isPublished: %}
               <span
                   class="icon icon-invisible flex-end"
@@ -23,6 +23,18 @@
                   class="icon icon-tool flex-end"
                   data-tooltip="You are able to manage this study, either because you uploaded it or because you've given someone the right to edit it.">
               </span>
+            {% endif %}
+
+            {% if study.publicationType: %}
+              <div class="publication-type">
+                {% if study.publicationType == 'publication': %}
+                  📚 {{ study.url|external_link("Publication") }}
+                {% elif study.publicationType == 'preprint': %}
+                  📄 {{ study.url|external_link("Pre-print") }}
+                {% elif study.publicationType == 'dataset': %}
+                  💽 Dataset
+                {% endif %}
+              </div>
             {% endif %}
           </div>
         </h3>
@@ -41,9 +53,19 @@
           {% if study.url and study.url != '': %}
             <strong>Publication</strong>:
             {{ study.url|external_link() }}
-            <br>
-          {% endif %}
 
+            {% if study.authors: %}
+              by {{ study.authors|author_link_list(limit=10) }}
+            {% endif %}
+
+            {% if study.publicationDate: %}
+              <br>
+              <strong>Publication date</strong>: {{ study.publicationDate }}
+            {% endif %}
+          {% endif %}
+        </p>
+
+        <p class="small">
           {% if study.studyTechniques: %}
             <strong>Measurement techniques</strong>:
             {{ study.studyTechniques|map(attribute="long_name")|unique|join(", ") }}
@@ -57,9 +79,13 @@
             {{ model_info_list|map(attribute="name")|unique|join(", ") }}
             <br>
           {% endif %}
+
+          <strong>Data</strong>: Measurements of
+          <strong>{{ study.bioreplicates|length }}</strong> biological replicates in
+          <strong>{{ study.experiments|length }}</strong> experiments.
         </p>
 
-        {{ render_strains_and_metabolites(study, search) }}
+        {{ render_strains_and_metabolites(study) }}
       </div>
     </li>
   {% endfor %}

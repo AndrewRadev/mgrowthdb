@@ -18,7 +18,7 @@ class TestSearch(unittest.TestCase):
 
     def test_dynamical_query_with_simple_arguments(self):
         query, values = dynamical_query([
-            {'option': 'Study Name', 'value': 'Example'}
+            {'option': 'Study name', 'value': 'Example'}
         ])
         self.assertSqlQuery(query, """
             SELECT DISTINCT publicId
@@ -28,7 +28,7 @@ class TestSearch(unittest.TestCase):
         self.assertEqual(values, ['%example%'])
 
         query, values = dynamical_query([
-            {'option': 'Microbial Strain', 'value': 'Rhodospirillum'}
+            {'option': 'Microbial strain', 'value': 'Rhodospirillum'}
         ])
         self.assertSqlQuery(query, """
             SELECT DISTINCT publicId
@@ -42,7 +42,7 @@ class TestSearch(unittest.TestCase):
 
     def test_dynamical_query_with_logic_operators(self):
         query, values = dynamical_query([
-            {'option': 'Study Name', 'value': 'human'},
+            {'option': 'Study name', 'value': 'human'},
             {'option': 'Metabolites', 'value': 'acetyl', 'logic_operator': 'AND'}
         ])
         self.assertSqlQuery(query, """

@@ -57,7 +57,7 @@ class TestSearch(PageTest):
         s2 = bootstrap_study(self.db_session, 'ri_bt_bh_in_chemostat_controls', 'test_user')
 
         response = self.client.get('/advanced-search/', query_string={
-            'clauses-0-option': 'Study Name',
+            'clauses-0-option': 'Study name',
             'clauses-0-value': 'Synthetic human gut',
         })
         response_text = self._get_text(response)
@@ -67,7 +67,7 @@ class TestSearch(PageTest):
         self.assertNotIn("RI, BT and BH in chemostat: Controls", response_text)
 
         response = self.client.get('/advanced-search/', query_string={
-            'clauses-0-option': 'Study Name',
+            'clauses-0-option': 'Study name',
             'clauses-0-value': 'chemostat',
         })
         response_text = self._get_text(response)
@@ -82,7 +82,7 @@ class TestSearch(PageTest):
         self.db_session.commit()
 
         response = self.client.get('/advanced-search/', query_string={
-            'clauses-0-option': 'Study Name',
+            'clauses-0-option': 'Study name',
             'clauses-0-value': 'a',
         })
         response_text = self._get_text(response)

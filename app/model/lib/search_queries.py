@@ -14,9 +14,9 @@ def dynamical_query(all_advance_query):
         where_clause = ""
 
         if not query_dict['option']:
-            query_dict['option'] = 'Study Name'
+            query_dict['option'] = 'Study name'
 
-        if query_dict['option'] == 'Project Name':
+        if query_dict['option'] == 'Project name':
             project_name = query_dict['value'].strip().lower()
             if project_name != '':
                 where_clause = f"""
@@ -39,7 +39,7 @@ def dynamical_query(all_advance_query):
                 )
             """
             values.append(project_id)
-        elif query_dict['option'] == 'Study Name':
+        elif query_dict['option'] == 'Study name':
             study_name = query_dict['value'].strip().lower()
             if study_name != '':
                 where_clause = f"""
@@ -54,7 +54,17 @@ def dynamical_query(all_advance_query):
                 WHERE publicId = :value_{len(values)}
             """
             values.append(study_id)
-        elif query_dict['option'] == 'Microbial Strain':
+        elif query_dict['option'] == 'Experiment ID':
+            experiment_id = query_dict['value'].strip()
+            where_clause = f"""
+                FROM (
+                    SELECT studyId as publicId, publicId as experimentId
+                    FROM Experiments
+                ) as Experiments_Alias
+                WHERE experimentId = :value_{len(values)}
+            """
+            values.append(experiment_id)
+        elif query_dict['option'] == 'Microbial strain':
             microb_strain = query_dict['value'].strip().lower()
             # Note: Creating a nested query so that "Strains.studyId" can be
             # renamed to "publicId"
