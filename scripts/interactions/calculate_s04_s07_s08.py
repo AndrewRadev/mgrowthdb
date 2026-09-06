@@ -1,21 +1,16 @@
-import json
-import requests
-from io import BytesIO
-
-import numpy as np
 import pandas as pd
 
 from scripts.interactions.functions import (
     calculate_api_interactions,
-    save_html_table,
-    save_latex_table,
+    # save_html_table,
+    # save_latex_table,
     save_chart,
     get_json,
     adjust_p_values,
 )
 
-root_url = 'http://localhost:8081/api/v1'
-# root_url = 'https://mgrowthdb.gbiomed.kuleuven.be/api/v1'
+# root_url = 'http://localhost:8081/api/v1'
+root_url = 'https://mgrowthdb.gbiomed.kuleuven.be/api/v1'
 
 short_names = {
     'Bacteroides cellulosilyticus CL02T12C19':     'B. cellulosilyticus',
@@ -53,6 +48,8 @@ s7_interactions = calculate_api_interactions(
     experiment_pairs=experiment_pairs,
     experiment_data=experiment_data,
 )
+for i in s7_interactions:
+    i['study'] = 'SMGDB00000007'
 
 experiment_id_data = get_json(root_url, "study/SMGDB00000008")["experiments"]
 experiment_data = [get_json(root_url, f"experiment/{e["id"]}") for e in experiment_id_data]
@@ -79,7 +76,8 @@ s8_interactions = calculate_api_interactions(
     experiment_pairs=experiment_pairs,
     experiment_data=experiment_data,
 )
-
+for i in s8_interactions:
+    i['study'] = 'SMGDB00000008'
 
 experiment_id_data = get_json(root_url, "study/SMGDB00000004")["experiments"]
 experiment_data = [get_json(root_url, f"experiment/{e["id"]}") for e in experiment_id_data]
@@ -98,12 +96,14 @@ s4_interactions = calculate_api_interactions(
     experiment_pairs=experiment_pairs,
     experiment_data=experiment_data,
 )
+for i in s4_interactions:
+    i['study'] = 'SMGDB00000004'
 
 interactions = adjust_p_values(s4_interactions + s7_interactions + s8_interactions)
 
 df = pd.DataFrame.from_dict(interactions)
 df.to_csv("s04_s07_s08.csv", index=False)
 
-save_html_table(f"s04_s07_s08.html", interactions, short_names)
-save_latex_table(f"s04_s07_s08.latex", interactions, short_names)
-save_chart(f"s04_s07_s08", interactions, short_names)
+# save_html_table("s04_s07_s08.html", interactions, short_names)
+# save_latex_table("s04_s07_s08.latex", interactions, short_names)
+save_chart("s04_s07_s08", interactions, short_names)
