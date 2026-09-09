@@ -130,15 +130,13 @@ def save_html_table(output_filename, interactions, short_names={}):
 def save_latex_table(output_filename, interactions, short_names={}):
     with open(output_filename, 'w') as f:
         print(r"""
-            \begin{tabular}{ ||l|l|r|r|l|| }
+            \begin{tabular}{ ||l|l|r|r|l|r|l|| }
             \hline
-            Focal strain & Other strain & Log-ratio & P-value & \\
+            Focal strain & Other strain & Log-ratio & p-value & & Adj. p-value & \\
             \hline
         """, file=f)
 
-        sorted_interactions = sorted(interactions, key=lambda i: (i['focal_strain'], i['other_strain']))
-
-        for interaction in sorted_interactions:
+        for interaction in interactions:
             focal_strain = interaction['focal_strain']
             other_strain = interaction['other_strain']
 
@@ -148,6 +146,8 @@ def save_latex_table(output_filename, interactions, short_names={}):
                 f"{interaction['log_ratio']:.5f}",
                 f"{interaction['p_value']:.3e}",
                 interaction['p_symbol'],
+                f"{interaction['adj_p_value']:.3e}",
+                interaction['adj_p_symbol'],
             ]) + r'\\', file=f)
 
         print(r"""

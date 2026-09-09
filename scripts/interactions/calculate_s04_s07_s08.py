@@ -3,7 +3,7 @@ import pandas as pd
 from scripts.interactions.functions import (
     calculate_api_interactions,
     # save_html_table,
-    # save_latex_table,
+    save_latex_table,
     save_chart,
     get_json,
     adjust_p_values,
@@ -21,6 +21,7 @@ short_names = {
     'Bifidobacterium adolescentis ATCC 15703':     'B. adolescentis',
     'Blautia hydrogenotrophica DSM 10507':         'B. hydrogenotrophica',
     'Escherichia coli str. K-12 substr. MG1655':   'E. coli',
+    'Faecalibacterium prausnitzii A2-165':         'F. prausnitzii',
     'Flavonifractor plautii 1_3_50AFAA':           'F. plautii',
     'Lachnoclostridium clostridioforme 2_1_49FAA': 'L. clostridioforme',
     'Lachnoclostridium symbiosum WAL-14673':       'L. symbiosum',
@@ -105,5 +106,5 @@ df = pd.DataFrame.from_dict(interactions)
 df.to_csv("s04_s07_s08.csv", index=False)
 
 # save_html_table("s04_s07_s08.html", interactions, short_names)
-# save_latex_table("s04_s07_s08.latex", interactions, short_names)
+save_latex_table("s04_s07_s08.latex", interactions, short_names)
 save_chart("s04_s07_s08", interactions, short_names)
