@@ -130,7 +130,7 @@ class MeasurementContext(OrmBase):
             label_parts.append('of the')
             label_parts.append(bioreplicate_label)
 
-            if len(experiment.community.strains) == 1:
+            if experiment.community and len(experiment.community.strains) == 1:
                 label_parts.append('monoculture')
             else:
                 label_parts.append('community')
