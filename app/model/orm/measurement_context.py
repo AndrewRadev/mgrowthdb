@@ -129,7 +129,11 @@ class MeasurementContext(OrmBase):
         if technique.subjectType == 'bioreplicate':
             label_parts.append('of the')
             label_parts.append(bioreplicate_label)
-            label_parts.append('community')
+
+            if len(experiment.community.strains) == 1:
+                label_parts.append('monoculture')
+            else:
+                label_parts.append('community')
         elif technique.subjectType == 'metabolite':
             label_parts.append('in')
             label_parts.append(bioreplicate_label)
