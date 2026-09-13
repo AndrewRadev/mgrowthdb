@@ -182,7 +182,9 @@ class Chart:
                 maxheight=0.25,
             ),
             modebar=dict(orientation='v'),
-            font_family="Public Sans",
+            font=dict(
+                family="Public Sans",
+            ),
             yaxis=left_yaxis,
             yaxis2=right_yaxis,
             xaxis=dict(
