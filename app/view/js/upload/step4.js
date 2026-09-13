@@ -54,11 +54,17 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
       });
 
       $select.trigger('change');
+
+      $subform.on('change', 'input[name$="name"]', function() {
+        updateIndexAndName($subform, index + 1, $(this));
+      });
+      updateIndexAndName($subform, index + 1, null);
     },
 
     onDuplicate: function($newForm) {
       // Reset name
       $newForm.find('input[name$="name"]').val('');
+      $newForm.find('.js-title').html('[New]')
     },
   });
 
