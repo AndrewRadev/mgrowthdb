@@ -1,9 +1,11 @@
+import copy
 import json
 import subprocess
 import requests
 import itertools
 
 import numpy as np
+import pandas as pd
 from scipy.stats import ttest_ind, zscore, false_discovery_control
 
 
@@ -58,12 +60,14 @@ def calculate_api_interactions(metric, technique, experiment_data, experiment_pa
             mono_values = _extract_measurements(metric, technique, focal_strain, target_bioreplicates)
             co_values   = _extract_measurements(metric, technique, focal_strain, combined_bioreplicates)
 
-            log_ratio, p_value, p_symbol = _calculate_ratio(mono_values, co_values)
+            log_ratio, p_value, t_value, t_df, p_symbol = _calculate_ratio(mono_values, co_values)
 
             interactions.append({
                 'focal_strain': focal_strain,
                 'other_strain': other_strain,
                 'log_ratio':    log_ratio,
+                't_value':      t_value,
+                't_df':         t_df,
                 'p_value':      p_value,
                 'p_symbol':     p_symbol,
             })
@@ -71,60 +75,15 @@ def calculate_api_interactions(metric, technique, experiment_data, experiment_pa
     return interactions
 
 
-def save_html_table(output_filename, interactions, short_names={}):
-    with open(output_filename, 'w') as f:
-        print("""
-            <style>
-              th, td {
-                border: 1px solid black;
-                padding: 6px;
-              }
-            </style>
+def save_csv(output_filename, interactions, short_names={}):
+    short_name_interactions = copy.deepcopy(interactions)
 
-            <table>
-              <tr>
-                <th>Focal strain</th>
-                <th>Other strain</th>
-                <th>Log ratio</th>
-                <th>P-value</th>
-                <th></th>
-                <th>Adjusted P-value</th>
-                <th></th>
-              </tr>
-        """, file=f)
+    for interaction in short_name_interactions:
+        for key in ('focal_strain', 'other_strain'):
+            interaction[key] = short_names.get(interaction[key], interaction[key])
 
-        sorted_interactions = sorted(interactions, key=lambda i: (i['focal_strain'], i['other_strain']))
-
-        for interaction in sorted_interactions:
-            focal_strain = interaction['focal_strain']
-            other_strain = interaction['other_strain']
-
-            log_ratio = interaction['log_ratio']
-            color = 'auto'
-
-            if interaction['adj_p_symbol'] != '':
-                if log_ratio > 0:
-                    color = 'green'
-                elif log_ratio < 0:
-                    color = 'red'
-
-            print(f"""
-                <tr>
-                    <td>{short_names.get(focal_strain, focal_strain)}</td>
-                    <td>{short_names.get(other_strain, other_strain)}</td>
-                    <td style="color: {color}">
-                        {interaction['log_ratio']:.5f}
-                    </td>
-                    <td>{interaction['p_value']:.5f}</td>
-                    <td>{interaction['p_symbol']}</td>
-                    <td>{interaction['adj_p_value']:.5f}</td>
-                    <td>{interaction['adj_p_symbol']}</td>
-                </tr>
-            """, file=f)
-
-        print("""
-            </table>
-        """, file=f)
+    df = pd.DataFrame.from_dict(short_name_interactions)
+    df.to_csv(output_filename, index=False)
 
 
 def save_latex_table(output_filename, interactions, short_names={}):
@@ -257,7 +216,11 @@ def _extract_measurements(metric, technique, strain, bioreplicates):
 
 def _calculate_ratio(mono_values, co_values):
     log_ratio = float(np.log10(np.mean(co_values) / np.mean(mono_values)))
-    p_value = float(ttest_ind(co_values, mono_values).pvalue)
+    t_test = ttest_ind(co_values, mono_values)
+
+    t_value = float(t_test.statistic)
+    t_df = float(t_test.df)
+    p_value = float(t_test.pvalue)
 
     if p_value < 0.001:
         p_symbol = '***'
@@ -268,4 +231,4 @@ def _calculate_ratio(mono_values, co_values):
     else:
         p_symbol = ''
 
-    return (log_ratio, p_value, p_symbol)
+    return (log_ratio, p_value, t_value, t_df, p_symbol)
