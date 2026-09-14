@@ -1,6 +1,5 @@
 from scripts.interactions.functions import (
     calculate_api_interactions,
-    # save_html_table,
     save_csv,
     save_latex_table,
     save_chart,
@@ -102,7 +101,5 @@ for i in s4_interactions:
 interactions = adjust_p_values(s4_interactions + s7_interactions + s8_interactions)
 
 save_csv("s04_s07_s08.csv", interactions, short_names)
-
-# save_html_table("s04_s07_s08.html", interactions, short_names)
 save_latex_table("s04_s07_s08.latex", interactions, short_names)
 save_chart("s04_s07_s08", interactions, short_names)
