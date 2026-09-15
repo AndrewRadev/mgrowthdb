@@ -26,7 +26,7 @@ base_dir_path.mkdir(exist_ok=True)
 organisms_dir_path = base_dir_path / 'organisms_dictionary'
 organisms_dir_path.mkdir(exist_ok=True)
 
-data_dump_path = base_dir_path / 'data_dump.csv'
+data_dump_path = base_dir_path / 'data_dump_1.csv'
 
 with print_with_time("Downloading and extracting JensenLab data dump"):
     jensenlab_url = 'https://download.jensenlab.org/organisms_dictionary.tar.gz'

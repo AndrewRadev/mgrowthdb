@@ -8,7 +8,7 @@ import sqlalchemy as sql
 from long_task_printer import LongTask
 
 base_dir_path  = Path('var/external_data/ncbi/')
-ncbi_taxa_path = base_dir_path / 'data_dump.csv'
+ncbi_taxa_path = base_dir_path / 'data_dump_2.csv'
 
 # Count the number of lines in the file, should be quick:
 with open(ncbi_taxa_path) as f:
