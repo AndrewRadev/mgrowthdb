@@ -272,12 +272,12 @@
           {{ "https://mgrowthdb.readthedocs.io/en/latest/"|external_link("ReadTheDocs") }}.
         </p>
 
-        <p>
-          You can also use the
-          <a href="https://mgrowthdb.readthedocs.io/en/latest/api.html">API interface</a>
-          to build external integrations.
+        {% if demo_projects|length > 0: %}
+          <p>
+            You can also use the
+            <a href="https://mgrowthdb.readthedocs.io/en/latest/api.html">API interface</a>
+            to build external integrations.
 
-          {% if demo_projects|length > 0: %}
             Some examples of projects that use mGrowthDB's API:
             <ul>
               {% for demo_project in demo_projects: %}
@@ -289,8 +289,8 @@
                 </li>
               {% endfor %}
             </ul>
-          {% endif %}
-        </p>
+          </p>
+        {% endif %}
       </div>
     </article>
   </div>
