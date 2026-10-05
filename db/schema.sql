@@ -152,6 +152,26 @@ CREATE TABLE DashboardEntries (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `DemoProjects`
+--
+
+DROP TABLE IF EXISTS DemoProjects;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE DemoProjects (
+  id int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `description` text NOT NULL,
+  position int NOT NULL DEFAULT '0',
+  showOnHomepage tinyint(1) DEFAULT '1',
+  createdAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `ExcelFiles`
 --
 
@@ -853,5 +873,6 @@ INSERT INTO MigrationVersions VALUES
 (108,'2026_06_27_154711_add_publication_type_to_studies','2026-06-27 14:14:42'),
 (109,'2026_08_01_115108_add_job_statuses_to_submissions','2026-08-03 09:57:09'),
 (110,'2026_08_02_170359_add_growth_rate_to_measurement_contexts','2026-08-03 09:57:10'),
-(115,'2026_08_13_123711_add_auc_to_measurement_context','2026-08-13 10:50:03');
+(115,'2026_08_13_123711_add_auc_to_measurement_context','2026-08-13 10:50:03'),
+(118,'2026_10_04_101309_create_demo_projects','2026-10-04 07:20:47');
 

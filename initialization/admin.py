@@ -25,6 +25,7 @@ from app.model.orm import (
     Community,
     Compartment,
     CustomModel,
+    DemoProject,
     ExcelFile,
     Experiment,
     ExperimentCompartment,
@@ -320,8 +321,14 @@ def init_admin(app):
     class TaxonView(AppView):
         column_searchable_list = ['name']
 
-    admin.add_view(MetaboliteView(Metabolite, db_session, category="External data"))
-    admin.add_view(TaxonView(Taxon,           db_session, category="External data"))
+    class DemoProjectView(AppView):
+        form_excluded_columns = [
+            'createdAt', 'updatedAt',
+        ]
+
+    admin.add_view(MetaboliteView(Metabolite,   db_session, category="External data"))
+    admin.add_view(TaxonView(Taxon,             db_session, category="External data"))
+    admin.add_view(DemoProjectView(DemoProject, db_session, category="External data"))
 
     class UserView(AppView):
         form_excluded_columns = [
