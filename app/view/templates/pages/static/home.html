@@ -271,26 +271,6 @@
           is the developer documentation at
           {{ "https://mgrowthdb.readthedocs.io/en/latest/"|external_link("ReadTheDocs") }}.
         </p>
-
-        {% if demo_projects|length > 0: %}
-          <p>
-            You can also use the
-            <a href="https://mgrowthdb.readthedocs.io/en/latest/api.html">API interface</a>
-            to build external integrations.
-
-            Some examples of projects that use mGrowthDB's API:
-            <ul>
-              {% for demo_project in demo_projects: %}
-                <li>
-                  <strong>
-                    {{ demo_project.url|external_link(demo_project.name) }}
-                  </strong>:
-                  {{ demo_project.description }}
-                </li>
-              {% endfor %}
-            </ul>
-          </p>
-        {% endif %}
       </div>
     </article>
   </div>

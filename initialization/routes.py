@@ -33,8 +33,9 @@ def init_routes(app):
     #
     # Web routes
     #
-    app.add_url_rule("/",       view_func=static_pages.static_home_page)
-    app.add_url_rule("/about/", view_func=static_pages.static_about_page)
+    app.add_url_rule("/",               view_func=static_pages.static_home_page)
+    app.add_url_rule("/about/",         view_func=static_pages.static_about_page)
+    app.add_url_rule("/demo-projects/", view_func=static_pages.static_demo_projects_page)
 
     app.add_url_rule("/help/",               view_func=help_pages.help_index_page)
     app.add_url_rule("/help/<string:name>/", view_func=help_pages.help_show_page)

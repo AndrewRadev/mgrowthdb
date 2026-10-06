@@ -1,9 +1,11 @@
 import io
+import os
 from datetime import datetime, timezone
 
 import simplejson as json
 from wtforms import fields
 from werkzeug.exceptions import NotFound
+from werkzeug.utils import secure_filename
 from sqlalchemy.orm import configure_mappers
 from markupsafe import Markup
 from flask import (
@@ -12,6 +14,7 @@ from flask import (
     request,
 )
 from flask_admin import Admin, form, AdminIndexView, expose
+from flask_admin.form.upload import FileUploadField
 from flask_admin.model.form import converts
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.form import AdminModelConverter
@@ -325,6 +328,17 @@ def init_admin(app):
         form_excluded_columns = [
             'createdAt', 'updatedAt',
         ]
+        # Override form field to use Flask-Admin FileUploadField
+        form_overrides = {"logoFilename": FileUploadField}
+
+        # Pass additional parameters to 'path' to FileUploadField constructor
+        form_args = {
+            "logoFilename": {
+                "label": "Logo",
+                "base_path": f"{os.getcwd()}/static/upload",
+                "namegen": _logo_upload_name,
+            }
+        }
 
     admin.add_view(MetaboliteView(Metabolite,   db_session, category="External data"))
     admin.add_view(TaxonView(Taxon,             db_session, category="External data"))
@@ -368,3 +382,8 @@ def init_admin(app):
     admin.add_view(PageErrorView(PageError,               db_session, category="Users"))
 
     return app
+
+
+def _logo_upload_name(obj, file_data):
+    _, extension = os.path.splitext(file_data.filename)
+    return secure_filename(f"logo-{obj.name}{extension}")

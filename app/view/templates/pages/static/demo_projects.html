@@ -1,0 +1,27 @@
+{% extends '_layout.html' %}
+
+{% block content %}
+  <div class="container">
+    <article>
+      <h1>API showcase</h1>
+
+      <p>
+        Here, you can find some examples of projects that use mGrowthDB's API.
+      </p>
+
+      <div class="flex-row margin-top-10" style="flex-wrap: wrap; gap: 20px;">
+        {% for demo_project in demo_projects: %}
+          <div class="box" style="width: 30%">
+            {% if demo_project.logoFilename: %}
+              <img src="/static/upload/{{ demo_project.logoFilename }}" />
+            {% endif %}
+            <h2>{{ demo_project.url|external_link(demo_project.name) }}</h2>
+            <p>
+              {{ demo_project.description }}
+            </p>
+          </div>
+        {% endfor %}
+      </div>
+    </article>
+  </div>
+{% endblock %}

@@ -58,12 +58,6 @@ def static_home_page():
         .where(Study.isPublished)
     ).one()
 
-    demo_projects = g.db_session.scalars(
-        sql.select(DemoProject)
-        .where(DemoProject.showOnHomepage == True)
-        .order_by(DemoProject.position.asc())
-    ).all()
-
     last_ncbi_update = read_timestamp_date('var/external_data/last_ncbi_update.txt')
     last_chebi_update = read_timestamp_date('var/external_data/last_chebi_update.txt')
 
@@ -75,7 +69,6 @@ def static_home_page():
         study_metabolite_count=study_metabolite_count,
         taxa_count=taxa_count,
         study_strain_count=study_strain_count,
-        demo_projects=demo_projects,
         last_ncbi_update=last_ncbi_update,
         last_chebi_update=last_chebi_update,
         help_topic_words=help_topic_words,
@@ -84,3 +77,12 @@ def static_home_page():
 
 def static_about_page():
     return render_template("pages/static/about.html")
+
+
+def static_demo_projects_page():
+    demo_projects = g.db_session.scalars(
+        sql.select(DemoProject)
+        .order_by(DemoProject.position.asc())
+    ).all()
+
+    return render_template("pages/static/demo_projects.html", demo_projects=demo_projects)

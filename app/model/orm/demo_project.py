@@ -21,8 +21,8 @@ class DemoProject(OrmBase):
     url:         Mapped[str] = mapped_column(sql.String(255), nullable=False)
     description: Mapped[str] = mapped_column(sql.String,      nullable=False)
 
-    position:       Mapped[int]  = mapped_column(sql.Integer, nullable=False, default=0)
-    showOnHomepage: Mapped[bool] = mapped_column(sql.Boolean, default=True)
+    position:     Mapped[int] = mapped_column(sql.Integer, nullable=False, default=0)
+    logoFilename: Mapped[str] = mapped_column(sql.String(255))
 
     createdAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
     updatedAt: Mapped[datetime] = mapped_column(UtcDateTime, server_default=sql.FetchedValue())
