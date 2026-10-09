@@ -171,6 +171,59 @@ make clean
 make html
 ```
 
+## Software versions
+
+### Core packages
+
+```pip-requirements
+pandas==2.3.2
+openpyxl==3.1.5
+odfpy==1.4.1
+simplejson==3.20.1
+humanize==4.13.0
+dotenv==0.9.9
+```
+
+### Web packages
+
+```pip-requirements
+Flask==3.1.2
+Flask-Admin==2.0.0
+Flask-Assets==2.1.0
+Flask-WTF==1.2.2
+Flask-SQLAlchemy==3.1.1
+cssmin==0.2.0
+plotly==6.5.0
+celery[redis]==5.5.3
+gunicorn==23.0.0
+requests==2.32.5
+watchdog==6.0.0
+markdown-it-py==4.0.0
+beautifulsoup4==4.13.5
+crawlerdetect==0.3.2
+maxminddb==3.0.0
+werkzeug==3.1.3
+```
+
+###  Database
+
+```pip-requirements
+sqlalchemy==2.0.54
+SQLAlchemy-Utc==0.14.0
+cryptography==45.0.7
+pymysql==1.2.3
+```
+
+### Testing
+
+```pip-requirements
+pytest==8.4.2
+pytest-env==1.1.5
+pytest-cov==7.0.0
+freezegun==1.5.5
+requests-mock==1.12.1
+```
+
 ## External references
 
 - CSS reset: <https://piccalil.li/blog/a-more-modern-css-reset/>
