@@ -1,5 +1,7 @@
 # Pinned setuptools to avoid deprecation warning:
 setuptools<80
+# Update certificates after security issue:
+certifi>=2026.10.19
 
 # Core
 pandas==2.3.2
