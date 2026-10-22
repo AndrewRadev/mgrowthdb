@@ -136,6 +136,11 @@ def validate_data_file(submission_form, data_file=None):
 
     # Validate values:
     for sheet_name, df in sheets.items():
+        if not set(df.columns).intersection(set(mandatory_columns)):
+            # Then this particular sheet does not have the right shape, it
+            # might have extra data that should be ignored.
+            continue
+
         missing_time_rows = []
         missing_values    = {}
 
