@@ -136,7 +136,7 @@ def validate_data_file(submission_form, data_file=None):
 
     # Validate values:
     for sheet_name, df in sheets.items():
-        if not set(df.columns).intersection(set(mandatory_columns)):
+        if not _is_valid_sheet(df):
             # Then this particular sheet does not have the right shape, it
             # might have extra data that should be ignored.
             continue
@@ -454,6 +454,9 @@ def _save_measurements(db_session, study, submission_form):
     sheets = pd.read_excel(io.BytesIO(data_xls), sheet_name=None)
 
     for _, df in sheets.items():
+        if not _is_valid_sheet(df):
+            continue
+
         Measurement.insert_from_csv_string(db_session, study, df.to_csv(index=False))
 
 
@@ -575,3 +578,7 @@ def _format_row_list_error(row_list):
         description += f", and {len(row_list) - 3} more"
 
     return description
+
+
+def _is_valid_sheet(df):
+    return len(set(df.columns).intersection({'Biological Replicate', 'Compartment', 'Time'})) > 0
