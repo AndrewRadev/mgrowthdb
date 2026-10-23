@@ -24,6 +24,8 @@ def calculate_growth_rate(db_session, experiment, measurement_context):
         data = data[["time", "value"]]
         # Remove rows with NA values, if any
         data = data.dropna()
+        # Remove points that are at 0 (could happen with OD)
+        data = data[data['value'] > 0]
 
         if data.shape[0] < 6:
             return False

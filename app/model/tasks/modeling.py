@@ -56,6 +56,9 @@ def _process_modeling_request(db_session, modeling_result_id, target_type, targe
         # Remove rows with NA values, if any
         data = data.dropna()
 
+        # Remove points that are at 0 (could happen with OD)
+        data = data[data['value'] > 0]
+
         try:
             rscript = RScript(root_path=tmp_dir_name)
             rscript.write_csv('input.csv', data)
