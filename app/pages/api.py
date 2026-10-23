@@ -66,7 +66,7 @@ def study_json(publicId):
             'description': study.description,
             'url':         study.url,
             'uploadedAt':  study.createdAt.isoformat(),
-            'publishedAt': study.publishedAt.isoformat(),
+            'publishedAt': study.publishedAt.isoformat() if study.publishedAt else None,
             'experiments': [
                 {'id': e.publicId, 'name': e.name}
                 for e in study.experiments
