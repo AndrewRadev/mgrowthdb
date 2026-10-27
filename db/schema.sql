@@ -300,8 +300,8 @@ CREATE TABLE Measurements (
   id int NOT NULL AUTO_INCREMENT,
   studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   timeInSeconds int NOT NULL,
-  `value` decimal(20,3) DEFAULT NULL,
-  std decimal(20,3) DEFAULT NULL,
+  `value` decimal(25,3) DEFAULT NULL,
+  std decimal(25,3) DEFAULT NULL,
   contextId int NOT NULL,
   PRIMARY KEY (id),
   KEY studyId (studyId),
@@ -873,7 +873,8 @@ INSERT INTO MigrationVersions VALUES
 (108,'2026_06_27_154711_add_publication_type_to_studies','2026-06-27 14:14:42'),
 (109,'2026_08_01_115108_add_job_statuses_to_submissions','2026-08-03 09:57:09'),
 (110,'2026_08_02_170359_add_growth_rate_to_measurement_contexts','2026-08-03 09:57:10'),
-(115,'2026_08_13_123711_add_auc_to_measurement_context','2026-08-13 10:50:03'),
-(118,'2026_10_04_101309_create_demo_projects','2026-10-04 07:20:47'),
-(120,'2026_10_06_112526_add_logo_to_demo_projects','2026-10-06 08:26:56');
+(111,'2026_08_13_123711_add_auc_to_measurement_context','2026-08-21 15:45:15'),
+(112,'2026_10_04_101309_create_demo_projects','2026-10-05 12:34:58'),
+(113,'2026_10_06_112526_add_logo_to_demo_projects','2026-10-06 09:12:33'),
+(115,'2026_10_27_140728_increase_measurement_value_size','2026-10-27 13:09:27');
 
