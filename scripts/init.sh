@@ -61,10 +61,11 @@ else
 fi
 python scripts/external/chebi/insert_data.py
 
-if [ -f "var/external_data/ncbi/data_dump.csv" ]; then
+if [ -f "var/external_data/ncbi/data_dump_2.csv" ]; then
   echo "> NCBI data dump already downloaded"
 else
   python scripts/external/ncbi/download_dump.py
+  python scripts/external/ncbi/download_taxonomy.py
 fi
 python scripts/external/ncbi/insert_data.py
 
