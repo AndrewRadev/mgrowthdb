@@ -107,6 +107,10 @@ Page('.workspaces-modeling-page', function($page) {
       },
       success: function(response) {
         $chart.html(response)
+        $chart.find('.js-plotly-plot').each(function() {
+          initPlotEvents(this);
+        });
+
         $form.find('input').prop('disabled', false);
         initTooltips();
       },
