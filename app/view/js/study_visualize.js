@@ -176,8 +176,11 @@ Page('.study-visualize-page', function($page) {
       data: $form.serializeArray(),
       success: function(response) {
         $chart.html(response);
-        $(document).scrollTop(scrollPosition);
+        $chart.find('.js-plotly-plot').each(function() {
+          initPlotEvents(this);
+        });
 
+        $(document).scrollTop(scrollPosition);
         updateTabLinks();
       }
     })
