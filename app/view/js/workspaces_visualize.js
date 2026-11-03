@@ -126,6 +126,10 @@ Page('.workspaces-visualize-page', function($page) {
       data: $form.serializeArray(),
       success: function(response) {
         $chart.html(response);
+        $chart.find('.js-plotly-plot').each(function() {
+          initPlotEvents(this);
+        });
+
         $(document).scrollTop(scrollPosition);
       }
     })

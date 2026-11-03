@@ -44,6 +44,7 @@ def init_assets(app):
         '../app/view/js/lib/animations.js',
         '../app/view/js/lib/compare_buttons.js',
         '../app/view/js/lib/custom_file_input.js',
+        '../app/view/js/lib/charts.js',
         # Pages:
         '../app/view/js/upload/common.js',
         '../app/view/js/upload/step1.js',

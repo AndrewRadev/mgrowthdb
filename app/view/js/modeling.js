@@ -3,11 +3,14 @@ Page('.study-modeling-page', function($page) {
   let $form         = $page.find('.js-modeling-form');
   let $submitButton = $form.find('input[type=submit]');
 
-  let $uploadContainer = $('.js-upload-container');
-  $uploadContainer.customFileInput();
-  $uploadContainer.on('change', 'input[type=file]', function() {
-    let filename = this.files[0].name;
-    $uploadContainer.find('.js-preview').html(filename);
+  $('.js-upload-container').each(function() {
+    let $uploadContainer = $(this);
+
+    $uploadContainer.customFileInput();
+    $uploadContainer.on('change', 'input[type=file]', function() {
+      let filename = this.files[0].name;
+      $uploadContainer.find('.js-preview').html(filename);
+    });
   });
 
   updateFormVisibility($form);
@@ -233,6 +236,10 @@ Page('.study-modeling-page', function($page) {
       },
       success: function(response) {
         $chart.html(response)
+        $chart.find('.js-plotly-plot').each(function() {
+          initPlotEvents(this);
+        });
+
         $form.find('input').prop('disabled', false);
         initTooltips();
       },
