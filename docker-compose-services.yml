@@ -18,5 +18,7 @@ services:
     image: redis:7.4-alpine
     restart: always
     container_name: mgrowthdb_redis
+    # Note: set password on production:
+    # command: '--requirepass <password>'
     ports:
       - "6379:6379"

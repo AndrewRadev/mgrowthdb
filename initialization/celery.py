@@ -18,6 +18,7 @@ def init_celery(app):
 
     * ``REDIS_HOST``
     * ``REDIS_PORT``
+    * ``REDIS_PASS``
     """
     class AppTask(Task):
         def __call__(self, *args: object, **kwargs: object) -> object:
@@ -26,8 +27,12 @@ def init_celery(app):
 
     redis_host = os.getenv('REDIS_HOST', 'localhost')
     redis_port = os.getenv('REDIS_PORT', '6379')
+    redis_pass = os.getenv('REDIS_PASS', '')
 
-    redis_url = f"redis://{redis_host}:{redis_port}/0"
+    if len(redis_pass):
+        redis_url = f"redis://:{redis_pass}@{redis_host}:{redis_port}/0"
+    else:
+        redis_url = f"redis://{redis_host}:{redis_port}/0"
 
     celery_app = Celery(app.name, task_cls=AppTask)
 
