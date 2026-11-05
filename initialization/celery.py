@@ -30,7 +30,7 @@ def init_celery(app):
     redis_pass = os.getenv('REDIS_PASS', '')
 
     if len(redis_pass):
-        redis_url = f"redis://:{redis_pass}@{redis_host}:{redis_port}/0"
+        redis_url = f"redis://default:{redis_pass}@{redis_host}:{redis_port}/0"
     else:
         redis_url = f"redis://{redis_host}:{redis_port}/0"
 
