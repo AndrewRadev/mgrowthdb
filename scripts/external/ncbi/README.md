@@ -2,8 +2,10 @@
 
 To have NCBI taxonomy for use with strain completion, these scripts fetch NCBI ids and names and insert them into the database. There are two main scripts:
 
-- `download_dump.py`: Fetches and processes the data into `var/external_data/ncbi/data_dump.csv`.
-- `insert_data.py`: Iterates over the above file and inserts the entries into the database.
+- `download_dump.py`: Fetches and processes the data into `var/external_data/ncbi/data_dump_1.csv`.
+- `download_taxonomy.py`: Fetches relationships between taxons from the previous data dump and annotates them in `var/external_data/ncbi/data_dump_2.csv`.
+- `insert_data.py`: Iterates over the above file and inserts the entries into
+  the database.
 
 ## Downloading
 
