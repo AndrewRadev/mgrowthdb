@@ -19,6 +19,6 @@ services:
     restart: always
     container_name: mgrowthdb_redis
     env_file: ".env"
-    command: '--requirepass "$REDIS_PASS"'
+    command: '--protected-mode yes --requirepass "$REDIS_PASS"'
     ports:
       - "6379:6379"
