@@ -24,7 +24,7 @@
     </li>
   </ul>
 
-  <div class="js-tab-1-container experiment-form-list flex-column flex-gap-10 hidden">
+  <div class="js-tab-1-container experiment-form-list flex-column flex-gap-10">
     <form
         class="simple-form step-form js-step-form"
         action="{{ url_for('upload_step5_page', id=submission_form.submission.id) }}"
@@ -67,7 +67,7 @@
     </form>
   </div>
 
-  <div class="js-tab-2-container batch-experiment-form flex-column flex-gap-10">
+  <div class="js-tab-2-container batch-experiment-form flex-column flex-gap-10 hidden">
     <form
         class="simple-form js-batch-experiment-form"
         action="{{ url_for('upload_step5_batch_page', id=submission_form.submission.id) }}"
