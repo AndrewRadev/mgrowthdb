@@ -1,5 +1,5 @@
 Page('.upload-page .step-content.step-5.active', function($step5) {
-  $step5.initAjaxSubform({
+  $step5.find('.js-tab-1-container').initAjaxSubform({
     prefixRegex:    /experiments-(\d+)-/,
     prefixTemplate: 'experiments-{}-',
 
@@ -120,6 +120,23 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
     },
   })
 
+  $step5.on('click', '.js-tab a', function(e) {
+    e.preventDefault();
+
+    let $trigger = $(this).parents('.js-tab');
+
+    $step5.find('.js-tab').removeClass('current');
+    $trigger.addClass('current');
+
+    if ($trigger.is('.js-tab-1')) {
+      $step5.find('.js-tab-1-container').removeClass('hidden');
+      $step5.find('.js-tab-2-container').addClass('hidden');
+    } else if ($trigger.is('.js-tab-2')) {
+      $step5.find('.js-tab-1-container').addClass('hidden');
+      $step5.find('.js-tab-2-container').removeClass('hidden');
+    }
+  });
+
   $step5.on('click', '.js-edit-experiment', function() {
     $button = $(this);
 
@@ -139,4 +156,37 @@ Page('.upload-page .step-content.step-5.active', function($step5) {
     // By default, add one form
     $step5.find('.js-add-experiment').trigger('click');
   }
+
+  // Batch experiments:
+  let $batchExperimentForm = $step5.find('.js-batch-experiment-form');
+
+  // Initialize compartments:
+  let $select = $batchExperimentForm.find('.js-compartment-select');
+  $select.select2({
+    multiple: true,
+    theme: 'custom',
+    width: '100%',
+    templateResult: select2Highlighter,
+  })
+  $select.trigger('change');
+
+  // Initialize perturbation subforms:
+  $batchExperimentForm.find('.js-perturbation-form-row').initClientSideSubform({
+    buildSubform: function(perturbationIndex) {
+      let templateHtml = $batchExperimentForm.find('template.perturbation-form').html();
+      let $perturbationForm = $("<div />").html(templateHtml).children();
+
+      $perturbationForm.addPrefix(`batch-experiment-perturbations-${perturbationIndex}-`);
+
+      return $perturbationForm;
+    },
+
+    initializeSubform: function($perturbationForm) {
+      $perturbationForm.find('.js-single-select').select2({
+        theme: 'custom',
+        width: '100%',
+        templateResult: select2Highlighter,
+      })
+    }
+  });
 });

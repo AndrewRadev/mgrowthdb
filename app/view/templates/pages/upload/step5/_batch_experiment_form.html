@@ -1,0 +1,162 @@
+{% from 'pages/upload/step5/_bioreplicate_form.html' import render_bioreplicate_form %}
+{% from 'pages/upload/step5/_perturbation_form.html' import render_perturbation_form %}
+{% from 'utils/_form_errors.html' import render_form_errors %}
+
+{% macro render_batch_experiment_form(form, submission_form) %}
+  {% set submission = submission_form.submission %}
+
+  <div class="subform-container box">
+    <div class="form-row">
+      <h3>Batch-add experiments</h3>
+    </div>
+
+    <div class="js-subform {{ 'hidden' if preview else '' }}">
+      {{ render_form_errors(form.errors['']) }}
+
+      <div class="form-row margin-top-10">
+        <label class="full">
+          <div>Treatment labels</div>
+          {{ form['treatmentLabels'](class='form-input-blue form-input-full') }}
+          <p class="help small">
+            Comma-separated list of treatments, e.g.: Compound1, Compound2, ...
+          </p>
+        </label>
+
+        <label class="full">
+          <div>Treatment values</div>
+          {{ form['treatmentValues'](class='form-input-blue form-input-full') }}
+          <p class="help small">
+            Comma-separated list of treatment values, e.g.: 1.23mg/L, 4.56mg/L, ...
+          </p>
+        </label>
+      </div>
+
+      <div class="form-row margin-top-10">
+        <label class="full">
+          <div class="required">Name template</div>
+          {# Note: Have to access the input using [], since there is an existing `.name` attribute #}
+          {{ form['nameTemplate'](class='form-input-blue form-input-full', placeholder="AB+{treatmentLabel}_{treatmentValue}") }}
+
+          <p class="help small">
+            Fill in the name and description of each experiment by using the
+            special placeholders <strong>{treatmentLabel}</strong> and
+            <strong>{treatmentValue}</strong> which will be replaced with each pair of
+            treatment and value.
+          </p>
+        </label>
+
+        <label class="full">
+          <div class="required">Description template</div>
+          {{ form['descriptionTemplate'](
+            class='form-input-blue form-input-full',
+            placeholder="Monoculture of AB grown with added {treatmentValue} of {treatmentLabel}.",
+            rows=3,
+          ) }}
+        </label>
+      </div>
+
+      <div class="form-row margin-top-10">
+        <label class="flex-1">
+          <div class="required">Biological replicate count</div>
+          {{ form['bioreplicateCount'](class='form-input-blue form-input-full') }}
+        </label>
+
+        <p class="help small flex-2 no-label">
+          Biological replicates will be defined automatically based on the
+          experiment name and given sequential numbers. You can edit them
+          afterwards to add extra information.
+        </p>
+      </div>
+
+      <hr>
+
+      <div class="form-row margin-top-10">
+        <label class="full">
+          <div class="required">Cultivation mode</div>
+          {{ form.cultivationMode(class='form-input-blue form-input-full') }}
+        </label>
+
+        <label class="full">
+          <div class="required">Community</div>
+
+          <select
+              required
+              name="communityName"
+              class="form-input-blue form-input-full js-community-select">
+            {% for community_data in submission.studyDesign['communities']: %}
+              <option
+                  value="{{ community_data['name'] }}"
+                  {{ "selected" if form.data['communityName'] == community_data['name'] }}>
+                {{ community_data['name'] }}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label class="full">
+          <div class="required">Compartments</div>
+
+          <select
+              required
+              multiple
+              name="compartmentNames"
+              class="js-compartment-select">
+            {% set compartmentNames = form.data['compartmentNames'] %}
+
+            {% for compartment_data in submission.studyDesign['compartments']: %}
+              <option
+                  value="{{ compartment_data['name'] }}"
+                  {{ "selected" if compartmentNames and compartment_data['name'] in compartmentNames }}>
+                {{ compartment_data['name'] }}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label class="full">
+          <div class="required">
+            Timepoint count
+            <span class="icon icon-info" data-tooltip="Number of timepoints measured for the experiment">
+            </span>
+          </div>
+          {# Note: Have to access the input using [], since there is an existing `.name` attribute #}
+          {{ form['timepointCount'](class='form-input-blue form-input-full') }}
+        </label>
+      </div>
+
+      <div class="form-row flex-column box box-light js-perturbation-form-row" style="margin-top: 10px">
+        <div class="form-row flex-row" style="align-items: center;">
+          <h4>Perturbations</h4>
+
+          <a href="#" class="white-button small-button flex-row js-add-trigger js-add-perturbation">
+            <span class="icon icon-add"></span>
+          </a>
+
+          <div class="help">
+            Changes to the composition of the experiment over time
+          </div>
+        </div>
+
+        {{ render_form_errors(form.errors['perturbations']) }}
+
+        <div class="js-subform-list js-perturbation-subform-list flex-column flex-gap-10">
+          {% set experimentIndex = index %}
+
+          {% for perturbation_form in form.perturbations: %}
+            {{ render_perturbation_form(
+              form=perturbation_form,
+              submission_form=submission_form,
+              index=loop.index0,
+              experimentIndex=experimentIndex,
+            ) }}
+          {% endfor %}
+        </div>
+
+        <template class="perturbation-form">
+          {% set subform = form.get_template('PerturbationForm') %}
+          {{ render_perturbation_form(form=subform, submission_form=submission_form, index=None) }}
+        </template>
+      </div>
+    </div>
+  </div>
+{% endmacro %}
