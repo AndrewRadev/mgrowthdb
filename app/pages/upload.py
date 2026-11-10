@@ -1,6 +1,7 @@
 import io
 
 from sqlalchemy.orm.exc import NoResultFound
+from werkzeug.exceptions import BadRequest
 from flask import (
     g,
     render_template,
@@ -24,7 +25,7 @@ from app.view.forms.submission_form import SubmissionForm
 from app.view.forms.upload_step2_form import UploadStep2Form
 from app.view.forms.upload_step3_form import UploadStep3Form
 from app.view.forms.upload_step4_form import UploadStep4Form
-from app.view.forms.upload_step5_form import UploadStep5Form
+from app.view.forms.upload_step5_form import UploadStep5Form, UploadStep5BatchForm
 
 
 def upload_status_page():
@@ -218,6 +219,27 @@ def upload_step5_page(id):
         if upload_form.validate():
             session['submission_id'] = submission_form.save()
             return redirect(url_for('upload_step6_page', id=id))
+
+    return render_template(
+        "pages/upload/index.html",
+        submission_form=submission_form,
+        upload_form=upload_form,
+    )
+
+
+def upload_step5_batch_page(id):
+    submission_form = _load_submission_form(id, step=5)
+    upload_form     = _init_upload_form(UploadStep5Form, submission_form.submission)
+    batch_form      = UploadStep5BatchForm(request.form)
+
+    # TODO (2026-11-10) Validation
+
+    if request.method == 'POST':
+        experiment_data = batch_form.get_experiment_data()
+        submission_form.submission.studyDesign['experiments'].extend(experiment_data)
+        session['submission_id'] = submission_form.save()
+
+        return redirect(url_for('upload_step5_page', id=id))
 
     return render_template(
         "pages/upload/index.html",

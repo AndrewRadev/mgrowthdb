@@ -1,5 +1,4 @@
 from wtforms import (
-    BooleanField,
     FieldList,
     FormField,
     HiddenField,
@@ -13,6 +12,22 @@ from wtforms import (
 from wtforms.validators import DataRequired, ValidationError, Length
 
 from app.view.forms.base_form import BaseForm
+
+
+class ExperimentPerturbationForm(BaseForm):
+    class Meta:
+        csrf = False
+
+    # Note: converted to seconds when creating perturbation
+    startTime = IntegerField('startTime', validators=[DataRequired()])
+    endTime   = IntegerField('endTime',   validators=[DataRequired()])
+
+    description = TextAreaField('description', validators=[DataRequired()])
+
+    removedCompartmentName = SelectField('removedCompartmentName', choices=[], validate_choice=False)
+    addedCompartmentName   = SelectField('addedCompartmentName',   choices=[], validate_choice=False)
+    oldCommunityName       = SelectField('oldCommunityName',       choices=[], validate_choice=False)
+    newCommunityName       = SelectField('newCommunityName',       choices=[], validate_choice=False)
 
 
 class UploadStep5Form(BaseForm):
@@ -30,21 +45,6 @@ class UploadStep5Form(BaseForm):
             name         = StringField('name', validators=[DataRequired(), Length(max=100)])
             position     = StringField('position', validators=[Length(max=100)])
             biosampleUrl = URLField('biosampleUrl')
-
-        class PerturbationForm(BaseForm):
-            class Meta:
-                csrf = False
-
-            # Note: converted to seconds when creating perturbation
-            startTime = IntegerField('startTime', validators=[DataRequired()])
-            endTime   = IntegerField('endTime',   validators=[DataRequired()])
-
-            description = TextAreaField('description', validators=[DataRequired()])
-
-            removedCompartmentName = SelectField('removedCompartmentName', choices=[], validate_choice=False)
-            addedCompartmentName   = SelectField('addedCompartmentName',   choices=[], validate_choice=False)
-            oldCommunityName       = SelectField('oldCommunityName',       choices=[], validate_choice=False)
-            newCommunityName       = SelectField('newCommunityName',       choices=[], validate_choice=False)
 
         publicId       = HiddenField('publicId')
         name           = StringField('name', validators=[DataRequired(), Length(max=100)])
@@ -70,6 +70,9 @@ class UploadStep5Form(BaseForm):
             choices=[],
             validate_choice=False,
         )
+
+        # Create a local reference to the class for metaprogramming purposes
+        PerturbationForm = ExperimentPerturbationForm
 
         bioreplicates = FieldList(FormField(BioreplicateForm))
         perturbations = FieldList(FormField(PerturbationForm))
@@ -108,3 +111,84 @@ class UploadStep5Form(BaseForm):
             for bioreplicate in experiment['bioreplicates']
         ]
         self._validate_uniqueness("bioreplicate_names", "bioreplicate names are not globally unique", names)
+
+    def get_batch_form(self):
+        return UploadStep5BatchForm()
+
+
+class UploadStep5BatchForm(BaseForm):
+    class Meta:
+        csrf_time_limit = None
+
+    treatmentLabels     = StringField('treatmentLabels')
+    treatmentValues     = StringField('treatmentValues')
+    nameTemplate        = StringField('nameTemplate', validators=[DataRequired(), Length(max=100)])
+    descriptionTemplate = TextAreaField('descriptionTemplate', validators=[DataRequired()])
+    bioreplicateCount   = IntegerField('bioreplicateCount', validators=[DataRequired()], default=1)
+
+    cultivationMode = SelectField('cultivationMode', choices=[
+        ('batch',     "Batch"),
+        ('fed-batch', "Fed-batch"),
+        ('chemostat', "Chemostat"),
+        ('other',     "Other"),
+    ])
+
+    communityName = SelectField(
+        'communityName',
+        validators=[DataRequired()],
+        choices=[],
+        validate_choice=False,
+    )
+    compartmentNames = SelectMultipleField(
+        'compartmentNames',
+        validators=[DataRequired()],
+        choices=[],
+        validate_choice=False,
+    )
+    timepointCount = IntegerField('timepointCount', validators=[DataRequired()])
+
+    # Create a local reference to the class for metaprogramming purposes
+    PerturbationForm = ExperimentPerturbationForm
+
+    perturbations = FieldList(FormField(PerturbationForm))
+
+    def get_experiment_data(self):
+        treatment_labels = self.data['treatmentLabels'].split(',')
+        treatment_values = self.data['treatmentValues'].split(',')
+
+        experiment_data = []
+
+        for label in treatment_labels:
+            label = label.strip()
+
+            for value in treatment_values:
+                value = value.strip()
+
+                name = self.data['nameTemplate']
+                name = name.replace('{treatmentLabel}', label)
+                name = name.replace('{treatmentValue}', value)
+
+                description = self.data['descriptionTemplate']
+                description = description.replace('{treatmentLabel}', label)
+                description = description.replace('{treatmentValue}', value)
+
+                bioreplicate_data = []
+                for i in range(1, self.data['bioreplicateCount'] + 1):
+                    bioreplicate_data.append({
+                        "name": f"{name}_{i}",
+                        "position": "",
+                        "biosampleUrl": ""
+                    })
+
+                experiment_data.append({
+                    'name':             name,
+                    'description':      description,
+                    'communityName':    self.data['communityName'],
+                    'cultivationMode':  self.data['cultivationMode'],
+                    'compartmentNames': self.data['compartmentNames'],
+                    'timepointCount':   self.data['timepointCount'],
+                    'perturbations':    self.data['perturbations'],
+                    'bioreplicates':    bioreplicate_data,
+                })
+
+        return experiment_data

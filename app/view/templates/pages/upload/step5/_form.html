@@ -1,52 +1,96 @@
 {% from 'pages/upload/step5/_experiment_form.html' import render_experiment_form %}
+{% from 'pages/upload/step5/_batch_experiment_form.html' import render_batch_experiment_form %}
 
 {% macro render_step5_form(submission_form, upload_form) %}
+  {% set submission = submission_form.submission %}
 
-  <form
-      class="simple-form step-form js-step-form"
-      action="{{ url_for('upload_step5_page', id=submission_form.submission.id) }}"
-      method="POST">
+  <p>
+    Organize the data you've entered so far into experiments. Each experiment
+    has a single community, but may have multiple separate compartments that
+    are being measured.
+  </p>
 
-    {{ upload_form.csrf_token }}
-
-    <p>
-      Organize the data you've entered so far into experiments. Each experiment
-      has a single community, but may have multiple separate compartments that
-      are being measured. Pick the time unit that you will use when upload
-      measurements:
-    </p>
-
-    <div class="form-row flex-row">
-      <label>
-        <div class="required">Time units</div>
-        {{ upload_form['timeUnits'](class='form-input-blue form-input-full') }}
-      </label>
-    </div>
-
-    <p>
-      For each experiment, name the biological replicates of the experimental
-      design. These will show up as rows in the data spreadsheet.
-    </p>
-
-    <div class="js-subform-list flex-column flex-gap-10">
-      {% include 'pages/upload/step5/_subform_list.html' %}
-    </div>
-
-    <div class="form-row flex-right flex-row">
-      <a href="#" class="white-button flex-row js-add-trigger js-add-experiment">
-        <span class="icon icon-add"></span> Add experiment
+  <ul class="tabs">
+    <li class="js-tab js-tab-1 current">
+      <a href="#">
+        Experiments
       </a>
-    </div>
+    </li>
 
-    <div class="form-row">
-      <input type="submit" class="form-input-blue" value="Next" />
-      {% include 'pages/upload/_loader.html' %}
-    </div>
+    <li class="js-tab js-tab-2">
+      <a href="#">
+        Batch-add experiments
+      </a>
+    </li>
+  </ul>
 
-    <template class="experiment-form">
-      {% set subform = upload_form.get_template('ExperimentForm') %}
-      {{ render_experiment_form(form=subform, submission_form=submission_form, index=None) }}
-    </template>
-  </form>
+  <div class="js-tab-1-container experiment-form-list flex-column flex-gap-10">
+    <form
+        class="simple-form step-form js-step-form"
+        action="{{ url_for('upload_step5_page', id=submission_form.submission.id) }}"
+        method="POST">
+
+      {{ upload_form.csrf_token }}
+
+      <p class="margin-top-0">
+        For each experiment, name the biological replicates of the experimental
+        design. These will show up as rows in the data spreadsheet. Pick the
+        time unit that you will use when upload measurements:
+      </p>
+
+      <div class="form-row flex-row">
+        <label>
+          <div class="required">Time units</div>
+          {{ upload_form['timeUnits'](class='form-input-blue form-input-full') }}
+        </label>
+      </div>
+
+      <div class="js-subform-list flex-column flex-gap-10">
+        {% include 'pages/upload/step5/_subform_list.html' %}
+      </div>
+
+      <div class="form-row flex-right flex-row">
+        <a href="#" class="white-button flex-row js-add-trigger js-add-experiment">
+          <span class="icon icon-add"></span> Add experiment
+        </a>
+      </div>
+
+      <template class="experiment-form">
+        {% set subform = upload_form.get_template('ExperimentForm') %}
+        {{ render_experiment_form(form=subform, submission_form=submission_form, index=None) }}
+      </template>
+
+      <div class="form-row">
+        <input type="submit" class="form-input-blue" value="Next" />
+        {% include 'pages/upload/_loader.html' %}
+      </div>
+    </form>
+  </div>
+
+  <div class="js-tab-2-container batch-experiment-form flex-column flex-gap-10 hidden">
+    <form
+        class="simple-form js-batch-experiment-form"
+        action="{{ url_for('upload_step5_batch_page', id=submission_form.submission.id) }}"
+        method="POST">
+
+      <p class="margin-top-0">
+        Describe multiple experiments based on treatments. An experiment will
+        be defined for each pair of treatment label and treatment value with
+        the description and name based on the template you describe. You will
+        be able to edit the defined experiments manually in the "Experiments"
+        tab afterwards.
+      </p>
+
+      <div class="margin-top-10">
+        {{ render_batch_experiment_form(form=upload_form.get_batch_form(), submission_form=submission_form) }}
+      </div>
+
+      <div class="form-row flex-right flex-row">
+        <button type="submit" class="green-button flex-row js-add-trigger js-add-experiment">
+          Add batch of experiments
+        </button>
+      </div>
+    </form>
+  </div>
 
 {% endmacro %}
