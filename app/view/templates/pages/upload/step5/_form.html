@@ -27,7 +27,7 @@
   <div class="js-tab-1-container experiment-form-list flex-column flex-gap-10">
     <form
         class="simple-form step-form js-step-form"
-        action="{{ url_for('upload_step5_page', id=submission_form.submission.id) }}"
+        action="{{ url_for('upload_step5_page', id=submission.id) }}"
         method="POST">
 
       {{ upload_form.csrf_token }}
@@ -43,6 +43,18 @@
           <div class="required">Time units</div>
           {{ upload_form['timeUnits'](class='form-input-blue form-input-full') }}
         </label>
+
+        {% if submission.study is none: %}
+          <div class="no-label flex-right">
+            <button
+                data-url="{{ url_for('upload_step5_clear_action', id=submission.id) }}"
+                type="button"
+                class="white-button orange-border js-clear-experiments">
+              <span class="icon icon-inline icon-delete"></span>
+              Clear experiments
+            </button>
+          </div>
+        {% endif %}
       </div>
 
       <div class="js-subform-list flex-column flex-gap-10">
@@ -70,7 +82,7 @@
   <div class="js-tab-2-container batch-experiment-form flex-column flex-gap-10 hidden">
     <form
         class="simple-form js-batch-experiment-form"
-        action="{{ url_for('upload_step5_batch_page', id=submission_form.submission.id) }}"
+        action="{{ url_for('upload_step5_batch_page', id=submission.id) }}"
         method="POST">
 
       <p class="margin-top-0">

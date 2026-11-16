@@ -55,6 +55,11 @@ def init_routes(app):
         view_func=upload_pages.upload_step5_batch_page,
         methods=["GET", "POST"],
     )
+    app.add_url_rule(
+        "/upload/<int:id>/5/clear",
+        view_func=upload_pages.upload_step5_clear_action,
+        methods=["POST"],
+    )
 
     app.add_url_rule(
         "/upload/fetch-authors/",

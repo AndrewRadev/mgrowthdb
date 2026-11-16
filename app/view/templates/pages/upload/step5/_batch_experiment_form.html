@@ -10,13 +10,17 @@
       <h3>Batch-add experiments</h3>
     </div>
 
+    <p class="help small js-preview-count">
+      ...
+    </p>
+
     <div class="js-subform {{ 'hidden' if preview else '' }}">
       {{ render_form_errors(form.errors['']) }}
 
       <div class="form-row margin-top-10">
         <label class="full">
           <div>Treatment labels</div>
-          {{ form['treatmentLabels'](class='form-input-blue form-input-full') }}
+          {{ form['treatmentLabels'](class='form-input-blue form-input-full js-preview-trigger') }}
           <p class="help small">
             Comma-separated list of treatments, e.g.: Compound1, Compound2, ...
           </p>
@@ -24,7 +28,7 @@
 
         <label class="full">
           <div>Treatment values</div>
-          {{ form['treatmentValues'](class='form-input-blue form-input-full') }}
+          {{ form['treatmentValues'](class='form-input-blue form-input-full js-preview-trigger') }}
           <p class="help small">
             Comma-separated list of treatment values, e.g.: 1.23mg/L, 4.56mg/L, ...
           </p>
@@ -35,7 +39,7 @@
         <label class="full">
           <div class="required">Name template</div>
           {# Note: Have to access the input using [], since there is an existing `.name` attribute #}
-          {{ form['nameTemplate'](class='form-input-blue form-input-full', placeholder="AB+{treatmentLabel}_{treatmentValue}") }}
+          {{ form['nameTemplate'](class='form-input-blue form-input-full js-preview-trigger', placeholder="AB+{treatmentLabel}_{treatmentValue}") }}
 
           <p class="help small">
             Fill in the name and description of each experiment by using the
@@ -48,12 +52,18 @@
         <label class="full">
           <div class="required">Description template</div>
           {{ form['descriptionTemplate'](
-            class='form-input-blue form-input-full',
+            class='form-input-blue form-input-full js-preview-trigger',
             placeholder="Monoculture of AB grown with added {treatmentValue} of {treatmentLabel}.",
             rows=3,
           ) }}
         </label>
       </div>
+
+      <p class="help small">
+        <strong>Example name</strong>: <span class="js-preview-name">...</span>
+        <br>
+        <strong>Example description</strong>: <span class="js-preview-description">...</span>
+      </p>
 
       <div class="form-row margin-top-10">
         <label class="flex-1">

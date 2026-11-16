@@ -237,7 +237,7 @@ def upload_step5_batch_page(id):
     if request.method == 'POST':
         experiment_data = batch_form.get_experiment_data()
         submission_form.submission.studyDesign['experiments'].extend(experiment_data)
-        session['submission_id'] = submission_form.save()
+        submission_form.save()
 
         return redirect(url_for('upload_step5_page', id=id))
 
@@ -246,6 +246,15 @@ def upload_step5_batch_page(id):
         submission_form=submission_form,
         upload_form=upload_form,
     )
+
+
+def upload_step5_clear_action(id):
+    submission_form = _load_submission_form(id, step=5)
+
+    submission_form.submission.studyDesign['experiments'] = []
+    submission_form.save()
+
+    return redirect(url_for('upload_step5_page', id=id))
 
 
 def _step5_partial(upload_form, submission_form):
