@@ -5,6 +5,9 @@ Page('.upload-page .step-content.active', function($page) {
     window.performance.getEntriesByType('navigation')[0]?.type === 'reload' ||
     window.performance.navigation?.type === 1; // fallback for old browsers
 
+  // TODO: check previous url and current URL to see if it's a tab change:
+  let isTabChange = false
+
   // If there is an error, scroll to it:
   let $errorMessageList = $page.find('.error-message-list');
   if ($errorMessageList.length > 0) {

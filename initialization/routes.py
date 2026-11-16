@@ -51,6 +51,17 @@ def init_routes(app):
     app.add_url_rule("/upload/<int:id>/7", view_func=upload_pages.upload_step7_page, methods=["GET", "POST"])
 
     app.add_url_rule(
+        "/upload/<int:id>/5/batch",
+        view_func=upload_pages.upload_step5_batch_page,
+        methods=["GET", "POST"],
+    )
+    app.add_url_rule(
+        "/upload/<int:id>/5/clear",
+        view_func=upload_pages.upload_step5_clear_action,
+        methods=["POST"],
+    )
+
+    app.add_url_rule(
         "/upload/fetch-authors/",
         view_func=upload_pages.upload_authors_json,
         methods=["POST"],
