@@ -7,6 +7,19 @@ from app.model.lib.mediadive_fetcher import MediadiveFetcher
 
 
 class TestMediadiveFetcher(unittest.TestCase):
+    def test_parsing_url(self):
+        fetcher = MediadiveFetcher.from_url("https://mediadive.dsmz.de/medium/339")
+        self.assertEqual(fetcher.mediadive_id, '339')
+
+        fetcher = MediadiveFetcher.from_url("https://mediadive.dsmz.de/medium/P1")
+        self.assertEqual(fetcher.mediadive_id, 'P1')
+
+        fetcher = MediadiveFetcher.from_url("http://mediadive.dsmz.de/medium/1a?moreParams")
+        self.assertEqual(fetcher.mediadive_id, '1a')
+
+        fetcher = MediadiveFetcher.from_url("http://mediadive.fake.de/medium/1")
+        self.assertIsNone(fetcher)
+
     def test_fetching_media_from_url(self):
         expected_ingredients = [
             {"compound": "dehydrated Wilkins-Chalgren medium", "g_l": 33,     "mmol_l": None},
@@ -21,8 +34,7 @@ class TestMediadiveFetcher(unittest.TestCase):
                 'https://mediadive.dsmz.de/download/composition/339/json',
                 json=expected_ingredients,
             )
-            medium_url = 'https://mediadive.dsmz.de/medium/339'
-            fetcher = MediadiveFetcher(medium_url)
+            fetcher = MediadiveFetcher('339')
 
             # Request is successful, ingredients are extracted:
             self.assertTrue(fetcher.make_request())
@@ -35,8 +47,7 @@ class TestMediadiveFetcher(unittest.TestCase):
                 'https://mediadive.dsmz.de/download/composition/P1/json',
                 text='nothing to be shown',
             )
-            medium_url = 'https://mediadive.dsmz.de/medium/P1'
-            fetcher = MediadiveFetcher(medium_url)
+            fetcher = MediadiveFetcher('P1')
 
             # Request is successful, but no ingredients:
             self.assertTrue(fetcher.make_request())
@@ -49,8 +60,7 @@ class TestMediadiveFetcher(unittest.TestCase):
                 status_code=404,
                 json={'status': 404, 'count': 0, 'error': 'DataNotFound', 'msg': 'Medium does not exist'},
             )
-            medium_url = 'https://mediadive.dsmz.de/medium/9999'
-            fetcher = MediadiveFetcher(medium_url)
+            fetcher = MediadiveFetcher('9999')
 
             # Request is a failure:
             self.assertFalse(fetcher.make_request())

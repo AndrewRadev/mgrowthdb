@@ -3,23 +3,25 @@ import re
 
 
 class MediadiveFetcher:
-    def __init__(self, mediadive_url):
-        self.mediadive_url = mediadive_url
+    @classmethod
+    def from_url(Self, mediadive_url):
+        if id_match := re.search(r'mediadive\.dsmz\.de/medium/([0-9a-zA-Z]+)', mediadive_url):
+            return Self(id_match[1])
+        else:
+            return None
+
+    def __init__(self, mediadive_id):
+        self.mediadive_id = mediadive_id
         self._response_json = None
 
     def make_request(self):
-        if id_match := re.search(r'mediadive\.dsmz\.de/medium/([0-9a-zA-Z]+)', self.mediadive_url):
-            medium_id = id_match[1]
-        else:
-            return False
-
-        medium_url = f"https://mediadive.dsmz.de/rest/medium/{medium_id}"
+        medium_url = f"https://mediadive.dsmz.de/rest/medium/{self.mediadive_id}"
         response = requests.get(medium_url)
         if response.status_code != 200:
             self._response_json = None
             return False
 
-        composition_url = f"https://mediadive.dsmz.de/download/composition/{medium_id}/json"
+        composition_url = f"https://mediadive.dsmz.de/download/composition/{self.mediadive_id}/json"
         response = requests.get(composition_url)
 
         try:
