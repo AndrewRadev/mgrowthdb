@@ -21,13 +21,13 @@ class MediadiveFetcher:
             self._response_json = None
             return False
 
-        composition_url = f"https://mediadive.dsmz.de/download/composition/{self.mediadive_id}/json"
+        composition_url = f"https://mediadive.dsmz.de/rest/medium-composition/{self.mediadive_id}"
         response = requests.get(composition_url)
 
         try:
             response_json = response.json()
             self._response_json = response_json
         except requests.exceptions.JSONDecodeError:
-            self._response_json = []
+            self._response_json = {}
 
         return True

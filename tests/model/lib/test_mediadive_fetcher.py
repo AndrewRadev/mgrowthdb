@@ -21,37 +21,49 @@ class TestMediadiveFetcher(unittest.TestCase):
         self.assertIsNone(fetcher)
 
     def test_fetching_media_from_url(self):
-        expected_ingredients = [
-            {"compound": "dehydrated Wilkins-Chalgren medium", "g_l": 33,     "mmol_l": None},
-            {"compound": "L-Cysteine HCl",                     "g_l": 0.3,    "mmol_l": 1.90331},
-            {"compound": "Sodium resazurin",                   "g_l": 0.0005, "mmol_l": 0.00199068},
-            {"compound": "Distilled water",                    "g_l": None,   "mmol_l": None}
-        ]
+        expected_payload = {
+            "status": 200,
+            "count": 5,
+            "data": [
+                {"id": 1, "name": "dehydrated Wilkins-Chalgren medium", "g_l": 33,     "mmol_l": None},
+                {"id": 2, "name": "L-Cysteine HCl",                     "g_l": 0.3,    "mmol_l": 1.90331},
+                {"id": 3, "name": "Sodium resazurin",                   "g_l": 0.0005, "mmol_l": 0.00199068},
+                {"id": 4, "name": "Distilled water",                    "g_l": None,   "mmol_l": None}
+            ]
+        }
 
         with requests_mock.Mocker() as m:
             m.get('https://mediadive.dsmz.de/rest/medium/339', status_code=200)
             m.get(
-                'https://mediadive.dsmz.de/download/composition/339/json',
-                json=expected_ingredients,
+                'https://mediadive.dsmz.de/rest/medium-composition/339',
+                json=expected_payload,
             )
             fetcher = MediadiveFetcher('339')
 
             # Request is successful, ingredients are extracted:
             self.assertTrue(fetcher.make_request())
-            self.assertEqual(fetcher._response_json, expected_ingredients)
+            self.assertEqual(fetcher._response_json, expected_payload)
 
     def test_fetching_media_with_no_composition(self):
+        expected_payload = {
+            "status": 404,
+            "count": 0,
+            "error": "DataNotFound",
+            "msg": "Medium does not exist"
+        }
+
         with requests_mock.Mocker() as m:
             m.get('https://mediadive.dsmz.de/rest/medium/P1', status_code=200)
             m.get(
-                'https://mediadive.dsmz.de/download/composition/P1/json',
-                text='nothing to be shown',
+                'https://mediadive.dsmz.de/rest/medium-composition/P1',
+                status_code=404,
+                json=expected_payload,
             )
             fetcher = MediadiveFetcher('P1')
 
             # Request is successful, but no ingredients:
             self.assertTrue(fetcher.make_request())
-            self.assertEqual(fetcher._response_json, [])
+            self.assertEqual(fetcher._response_json, expected_payload)
 
     def test_fetching_missing_media(self):
         with requests_mock.Mocker() as m:
