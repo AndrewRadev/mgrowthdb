@@ -26,7 +26,8 @@ class MediadiveFetcher:
             self.component_data = None
             return False
 
-        self.medium_name = response.json()['medium']['name']
+        response_json = response.json()
+        self.medium_name = response_json['data']['medium']['name']
 
         composition_url = f"https://mediadive.dsmz.de/rest/medium-composition/{self.mediadive_id}"
         response = requests.get(composition_url)
@@ -39,12 +40,13 @@ class MediadiveFetcher:
 
         return True
 
-    def create_study_records(self, db_session, study):
+    def create_study_records(self, db_session, study, medium_name=None):
         assert(self.medium_name is not None)
         assert(self.component_data is not None)
 
         medium = Medium(
-            name=self.medium_name,
+            name=(medium_name or self.medium_name),
+            url=f"https://mediadive.dsmz.de/medium/{self.mediadive_id}",
             study=study,
             mediadiveId=self.mediadive_id,
         )

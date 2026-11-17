@@ -33,4 +33,5 @@ class Medium(OrmBase):
     components: Mapped[List['MediumComponent']] = relationship(
         back_populates='medium',
         order_by='MediumComponent.position',
+        cascade='all, delete-orphan',
     )
