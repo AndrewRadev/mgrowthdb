@@ -25,8 +25,12 @@ class Medium(OrmBase):
     name:        Mapped[str] = mapped_column(sql.String(255), nullable=False)
     url:         Mapped[str] = mapped_column(sql.String(255))
     description: Mapped[str] = mapped_column(sql.String)
+    mediadiveId: Mapped[str] = mapped_column(sql.String(100))
 
     studyId: Mapped[str] = mapped_column(sql.ForeignKey('Studies.publicId'), nullable=False)
     study: Mapped['Study'] = relationship(back_populates='media')
 
-    components: Mapped[List['MediumComponent']] = relationship(back_populates='medium')
+    components: Mapped[List['MediumComponent']] = relationship(
+        back_populates='medium',
+        order_by='MediumComponent.position',
+    )

@@ -8,6 +8,7 @@ def up(conn):
             name VARCHAR(255) NOT NULL,
             `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
             description TEXT DEFAULT NULL,
+            mediadiveId VARCHAR(100) DEFAULT NULL,
             studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
             KEY Media_studyId (studyId),
             CONSTRAINT Media_studyId
@@ -26,6 +27,8 @@ def up(conn):
             molarConcentration float DEFAULT NULL,
             mediadiveId INT DEFAULT NULL,
             mediumId INT NOT NULL,
+            optional tinyint(1) NOT NULL DEFAULT '0',
+            position INT NOT NULL DEFAULT 1,
             KEY MediumComponents_mediumId (mediumId),
             CONSTRAINT MediumComponents_mediumId
                 FOREIGN KEY (mediumId)

@@ -322,6 +322,7 @@ CREATE TABLE Media (
   `name` varchar(255) NOT NULL,
   `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `description` text,
+  mediadiveId varchar(100) DEFAULT NULL,
   studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (id),
   KEY Media_studyId (studyId),
@@ -343,6 +344,8 @@ CREATE TABLE MediumComponents (
   molarConcentration float DEFAULT NULL,
   mediadiveId int DEFAULT NULL,
   mediumId int NOT NULL,
+  `optional` tinyint(1) NOT NULL DEFAULT '0',
+  position int NOT NULL DEFAULT '1',
   PRIMARY KEY (id),
   KEY MediumComponents_mediumId (mediumId),
   CONSTRAINT MediumComponents_mediumId FOREIGN KEY (mediumId) REFERENCES Media (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -916,5 +919,5 @@ INSERT INTO MigrationVersions VALUES
 (112,'2026_10_04_101309_create_demo_projects','2026-10-05 12:34:58'),
 (113,'2026_10_06_112526_add_logo_to_demo_projects','2026-10-06 09:12:33'),
 (114,'2026_10_27_140728_increase_measurement_value_size','2026-10-27 13:10:54'),
-(116,'2026_11_17_110736_create_media_tables','2026-11-17 11:37:03');
+(119,'2026_11_17_110736_create_media_tables','2026-11-17 16:38:25');
 

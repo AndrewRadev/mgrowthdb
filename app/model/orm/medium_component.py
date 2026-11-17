@@ -22,10 +22,13 @@ class MediumComponent(OrmBase):
 
     id:          Mapped[int] = mapped_column(primary_key=True)
     name:        Mapped[str] = mapped_column(sql.String(255), nullable=False)
-    mediadiveId: Mapped[str] = mapped_column(sql.Integer)
+    mediadiveId: Mapped[int] = mapped_column(sql.Integer)
 
     massConcentration:  Mapped[float] = mapped_column(sql.Float)
     molarConcentration: Mapped[float] = mapped_column(sql.Float)
+
+    optional: Mapped[bool] = mapped_column(sql.Boolean, nullable=False, default=False)
+    position: Mapped[int] = mapped_column(sql.Integer, nullable=False, default=1)
 
     mediumId: Mapped[str] = mapped_column(sql.ForeignKey('Media.id'), nullable=False)
     medium: Mapped['Medium'] = relationship(back_populates='components')
