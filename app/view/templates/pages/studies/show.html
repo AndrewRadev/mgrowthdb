@@ -123,6 +123,30 @@
 
       {{ render_strains_and_metabolites(study) }}
 
+      {% if study.media: %}
+        <h2>Media</h2>
+
+        <p>
+          <ol>
+            {% for medium in study.media: %}
+              <li>
+                {% if medium.url: %}
+                  {{ medium.url|external_link(medium.name) }}
+                {% else: %}
+                  {{ medium.name }}
+                {% endif %}
+
+                {% if medium.components: %}
+                  <div class="small">
+                  {{ medium.get_components_description() }}
+                  </div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ol>
+        </p>
+      {% endif %}
+
       <h2>Measurement techniques</h2>
 
       <p>

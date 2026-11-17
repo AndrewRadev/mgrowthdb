@@ -35,3 +35,18 @@ class Medium(OrmBase):
         order_by='MediumComponent.position',
         cascade='all, delete-orphan',
     )
+
+    def get_components_description(self):
+        description_parts = []
+
+        for component in self.components:
+            if component.massConcentration and component.molarConcentration:
+                measurement = f"{component.massConcentration:.3f} g/L ({component.molarConcentration:.3f} mmol/L) "
+            elif component.massConcentration:
+                measurement = f"{component.massConcentration:.3f} g/L"
+            elif component.molarConcentration:
+                measurement = f"{component.molarConcentration:.3f} mmol/L"
+
+            description_parts.append(f"{measurement} {component.name}")
+
+        return ', '.join(description_parts)
