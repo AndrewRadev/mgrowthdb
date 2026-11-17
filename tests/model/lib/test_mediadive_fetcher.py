@@ -37,7 +37,7 @@ class TestMediadiveFetcher(DatabaseTest):
         with requests_mock.Mocker() as m:
             m.get(
                 'https://mediadive.dsmz.de/rest/medium/339',
-                json={'medium': {'id': 339, 'name': 'WC anaerobe broth'}},
+                json={'data': {'medium': {'id': 339, 'name': 'WC anaerobe broth'}}},
             )
             m.get(
                 'https://mediadive.dsmz.de/rest/medium-composition/339',
@@ -60,7 +60,7 @@ class TestMediadiveFetcher(DatabaseTest):
         with requests_mock.Mocker() as m:
             m.get(
                 'https://mediadive.dsmz.de/rest/medium/P1',
-                json={'medium': {'id': 'P1', 'name': 'HaHa agar'}},
+                json={'data': {'medium': {'id': 'P1', 'name': 'HaHa agar'}}},
             )
             m.get(
                 'https://mediadive.dsmz.de/rest/medium-composition/P1',
@@ -100,7 +100,7 @@ class TestMediadiveFetcher(DatabaseTest):
         with requests_mock.Mocker() as m:
             m.get(
                 'https://mediadive.dsmz.de/rest/medium/339',
-                json={'medium': {'id': 339, 'name': 'WC anaerobe broth'}},
+                json={'data': {'medium': {'id': 339, 'name': 'WC anaerobe broth'}}},
             )
             m.get(
                 'https://mediadive.dsmz.de/rest/medium-composition/339',
