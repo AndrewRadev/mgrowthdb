@@ -6,6 +6,7 @@ from wtforms import (
     SelectMultipleField,
     StringField,
     URLField,
+    TextAreaField,
 )
 from wtforms.validators import DataRequired, Optional, Length
 
@@ -15,6 +16,14 @@ from app.view.forms.base_form import BaseForm
 class UploadStep4Form(BaseForm):
     class Meta:
         csrf_time_limit = None
+
+    class MediumForm(BaseForm):
+        class Meta:
+            csrf = False
+
+        name        = StringField('name', validators=[DataRequired()])
+        url         = URLField('url', validators=[Length(max=100)])
+        description = TextAreaField('description')
 
     class CompartmentForm(BaseForm):
         class Meta:

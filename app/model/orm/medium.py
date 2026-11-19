@@ -36,19 +36,20 @@ class Medium(OrmBase):
         cascade='all, delete-orphan',
     )
 
-    def get_components_description_html(self):
-        from markupsafe import Markup
-
-        description_parts = []
+    def get_component_descriptions(self):
+        parts = []
 
         for component in self.components:
             massPart = None
             molarPart = None
 
             if component.massConcentration:
-                massPart = f"{component.massConcentration:.3f} g/L"
+                massPart = f"{component.massConcentration} g/L"
             if component.molarConcentration:
-                massPart = f"{component.molarConcentration:.3f} mmol/L"
+                if component.molarConcentration < 1e-3:
+                    massPart = f"{component.molarConcentration:.1e} mM"
+                else:
+                    massPart = f"{component.molarConcentration:.3f} mM"
 
             if massPart and molarPart:
                 measurement = f"{massPart} ({molarPart})"
@@ -56,7 +57,19 @@ class Medium(OrmBase):
                 measurement = massPart
             elif molarPart:
                 measurement = molarPart
+            else:
+                measurement = ''
 
-            description_parts.append(f"{measurement} <strong>{component.name}</strong>")
+            parts.append((component.name, measurement))
+
+        return parts
+
+    def get_component_description_html(self):
+        from markupsafe import Markup
+
+        description_parts = []
+
+        for component_name, measurement in self.get_component_descriptions():
+            description_parts.append(f"{measurement} <strong>{component_name}</strong>".strip())
 
         return Markup(', '.join(description_parts))

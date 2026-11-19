@@ -138,8 +138,17 @@
 
                 {% if medium.components: %}
                   <div class="small">
-                  {{ medium.get_components_description_html() }}
+                    {{ medium.get_component_description_html() }}
                   </div>
+                  <br>
+
+                  <ul class="small" style="padding-left: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                    {% for component_name, measurement in medium.get_component_descriptions(): %}
+                      <li>
+                        {{ measurement }} <strong>{{ component_name }}</strong>
+                      </li>
+                    {% endfor %}
+                  </ul>
                 {% endif %}
               </li>
             {% endfor %}

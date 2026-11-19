@@ -1,0 +1,41 @@
+{% macro render_medium_form(form, index) %}
+  <div class="subform-container box js-subform-container">
+    <h3>
+      Medium <span class="js-index">{{ index + 1 if index is not none else '' }}</span>:
+      <span class="js-title">{{ form.data['name'] or '[New]' }}</span>
+    </h3>
+
+    <div class="form-row form-row-compact">
+      <label>
+        <div>
+          URL
+          <span class="icon icon-info" data-tooltip="A link to a URL with information about the medium. MediaDive is recommended"></span>
+        </div>
+        {{ form.url(class="form-input-blue form-input-full", placeholder="https://mediadive.dsmz.de/medium/339") }}
+      </label>
+
+      <div class="no-label">
+        <button
+            type="button"
+            class="green-button js-fetch-mediadive-info"
+            data-url="{{ url_for('upload_mediadive_info_json') }}"
+            disabled>
+          Fetch MediaDive info
+        </button>
+      </div>
+
+      <label>
+        <div class="required">Name</div>
+        {{ form['name'](class='form-input-blue form-input-full', placeholder="e.g. WC/BHI/GAM", maxlength=5) }}
+      </label>
+    </div>
+
+    <div class="form-row form-row-compact">
+      <label class="full">
+        <div>Description</div>
+        {{ form.description(rows=2, class="form-input-blue form-input-full", placeholder="Details about the medium preparation that you think are important to communicate.") }}
+      </label>
+    </div>
+  </div>
+
+{% endmacro %}

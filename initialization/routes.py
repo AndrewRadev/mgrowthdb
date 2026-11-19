@@ -60,6 +60,11 @@ def init_routes(app):
         view_func=upload_pages.upload_preview_fragment,
         methods=["POST"],
     )
+    app.add_url_rule(
+        "/upload/fetch-mediadive-info/",
+        view_func=upload_pages.upload_mediadive_info_json,
+        methods=["POST"],
+    )
 
     app.add_url_rule(
         "/upload/edit_submission/<int:id>",

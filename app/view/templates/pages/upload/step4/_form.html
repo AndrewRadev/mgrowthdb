@@ -1,3 +1,4 @@
+{% from 'pages/upload/step4/_medium_form.html' import render_medium_form %}
 {% from 'pages/upload/step4/_compartment_form.html' import render_compartment_form %}
 {% from 'pages/upload/step4/_community_form.html' import render_community_form %}
 
@@ -8,6 +9,34 @@
       action="{{ url_for('upload_step4_page', id=submission_form.submission.id) }}"
       method="POST">
     {{ upload_form.csrf_token }}
+
+    <section class="js-medium-section flex-column flex-gap-10">
+      <div>
+        <p>
+          Describe the media used in the study, which you will use below when
+          defining compartments. It is recommended to provide a link to
+          {{ "https://mediadive.dsmz.de/media"|external_link("MediaDive") }}.
+          You can then click the "Fetch MediaDive info" method to attach the
+          name and medium components based on their recipe.
+        </p>
+
+        <p>
+          You can define a custom medium using MediaDive's
+          {{ "https://mediadive.dsmz.de/docs/medium-builder"|external_link("medium builder") }}.
+          Alternatively, you can add the ingredients of your media directly here.
+        </p>
+      </div>
+
+      <div class="js-subform-list flex-column flex-gap-10">
+        {% include 'pages/upload/step4/_medium_subform_list.html' %}
+      </div>
+
+      <div class="form-row flex-right flex-row">
+        <a href="#" class="white-button flex-row js-add-trigger">
+          <span class="icon icon-add"></span> Add media
+        </a>
+      </div>
+    </section>
 
     <section class="js-compartment-section flex-column flex-gap-10">
       <div>
@@ -24,13 +53,6 @@
           separate "compartments" that you measure separately as well. If you
           change environments e.g. by modifying pH from neutral to acidic, you
           can describe them as two separate compartments.
-        </p>
-
-        <p>
-          To describe the medium, it is recommended to provide a link to
-          {{ "https://mediadive.dsmz.de/media"|external_link("MediaDive") }}.
-          You can define a custom medium using their
-          {{ "https://mediadive.dsmz.de/docs/medium-builder"|external_link("medium builder") }}.
         </p>
 
         <p>
@@ -81,6 +103,11 @@
         {% include 'pages/upload/_loader.html' %}
       </div>
     </section>
+
+    <template class="medium-form">
+      {% set subform = upload_form.get_template('MediumForm') %}
+      {{ render_medium_form(form=subform, index=None) }}
+    </template>
 
     <template class="compartment-form">
       {% set subform = upload_form.get_template('CompartmentForm') %}
