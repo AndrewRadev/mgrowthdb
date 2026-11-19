@@ -20,7 +20,7 @@ with get_session() as db_session:
                 continue
 
             print(f"  > Compartment: {compartment.name}, URL: {compartment.mediumUrl}")
-            medium_data.add((compartment.mediumName, compartment.mediumUrl))
+            medium_data.add((compartment.mediumName.strip(), compartment.mediumUrl.strip()))
 
         for medium_name, medium_url in medium_data:
             mediadive_fetcher = MediadiveFetcher.from_url(medium_url)
