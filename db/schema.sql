@@ -311,6 +311,66 @@ CREATE TABLE Measurements (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `Media`
+--
+
+DROP TABLE IF EXISTS Media;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE Media (
+  id int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `description` text,
+  mediadiveId varchar(100) DEFAULT NULL,
+  studyId varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  PRIMARY KEY (id),
+  KEY Media_studyId (studyId),
+  CONSTRAINT Media_studyId FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `MediumComponents`
+--
+
+DROP TABLE IF EXISTS MediumComponents;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE MediumComponents (
+  id int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  massConcentration float DEFAULT NULL,
+  molarConcentration float DEFAULT NULL,
+  mediadiveId int DEFAULT NULL,
+  mediumId int NOT NULL,
+  `optional` tinyint(1) NOT NULL DEFAULT '0',
+  position int NOT NULL DEFAULT '1',
+  PRIMARY KEY (id),
+  KEY MediumComponents_mediumId (mediumId),
+  CONSTRAINT MediumComponents_mediumId FOREIGN KEY (mediumId) REFERENCES Media (id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `MediumIngredients`
+--
+
+DROP TABLE IF EXISTS MediumIngredients;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE MediumIngredients (
+  id int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  mass decimal(10,5) DEFAULT NULL,
+  chebiId varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  mediadiveId int DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY MediumIngredients_name (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `Metabolites`
 --
 
@@ -876,5 +936,7 @@ INSERT INTO MigrationVersions VALUES
 (111,'2026_08_13_123711_add_auc_to_measurement_context','2026-08-21 15:45:15'),
 (112,'2026_10_04_101309_create_demo_projects','2026-10-05 12:34:58'),
 (113,'2026_10_06_112526_add_logo_to_demo_projects','2026-10-06 09:12:33'),
-(115,'2026_10_27_140728_increase_measurement_value_size','2026-10-27 13:09:27');
+(114,'2026_10_27_140728_increase_measurement_value_size','2026-10-27 13:10:54'),
+(119,'2026_11_17_110736_create_media_tables','2026-11-17 16:38:25'),
+(122,'2026_11_19_155825_create_medium_ingredients','2026-11-19 15:02:10');
 

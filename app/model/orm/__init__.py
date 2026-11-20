@@ -10,6 +10,9 @@ from .experiment_compartment import ExperimentCompartment
 from .measurement import Measurement
 from .measurement_context import MeasurementContext
 from .measurement_technique import MeasurementTechnique
+from .medium import Medium
+from .medium_component import MediumComponent
+from .medium_ingredient import MediumIngredient
 from .metabolite import Metabolite
 from .modeling_result import ModelingResult
 from .page_error import PageError

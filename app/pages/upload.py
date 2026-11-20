@@ -20,6 +20,7 @@ from app.model.lib.submission_process import (
 from app.model.lib.errors import LoginRequired
 from app.model.lib.util import is_ajax
 from app.model.lib.crossref_fetcher import CrossrefFetcher
+from app.model.lib.mediadive_fetcher import MediadiveFetcher
 from app.view.forms.submission_form import SubmissionForm
 from app.view.forms.upload_step2_form import UploadStep2Form
 from app.view.forms.upload_step3_form import UploadStep3Form
@@ -94,6 +95,21 @@ def upload_authors_json():
         return {
             'authorsHtml': render_template('pages/upload/step1/_authors.html', error=str(e)),
         }
+
+def upload_mediadive_info_json():
+    _require_user()
+    fetcher = MediadiveFetcher.from_url(request.form['url'])
+
+    if fetcher is None:
+        raise ClientError('Not a MediaDive URL')
+
+    if fetcher.make_request():
+        return {
+            'mediumName': fetcher.medium_name,
+            'components': fetcher.component_data,
+        }
+    else:
+        raise ClientError('Error making MediaDive request')
 
 
 def upload_preview_fragment():

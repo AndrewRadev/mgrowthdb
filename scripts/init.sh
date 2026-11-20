@@ -68,6 +68,13 @@ else
 fi
 python scripts/external/ncbi/insert_data.py
 
+if [ -f "var/external_data/mediadive/ingredient_dump.json" ]; then
+  echo "> MediaDive data dump already downloaded"
+else
+  python scripts/external/mediadive/download_dump.py
+fi
+python scripts/external/mediadive/insert_data.py
+
 #
 # Create initial studies:
 #
