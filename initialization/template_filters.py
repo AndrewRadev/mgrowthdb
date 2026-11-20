@@ -33,5 +33,6 @@ def init_template_filters(app):
 
     app.template_filter('format_text')(text.format_text)
     app.template_filter('highlight')(text.highlight)
+    app.template_filter('pluralize')(text.pluralize)
 
     return app
