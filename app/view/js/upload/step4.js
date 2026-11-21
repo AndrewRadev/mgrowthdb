@@ -25,29 +25,48 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
 
       let $fetchButton = $subform.find('.js-fetch-mediadive-info');
 
-      $urlInput.on('keyup', _.debounce(function() {
-        let url = $(this).val();
-
-        if (url.match(/mediadive\.dsmz\.de\/medium\/./)) {
-          $fetchButton.attr('disabled', false);
-        } else {
-          $fetchButton.attr('disabled', true);
-        }
-      }, 200));
-
       $fetchButton.on('click', function() {
-        if ($fetchButton.is('disabled')) {
+        let mediaUrl = $urlInput.val();
+
+        if (!mediaUrl.match(/mediadive\.dsmz\.de\/medium\/./)) {
           return;
         }
 
+        $urlInput.addClass('loading-input');
+
         $.ajax($fetchButton.data('url'), {
           method: 'POST',
-          data: { url: $urlInput.val() },
+          data: { url: mediaUrl, mediumIndex: index },
           success: function(response) {
+            $urlInput.removeClass('loading-input');
             $nameInput.animateVal(response.mediumName);
             updateIndexAndName($subform, index + 1, $nameInput)
+
+            let $form = $urlInput.parents('.js-subform-container');
+            let $subforms = $form.find('.js-medium-component-subform-list');
+
+            $subforms.html(response.componentHtml);
           }
         });
+      });
+
+      let mediumIndex = index;
+      let $mediumForm = $subform;
+
+      // Initialize component subform
+      $mediumForm.find('.js-medium-component-form-row').initClientSideSubform({
+        buildSubform: function(componentIndex) {
+          let templateHtml = $mediumForm.find('template.medium-component-form').html();
+          let $componentForm = $("<div />").html(templateHtml).children();
+
+          $componentForm.addPrefix(`media-${mediumIndex}-components-${componentIndex}-`);
+
+          return $componentForm;
+        },
+
+        afterAdd: function($componentForm) {
+          $componentForm.find('input[name$="name"]').focus();
+        }
       });
     },
 

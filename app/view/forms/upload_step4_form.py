@@ -25,6 +25,15 @@ class UploadStep4Form(BaseForm):
         url         = URLField('url', validators=[Length(max=100)])
         description = TextAreaField('description')
 
+        class MediumComponentForm(BaseForm):
+            class Meta:
+                csrf = False
+
+                name = StringField('name', validators=[DataRequired()])
+
+                massConcentration  = DecimalField('massConcentration',  validators=[Optional()])
+                molarConcentration = DecimalField('molarConcentration', validators=[Optional()])
+
     class CompartmentForm(BaseForm):
         class Meta:
             csrf = False

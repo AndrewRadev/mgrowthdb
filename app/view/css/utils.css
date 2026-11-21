@@ -51,6 +51,10 @@
   flex-grow: 1;
 }
 
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
 .flex-1 {
   flex: 1;
 }
@@ -89,6 +93,10 @@
 
 .margin-top-0 {
   margin-top: 0;
+}
+
+.margin-top-6 {
+  margin-top: 6px;
 }
 
 .margin-top-10 {
@@ -419,6 +427,7 @@ form.simple-form {
   border: 1px solid transparent;
   border-radius: var(--border-radius);
   padding: 0.7rem;
+  min-width: 0;
 
   &.form-input-small {
     padding: 0.5rem;

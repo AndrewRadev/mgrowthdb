@@ -299,6 +299,10 @@ $.fn.initClientSideSubform = function(params) {
     // DOM, allows adding some placeholder data.
     beforeAdd: function($subform) {},
 
+    // Triggered after a new form is added to the DOM, could be used to scroll
+    // to the form.
+    afterAdd: function($subform) {},
+
     // Run any necessary javascript on the newly-created form:
     initializeSubform: function($subform, index) {},
 
@@ -346,6 +350,9 @@ $.fn.initClientSideSubform = function(params) {
 
     // Trigger necessary javascript
     params.initializeSubform($newSubform, subformCount);
+
+    // Trigger post-add callback
+    params.afterAdd($newSubform);
 
     // Initialize any new tooltips:
     initTooltips();

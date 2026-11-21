@@ -106,7 +106,11 @@ def upload_mediadive_info_json():
     if fetcher.make_request():
         return {
             'mediumName': fetcher.medium_name,
-            'components': fetcher.component_data,
+            'componentHtml': render_template(
+                'pages/upload/step4/_medium_components.html',
+                medium_index=request.form['mediumIndex'],
+                component_data=fetcher.component_data,
+            )
         }
     else:
         raise ClientError('Error making MediaDive request')
