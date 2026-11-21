@@ -34,8 +34,6 @@ def pluralize(count, singular_phrase):
         prefix = None
         singular_word = parts[0]
 
-    print(count, singular_phrase)
-
     # Rules:
     if singular_word in _IRREGULAR_PLURALIZATIONS:
         word = _IRREGULAR_PLURALIZATIONS[singular_word]
