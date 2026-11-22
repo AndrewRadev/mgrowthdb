@@ -25,13 +25,22 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
 
       let $fetchButton = $subform.find('.js-fetch-mediadive-info');
 
+      let tooltip = tippy($fetchButton[0], {
+        content: "The URL does not look like a MediaDive URL (e.g. https://mediadive.dsmz.de/medium/1)",
+        trigger: 'click',
+      })
+      tooltip.disable();
+
       $fetchButton.on('click', function() {
         let mediaUrl = $urlInput.val();
 
         if (!mediaUrl.match(/mediadive\.dsmz\.de\/medium\/./)) {
+          tooltip.enable();
+          tooltip.show();
           return;
         }
 
+        tooltip.disable();
         $urlInput.addClass('loading-input');
 
         $.ajax($fetchButton.data('url'), {
