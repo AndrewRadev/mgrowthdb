@@ -1,27 +1,35 @@
 {% macro render_medium_component_form(prefix, entry) %}
-  <div class="box flex-column flex-gap-6 margin-top-6 small" style="max-width: 150px">
-    <input
-        type="text"
-        class="form-input-blue form-input-small"
-        name="{{ prefix }}name"
-        value="{{ entry['name'] }}" />
-
-    <label class="flex-row flex-gap-6">
+  <div class="box flex-column flex-gap-6 margin-top-6 smaller js-subform-container" style="max-width: 200px">
+    <div class="flex-row flex-gap-6">
       <input
           type="text"
-          class="form-input-blue form-input-small"
-          name="{{ prefix }}massConcentration"
-          value="{{ entry['g_l'] or "" }}" />
-      <span style="white-space: nowrap">g/L</span>
-    </label>
+          class="form-input-blue form-input-full form-input-small"
+          name="{{ prefix }}name"
+          value="{{ entry['name'] }}" />
 
-    <label class="flex-row flex-gap-6">
-      <input
-          type="text"
-          class="form-input-blue form-input-small"
-          name="{{ prefix }}molarConcentration"
-          value="{{ entry['mmol_l'] or "" }}" />
-      <span class="flex-grow">mM</span>
-    </label>
+      <a href="#" class="white-button smaller small-button flex-row flex-start js-remove-trigger">
+        <span class="icon icon-remove"></span>
+      </a>
+    </div>
+
+    <div class="flex-row flex-gap-6">
+      <label class="flex-row flex-gap-6">
+        <input
+            type="text"
+            class="form-input-blue form-input-small"
+            name="{{ prefix }}massConcentration"
+            value="{{ entry['g_l'] or "" }}" />
+        <span style="white-space: nowrap">g/L</span>
+      </label>
+
+      <label class="flex-row flex-gap-6">
+        <input
+            type="text"
+            class="form-input-blue form-input-small"
+            name="{{ prefix }}molarConcentration"
+            value="{{ entry['mmol_l'] or "" }}" />
+        <span class="flex-grow">mM</span>
+      </label>
+    </div>
   </div>
 {% endmacro %}

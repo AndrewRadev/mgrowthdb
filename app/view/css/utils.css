@@ -307,6 +307,10 @@ form.simple-form {
     display: flex;
     column-gap: 10px;
 
+    label {
+      min-width: 0;
+    }
+
     label.full {
       flex-grow: 1;
     }
@@ -355,7 +359,6 @@ form.simple-form {
       padding: 0.5rem;
     }
   }
-
 
   input[type="reset"],
   button[type="reset"] {

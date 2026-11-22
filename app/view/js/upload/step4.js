@@ -74,6 +74,11 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
         },
 
         afterAdd: function($componentForm) {
+          let $container = $mediumForm.find('.js-medium-component-subform-list');
+          let $addBox = $container.find('.js-add-box');
+          $addBox.remove();
+          $container.append($addBox);
+
           $componentForm.find('input[name$="name"]').focus();
         }
       });
