@@ -94,6 +94,26 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
       $newForm.find('input[name$="name"]').val('');
       $newForm.find('.js-title').html('[New]')
     },
+
+    beforeRemove: function($subform) {
+      let $nameInput = $subform.find('input[name$="name"]');
+      let removedName = $.trim($nameInput.val());
+
+      // Remove options with this name from compartment inputs. In case there
+      // are duplicates pre-validation, we only remove the first encounter
+      $step4.find('.js-compartment-section .js-medium-names-select').each(function() {
+        let nameOptions = $(this).find('option').get();
+
+        for (let option of nameOptions) {
+          let $option = $(option);
+
+          if ($.trim($option.val()) === removedName) {
+            $option.remove();
+            break;
+          }
+        }
+      });
+    }
   });
 
   $step4.find('.js-compartment-section').initAjaxSubform({

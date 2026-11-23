@@ -128,7 +128,10 @@ $.fn.initAjaxSubform = function(params) {
     e.preventDefault();
     e.stopPropagation();
 
-    $(e.currentTarget).parents('.js-subform-container').first().fadeOut(150, function() {
+    let $subform = $(e.currentTarget).parents('.js-subform-container');
+
+    $subform.first().fadeOut(150, function() {
+      params.beforeRemove($subform);
       $(this).remove();
     });
   });
