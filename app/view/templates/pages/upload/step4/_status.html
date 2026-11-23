@@ -1,8 +1,23 @@
 {% macro render_step4_status(submission_form, submission) %}
 
   <ul class="upload-status">
+    {% set media        = submission.studyDesign['media'] %}
     {% set compartments = submission.studyDesign['compartments'] %}
-    {% set communities = submission.studyDesign['communities'] %}
+    {% set communities  = submission.studyDesign['communities'] %}
+
+    {% if media|length > 0: %}
+      <li class="complete">
+        <span class="icon"></span>
+        <span>{{ media|length|pluralize("medium") }}:</span>
+        <span class="truncate">
+          {{ media|map(attribute='name')|join_tag('strong') }}
+        </span>
+      </li>
+    {% else: %}
+      <li class="incomplete">
+        <span class="icon"></span> No media defined
+      </li>
+    {% endif %}
 
     {% if compartments|length > 0: %}
       <li class="complete">
