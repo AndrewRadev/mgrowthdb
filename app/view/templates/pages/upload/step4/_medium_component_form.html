@@ -30,7 +30,8 @@
     <div class="flex-row flex-gap-6">
       <label class="flex-row flex-gap-6">
         <input
-            type="text"
+            type="number"
+            step="any"
             class="form-input-blue form-input-small"
             name="{{ prefix }}massConcentration"
             value="{{ entry['massConcentration'] or "" }}" />
@@ -41,7 +42,8 @@
     <div class="flex-row flex-gap-6">
       <label class="flex-row flex-gap-6">
         <input
-            type="text"
+            type="number"
+            step="any"
             class="form-input-blue form-input-small"
             name="{{ prefix }}molarConcentration"
             value="{{ entry['molarConcentration'] or "" }}" />
