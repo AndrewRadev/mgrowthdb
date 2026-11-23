@@ -35,6 +35,11 @@ class MediadiveFetcher:
         try:
             response_json = response.json()
             self.component_data = response_json.get('data', [])
+
+            # Add an alias so we can easily plug this data into forms:
+            for entry in self.component_data:
+                entry['mediadiveId'] = entry['id']
+
         except requests.exceptions.JSONDecodeError:
             self.component_data = []
 

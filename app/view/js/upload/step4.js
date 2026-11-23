@@ -55,6 +55,7 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
             let $subforms = $form.find('.js-medium-component-subform-list');
 
             $subforms.html(response.componentHtml);
+            initIngredientSelects($subforms);
           }
         });
       });
@@ -71,6 +72,10 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
           $componentForm.addPrefix(`media-${mediumIndex}-components-${componentIndex}-`);
 
           return $componentForm;
+        },
+
+        initializeSubform: function($componentForm, componentIndex) {
+          initIngredientSelects($componentForm);
         },
 
         afterAdd: function($componentForm) {
@@ -168,5 +173,25 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
     if ($nameInput) {
       $title.html($nameInput.val());
     }
+  }
+
+  function initIngredientSelects($componentForm) {
+    $componentForm.find('.js-ingredients-select').each(function() {
+      let $select = $(this);
+
+      $select.select2({
+        theme: 'custom',
+        width: '100%',
+        minimumInputLength: 1,
+        ajax: {
+          url: '/medium-ingredients/completion/',
+          dataType: 'json',
+          delay: 100,
+          cache: true,
+        },
+        templateResult: select2Highlighter,
+      });
+      $select.trigger('change');
+    });
   }
 });
