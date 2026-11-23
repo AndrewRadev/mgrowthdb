@@ -35,6 +35,9 @@ from app.model.orm import (
     Measurement,
     MeasurementContext,
     MeasurementTechnique,
+    Medium,
+    MediumComponent,
+    MediumIngredient,
     Metabolite,
     ModelingResult,
     PageError,
@@ -306,6 +309,8 @@ def init_admin(app):
     admin.add_view(ExperimentEntityView(Bioreplicate,          db_session, category="Experiments"))
     admin.add_view(ExperimentEntityView(Community,             db_session, category="Experiments"))
     admin.add_view(ExperimentEntityView(Perturbation,          db_session, category="Experiments"))
+    admin.add_view(ExperimentEntityView(Medium,                db_session, category="Experiments"))
+    admin.add_view(ExperimentEntityView(MediumComponent,       db_session, category="Experiments"))
 
     class ModelingResultView(AppView):
         column_exclude_list = ['rSummary', 'xValues', 'yValues', 'yErrors']
@@ -342,6 +347,7 @@ def init_admin(app):
 
     admin.add_view(MetaboliteView(Metabolite,   db_session, category="External data"))
     admin.add_view(TaxonView(Taxon,             db_session, category="External data"))
+    admin.add_view(AppView(MediumIngredient,    db_session, category="External data"))
     admin.add_view(DemoProjectView(DemoProject, db_session, category="External data"))
 
     class UserView(AppView):
