@@ -20,6 +20,7 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
 
       $nameInput.on('change', function() {
         updateIndexAndName($subform, index + 1, $(this));
+        updateCompartmentMediumNames();
       });
       updateIndexAndName($subform, index + 1, null);
 
@@ -194,4 +195,24 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
       $select.trigger('change');
     });
   }
+
+  function updateCompartmentMediumNames() {
+    let $nameInputs = $step4.find('.js-medium-section').find('.js-medium-name-input');
+    let names = $.map($nameInputs.get(), function(input) { return $.trim($(input).val()) });
+
+    $step4.find('.js-compartment-section .js-medium-names-select').each(function() {
+      let $nameSelect = $(this);
+      let options = $nameSelect.find('option').get();
+
+      for (let [index, name] of Object.entries(names)) {
+        if (index < options.length) {
+          $(options[index]).html(name);
+        } else {
+          $nameSelect.append(`<option>${name}</option>`);
+        }
+      }
+    });
+  }
+
+  updateCompartmentMediumNames();
 });

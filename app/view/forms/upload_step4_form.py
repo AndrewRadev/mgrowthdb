@@ -42,8 +42,7 @@ class UploadStep4Form(BaseForm):
 
         name = StringField('name', validators=[DataRequired()])
 
-        mediumName = StringField('mediumName', validators=[Length(max=100)])
-        mediumUrl  = URLField('mediumUrl', validators=[Length(max=100)])
+        mediumName = SelectField('mediumName', choices=[], validate_choice=False)
 
         volume        = DecimalField('volume',        validators=[Optional()])
         pressure      = DecimalField('pressure',      validators=[Optional()])
