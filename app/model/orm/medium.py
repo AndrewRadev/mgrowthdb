@@ -63,13 +63,3 @@ class Medium(OrmBase):
             parts.append((component.mediadiveId, component.name, measurement))
 
         return parts
-
-    def get_component_description_html(self):
-        from markupsafe import Markup
-
-        description_parts = []
-
-        for _, component_name, measurement in self.get_component_descriptions():
-            description_parts.append(f"{measurement} <strong>{component_name}</strong>".strip())
-
-        return Markup(', '.join(description_parts))
