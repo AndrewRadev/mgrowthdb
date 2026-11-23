@@ -60,7 +60,7 @@ class Medium(OrmBase):
             else:
                 measurement = ''
 
-            parts.append((component.name, measurement))
+            parts.append((component.mediadiveId, component.name, measurement))
 
         return parts
 
@@ -69,7 +69,7 @@ class Medium(OrmBase):
 
         description_parts = []
 
-        for component_name, measurement in self.get_component_descriptions():
+        for _, component_name, measurement in self.get_component_descriptions():
             description_parts.append(f"{measurement} <strong>{component_name}</strong>".strip())
 
         return Markup(', '.join(description_parts))

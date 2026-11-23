@@ -126,34 +126,32 @@
       {% if study.media: %}
         <h2>Media</h2>
 
-        <p>
-          <ol>
-            {% for medium in study.media: %}
-              <li>
-                {% if medium.url: %}
-                  {{ medium.url|external_link(medium.name) }}
-                {% else: %}
-                  {{ medium.name }}
-                {% endif %}
+        <ol class="flex-column flex-gap-10">
+          {% for medium in study.media: %}
+            <li>
+              {% if medium.url: %}
+                {{ medium.url|external_link(medium.name) }}
+              {% else: %}
+                {{ medium.name }}
+              {% endif %}
 
-                {% if medium.components: %}
-                  <div class="small">
-                    {{ medium.get_component_description_html() }}
-                  </div>
-                  <br>
-
-                  <ul class="small" style="padding-left: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-                    {% for component_name, measurement in medium.get_component_descriptions(): %}
-                      <li>
-                        {{ measurement }} <strong>{{ component_name }}</strong>
-                      </li>
-                    {% endfor %}
-                  </ul>
-                {% endif %}
-              </li>
-            {% endfor %}
-          </ol>
-        </p>
+              {% if medium.components: %}
+                <ul class="smaller medium-components">
+                  {% for mediadive_id, component_name, measurement in medium.get_component_descriptions(): %}
+                    <li>
+                      {{ measurement }}
+                      {% if mediadive_id: %}
+                        {{ "https://mediadive.dsmz.de/ingredients/{}".format(mediadive_id)|external_link(component_name) }}
+                      {% else: %}
+                        {{ component_name }}
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
       {% endif %}
 
       <h2>Measurement techniques</h2>
