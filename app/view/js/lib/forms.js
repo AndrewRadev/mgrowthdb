@@ -110,6 +110,9 @@ $.fn.initAjaxSubform = function(params) {
     // that should be unique:
     onDuplicate: function($subform) {},
 
+    // Triggered before a form is removed, to do any cleanup elsewhere.
+    beforeRemove: function($subform) {},
+
     // Run any necessary javascript on the newly-created form:
     initializeSubform: function($subform, index) {},
   };
@@ -130,7 +133,7 @@ $.fn.initAjaxSubform = function(params) {
 
     let $subform = $(e.currentTarget).parents('.js-subform-container');
 
-    $subform.first().fadeOut(150, function() {
+    $subform.first().fadeOut(250, function() {
       params.beforeRemove($subform);
       $(this).remove();
     });
@@ -160,7 +163,7 @@ $.fn.initAjaxSubform = function(params) {
           params.addNewSubform($subformList, $addButton, $newSubform)
 
           // Add fade-in effect
-          $newSubform.hide().fadeIn(150);
+          $newSubform.hide().fadeIn(250);
 
           // Trigger necessary javascript
           params.initializeSubform($newSubform, subformCount);
@@ -222,7 +225,7 @@ $.fn.initAjaxSubform = function(params) {
           $newSubform.addClass('new');
 
           // Add fade-in effect
-          $newSubform.hide().fadeIn(150);
+          $newSubform.hide().fadeIn(250);
 
           // Add it to the end of the list:
           params.addNewSubform($subformList, $duplicateButton, $newSubform)
@@ -306,6 +309,9 @@ $.fn.initClientSideSubform = function(params) {
     // to the form.
     afterAdd: function($subform) {},
 
+    // Triggered before a form is removed, to do any cleanup elsewhere.
+    beforeRemove: function($subform) {},
+
     // Run any necessary javascript on the newly-created form:
     initializeSubform: function($subform, index) {},
 
@@ -323,7 +329,12 @@ $.fn.initClientSideSubform = function(params) {
     e.preventDefault();
     e.stopPropagation();
 
-    $(e.currentTarget).parents('.js-subform-container').first().remove();
+    let $subform = $(e.currentTarget).parents('.js-subform-container');
+
+    $subform.first().fadeOut(250, function() {
+      params.beforeRemove($subform);
+      $(this).remove();
+    });
   });
 
   $container.on('click', '.js-add-trigger', function(e) {
@@ -343,7 +354,7 @@ $.fn.initClientSideSubform = function(params) {
     $newSubform.addClass('new');
 
     // Add fade-in effect
-    $newSubform.hide().fadeIn(150);
+    $newSubform.hide().fadeIn(250);
 
     // Trigger pre-add callback
     params.beforeAdd($newSubform);
