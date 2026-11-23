@@ -4,12 +4,3 @@
   {% set prefix = "media-{}-components-{}-".format(medium_index, loop.index0) %}
   {{ render_medium_component_form(prefix, entry, submission_form) }}
 {% endfor %}
-
-<div class="box new js-add-box" style="padding: 0; margin-top: 6px;">
-  <a
-      href="#"
-      class="white-button flex-row flex-center js-add-trigger js-add-medium-component"
-      style="border: none; height: 100%;">
-    <span class="icon icon-add"></span> Add component
-  </a>
-</div>

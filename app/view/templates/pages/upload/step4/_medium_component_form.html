@@ -4,9 +4,10 @@
     {% set name = submission_form.fetch_medium_ingredient_name(entry['mediadiveId']) %}
   {% endif %}
 
-  <input type="hidden" name="{{ prefix }}name" value="{{ name }}" />
+  <div
+      class="flex-column flex-gap-6 margin-top-6 margin-bottom-6 smaller js-subform-container">
+    <input type="hidden" name="{{ prefix }}name" value="{{ name }}" />
 
-  <div class="box flex-column flex-gap-6 margin-top-6 smaller js-subform-container">
     <div class="flex-row flex-gap-6 mediadive-select-row">
       <select
           name="{{ prefix }}mediadiveId"

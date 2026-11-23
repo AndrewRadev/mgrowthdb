@@ -83,6 +83,10 @@
   gap: 10px;
 }
 
+.flex-gap-20 {
+  gap: 20px;
+}
+
 .flex-gap-6 {
   gap: 6px;
 }
@@ -101,6 +105,10 @@
 
 .margin-top-10 {
   margin-top: 10px;
+}
+
+.margin-bottom-6 {
+  margin-bottom: 6px;
 }
 
 .margin-bottom-10 {
