@@ -34,11 +34,16 @@ class MediadiveFetcher:
 
         try:
             response_json = response.json()
-            self.component_data = response_json.get('data', [])
-
-            # Add an alias so we can easily plug this data into forms:
-            for entry in self.component_data:
-                entry['mediadiveId'] = entry['id']
+            self.component_data = [
+                {
+                    'name':               entry['name'],
+                    'mediadiveId':        entry['id'],
+                    'massConcentration':  entry['g_l'],
+                    'molarConcentration': entry['mmol_l'],
+                    'optional':           entry.get('optional', False),
+                }
+                for entry in response_json.get('data', [])
+            ]
 
         except requests.exceptions.JSONDecodeError:
             self.component_data = []
@@ -61,9 +66,9 @@ class MediadiveFetcher:
             medium_component = MediumComponent(
                 medium=medium,
                 name=entry['name'],
-                mediadiveId=entry['id'],
-                massConcentration=entry.get('g_l'),
-                molarConcentration=entry.get('mmol_l'),
+                mediadiveId=entry['mediadiveId'],
+                massConcentration=entry.get('massConcentration'),
+                molarConcentration=entry.get('molarConcentration'),
                 optional=entry.get('optional', False),
                 position=i + 1,
             )

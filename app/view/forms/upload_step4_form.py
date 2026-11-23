@@ -21,18 +21,20 @@ class UploadStep4Form(BaseForm):
         class Meta:
             csrf = False
 
-        name        = StringField('name', validators=[DataRequired()])
-        url         = URLField('url', validators=[Length(max=100)])
-        description = TextAreaField('description')
-
         class MediumComponentForm(BaseForm):
             class Meta:
                 csrf = False
 
-                name = StringField('name', validators=[DataRequired()])
+            mediadiveId = StringField('mediadiveId', validators=[DataRequired()])
 
-                massConcentration  = DecimalField('massConcentration',  validators=[Optional()])
-                molarConcentration = DecimalField('molarConcentration', validators=[Optional()])
+            massConcentration  = DecimalField('massConcentration',  validators=[Optional()])
+            molarConcentration = DecimalField('molarConcentration', validators=[Optional()])
+
+        name        = StringField('name', validators=[DataRequired()])
+        url         = URLField('url', validators=[Length(max=100)])
+        description = TextAreaField('description')
+
+        components = FieldList(FormField(MediumComponentForm))
 
     class CompartmentForm(BaseForm):
         class Meta:
@@ -74,8 +76,13 @@ class UploadStep4Form(BaseForm):
         name              = StringField('name', validators=[DataRequired()])
         strainIdentifiers = SelectMultipleField('strainIdentifiers', choices=[], validate_choice=False)
 
+    media        = FieldList(FormField(MediumForm))
     compartments = FieldList(FormField(CompartmentForm))
     communities  = FieldList(FormField(CommunityForm))
+
+    def validate_media(self, field):
+        names = [c['name'] for c in field.data]
+        self._validate_uniqueness("media_names", "Medium names are not unique", names)
 
     def validate_compartments(self, field):
         names = [c['name'] for c in field.data]

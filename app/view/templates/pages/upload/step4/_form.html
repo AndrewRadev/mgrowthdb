@@ -106,7 +106,7 @@
 
     <template class="medium-form">
       {% set subform = upload_form.get_template('MediumForm') %}
-      {{ render_medium_form(form=subform, index=None) }}
+      {{ render_medium_form(form=subform, index=None, submission_form=submission_form) }}
     </template>
 
     <template class="compartment-form">

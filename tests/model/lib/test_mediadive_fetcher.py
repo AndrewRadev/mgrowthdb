@@ -22,16 +22,15 @@ class TestMediadiveFetcher(DatabaseTest):
         self.assertIsNone(fetcher)
 
     def test_fetching_media_from_url(self):
-        component_data = [
-            {"id": 1, "name": "dehydrated Wilkins-Chalgren medium", "g_l": 33,     "mmol_l": None},
-            {"id": 2, "name": "L-Cysteine HCl",                     "g_l": 0.3,    "mmol_l": 1.90331},
-            {"id": 3, "name": "Sodium resazurin",                   "g_l": 0.0005, "mmol_l": 0.00199068},
-            {"id": 4, "name": "Distilled water",                    "g_l": None,   "mmol_l": None}
-        ]
-        expected_payload = {
+        payload = {
             "status": 200,
             "count": 5,
-            "data": component_data
+            "data": [
+                {"id": 1, "name": "dehydrated WC medium", "g_l": 33,     "mmol_l": None},
+                {"id": 2, "name": "L-Cysteine HCl",       "g_l": 0.3,    "mmol_l": 1.90331},
+                {"id": 3, "name": "Sodium resazurin",     "g_l": 0.0005, "mmol_l": 0.00199068},
+                {"id": 4, "name": "Distilled water",      "g_l": None,   "mmol_l": None}
+            ]
         }
 
         with requests_mock.Mocker() as m:
@@ -41,13 +40,42 @@ class TestMediadiveFetcher(DatabaseTest):
             )
             m.get(
                 'https://mediadive.dsmz.de/rest/medium-composition/339',
-                json=expected_payload,
+                json=payload,
             )
             fetcher = MediadiveFetcher('339')
 
             # Request is successful, ingredients are extracted:
             self.assertTrue(fetcher.make_request())
-            self.assertEqual(fetcher.component_data, component_data)
+            self.assertEqual(fetcher.component_data, [
+                {
+                    "mediadiveId": 1,
+                    "name": "dehydrated WC medium",
+                    "massConcentration": 33,
+                    "molarConcentration": None,
+                    "optional": False,
+                },
+                {
+                    "mediadiveId": 2,
+                    "name": "L-Cysteine HCl",
+                    "massConcentration": 0.3,
+                    "molarConcentration": 1.90331,
+                    "optional": False,
+                },
+                {
+                    "mediadiveId": 3,
+                    "name": "Sodium resazurin",
+                    "massConcentration": 0.0005,
+                    "molarConcentration": 0.00199068,
+                    "optional": False,
+                },
+                {
+                    "mediadiveId": 4,
+                    "name": "Distilled water",
+                    "massConcentration": None,
+                    "molarConcentration": None,
+                    "optional": False,
+                }
+            ])
 
     def test_fetching_media_with_no_composition(self):
         expected_payload = {

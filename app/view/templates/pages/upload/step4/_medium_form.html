@@ -1,7 +1,7 @@
 {% from 'utils/_form_errors.html' import render_form_errors %}
 {% from 'pages/upload/step4/_medium_component_form.html' import render_medium_component_form %}
 
-{% macro render_medium_form(form, index) %}
+{% macro render_medium_form(form, index, submission_form) %}
   <div class="subform-container box js-subform-container">
     <h3>
       Medium <span class="js-index">{{ index + 1 if index is not none else '' }}</span>:
@@ -35,7 +35,7 @@
     <div class="form-row form-row-compact">
       <label class="full">
         <div>Description</div>
-        {{ form.description(rows=2, class="form-input-blue form-input-full", placeholder="Details about the medium preparation that you think are important to communicate.") }}
+        {{ form['description'](rows=2, class="form-input-blue form-input-full", placeholder="Details about the medium preparation that you think are important to communicate.") }}
       </label>
     </div>
 
@@ -51,14 +51,14 @@
       {{ render_form_errors(form.errors['components']) }}
 
       <div class="js-subform-list js-medium-component-subform-list flex-row flex-wrap flex-gap-10">
-        {% set component_data = form['components'] %}
+        {% set component_data = form.data['components'] %}
         {% set medium_index = index %}
         {% include 'pages/upload/step4/_medium_components.html' %}
       </div>
 
       <template class="medium-component-form">
         {% set subform = form.get_template('MediumComponentForm') %}
-        {{ render_medium_component_form(entry=subform.data, prefix="") }}
+        {{ render_medium_component_form(entry=subform.data, prefix="", submission_form=submission_form) }}
       </template>
     </div>
   </div>

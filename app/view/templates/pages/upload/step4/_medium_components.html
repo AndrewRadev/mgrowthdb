@@ -2,7 +2,7 @@
 
 {% for entry in component_data: %}
   {% set prefix = "media-{}-components-{}-".format(medium_index, loop.index0) %}
-  {{ render_medium_component_form(prefix, entry) }}
+  {{ render_medium_component_form(prefix, entry, submission_form) }}
 {% endfor %}
 
 <div class="box new js-add-box" style="padding: 0; margin-top: 6px;">

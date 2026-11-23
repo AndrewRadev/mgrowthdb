@@ -7,12 +7,13 @@ import sqlalchemy as sql
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.model.orm import (
-    Taxon,
+    MediumIngredient,
     Metabolite,
     Project,
     Study,
     Submission,
-    SubmissionBackup
+    SubmissionBackup,
+    Taxon,
 )
 
 DEFAULT_STUDY_DESIGN = {
@@ -37,6 +38,7 @@ DEFAULT_STUDY_DESIGN = {
     'strains':        [],
     'custom_strains': [],
     'techniques':     [],
+    'media':          [],
     'compartments':   [],
     'communities':    [],
     'experiments':    [],
@@ -246,6 +248,17 @@ class SubmissionForm:
             sql.select(Taxon)
             .where(Taxon.ncbiId.in_(strains))
         ).all()
+
+    def fetch_medium_ingredient_name(self, mediadive_id):
+        medium_ingredient = self.db_session.scalars(
+            sql.select(MediumIngredient)
+            .where(MediumIngredient.mediadiveId == mediadive_id)
+        ).one_or_none()
+
+        if medium_ingredient:
+            return medium_ingredient.name
+        else:
+            return None
 
     def fetch_metabolites_for_technique(self, technique_index=None):
         if technique_index is None:
