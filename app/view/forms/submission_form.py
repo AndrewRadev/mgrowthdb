@@ -250,15 +250,7 @@ class SubmissionForm:
         ).all()
 
     def fetch_medium_ingredient_name(self, mediadive_id):
-        medium_ingredient = self.db_session.scalars(
-            sql.select(MediumIngredient)
-            .where(MediumIngredient.mediadiveId == mediadive_id)
-        ).one_or_none()
-
-        if medium_ingredient:
-            return medium_ingredient.name
-        else:
-            return None
+        return MediumIngredient.fetch_name(self.db_session, mediadive_id)
 
     def fetch_metabolites_for_technique(self, technique_index=None):
         if technique_index is None:

@@ -35,6 +35,7 @@ class Medium(OrmBase):
         order_by='MediumComponent.position',
         cascade='all, delete-orphan',
     )
+    compartments: Mapped[List['Compartment']] = relationship(back_populates='medium')
 
     def get_component_descriptions(self):
         parts = []

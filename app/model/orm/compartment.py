@@ -85,6 +85,10 @@ class Compartment(OrmBase):
 
     dilutionRate: Mapped[Decimal] = mapped_column(sql.Numeric(7, 3), nullable=True)
 
+    mediumId: Mapped[str] = mapped_column(sql.ForeignKey('Media.id'), nullable=False)
+    medium: Mapped['Medium'] = relationship(back_populates='compartments')
+
+    # Legacy fields, medium should now be used as a separate record:
     mediumName: Mapped[str]  = mapped_column(sql.String(100), nullable=True)
     mediumUrl:  Mapped[str]  = mapped_column(sql.String(100), nullable=True)
 

@@ -26,6 +26,18 @@ class MediumIngredient(OrmBase):
     mediadiveId: Mapped[str] = mapped_column(sql.String(100))
     mediadiveId: Mapped[int] = mapped_column(sql.Integer)
 
+    @classmethod
+    def fetch_name(Self, db_session, mediadive_id):
+        medium_ingredient = db_session.scalars(
+            sql.select(Self)
+            .where(Self.mediadiveId == mediadive_id)
+        ).one_or_none()
+
+        if medium_ingredient:
+            return medium_ingredient.name
+        else:
+            return None
+
     @staticmethod
     def search_by_name(db_session, term, page=1, per_page=10):
         term = term.lower().strip()

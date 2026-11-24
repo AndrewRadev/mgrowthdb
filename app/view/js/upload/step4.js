@@ -222,12 +222,22 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
     $step4.find('.js-compartment-section .js-medium-names-select').each(function() {
       let $nameSelect = $(this);
       let options = $nameSelect.find('option').get();
+      let selectedName = $nameSelect.parents('label').data('selected');
 
       for (let [index, name] of Object.entries(names)) {
+        let isSelected = false;
+        if (name === selectedName) {
+          isSelected = true;
+        }
+
         if (index < options.length) {
-          $(options[index]).html(name);
+          let $option = $(options[index]);
+          $option.html(name);
+          if (isSelected) {
+            $option.prop('selected', true)
+          }
         } else {
-          $nameSelect.append(`<option>${name}</option>`);
+          $nameSelect.append(`<option ${isSelected ? "selected": ""}>${name}</option>`);
         }
       }
     });

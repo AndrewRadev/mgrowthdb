@@ -102,8 +102,11 @@ CREATE TABLE Compartments (
   mediumName varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   mediumUrl varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   dilutionRate decimal(7,3) DEFAULT NULL,
+  mediumId int DEFAULT NULL,
   PRIMARY KEY (id),
   KEY fk_1 (studyId),
+  KEY Compartment_mediumId (mediumId),
+  CONSTRAINT Compartment_mediumId FOREIGN KEY (mediumId) REFERENCES Media (id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT Compartments_fk_1 FOREIGN KEY (studyId) REFERENCES Studies (publicId) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -938,5 +941,6 @@ INSERT INTO MigrationVersions VALUES
 (113,'2026_10_06_112526_add_logo_to_demo_projects','2026-10-06 09:12:33'),
 (114,'2026_10_27_140728_increase_measurement_value_size','2026-10-27 13:10:54'),
 (119,'2026_11_17_110736_create_media_tables','2026-11-17 16:38:25'),
-(122,'2026_11_19_155825_create_medium_ingredients','2026-11-19 15:02:10');
+(122,'2026_11_19_155825_create_medium_ingredients','2026-11-19 15:02:10'),
+(124,'2026_11_24_110012_add_medium_id_to_compartments','2026-11-24 10:02:42');
 

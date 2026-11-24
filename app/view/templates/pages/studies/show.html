@@ -129,10 +129,18 @@
         <ol class="flex-column flex-gap-10">
           {% for medium in study.media: %}
             <li>
-              {% if medium.url: %}
-                {{ medium.url|external_link(medium.name) }}
-              {% else: %}
-                {{ medium.name }}
+              <strong>
+                {% if medium.url: %}
+                  {{ medium.url|external_link(medium.name) }}
+                {% else: %}
+                  {{ medium.name }}
+                {% endif %}
+              </strong>
+
+              {% if medium.description: %}
+                <div class="small">
+                  {{ medium.description }}
+                </div>
               {% endif %}
 
               {% if medium.components: %}

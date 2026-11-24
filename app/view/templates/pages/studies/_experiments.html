@@ -38,7 +38,11 @@
               <br>
 
               Medium:
-              {% if compartment.mediumUrl: %}
+              {% if compartment.medium and compartment.medium.url: %}
+                {{ compartment.medium.url|external_link(compartment.medium.name) }}
+              {% elif compartment.medium: %}
+                {{ compartment.medium.name }}
+              {% elif compartment.mediumUrl: %}
                 {{ compartment.mediumUrl|external_link(compartment.mediumName) }}
               {% else: %}
                 {{ compartment.mediumName }}
