@@ -139,9 +139,8 @@ class DatabaseTest(unittest.TestCase):
         study_id = self._get_or_create_dependency(params, 'studyId', ('study', 'publicId'))
 
         params = {
-            'studyId':    study_id,
-            'name':       f"Compartment {self.compartment_sequence}",
-            'mediumName': 'WC anaerobe broth',
+            'studyId': study_id,
+            'name':    f"Compartment {self.compartment_sequence}",
             **params,
         }
 

@@ -99,7 +99,7 @@ CREATE TABLE Compartments (
   initialPh decimal(7,2) DEFAULT NULL,
   initialTemperature decimal(7,2) DEFAULT NULL,
   carbonSource tinyint(1) DEFAULT '0',
-  mediumName varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  mediumName varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   mediumUrl varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   dilutionRate decimal(7,3) DEFAULT NULL,
   mediumId int DEFAULT NULL,
@@ -942,5 +942,6 @@ INSERT INTO MigrationVersions VALUES
 (114,'2026_10_27_140728_increase_measurement_value_size','2026-10-27 13:10:54'),
 (119,'2026_11_17_110736_create_media_tables','2026-11-17 16:38:25'),
 (122,'2026_11_19_155825_create_medium_ingredients','2026-11-19 15:02:10'),
-(124,'2026_11_24_110012_add_medium_id_to_compartments','2026-11-24 10:02:42');
+(124,'2026_11_24_110012_add_medium_id_to_compartments','2026-11-24 10:02:42'),
+(126,'2026_11_24_114650_remove_mandatory_medium_name_from_compartments','2026-11-24 10:47:57');
 

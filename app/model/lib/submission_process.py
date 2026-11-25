@@ -317,7 +317,11 @@ def _save_compartments(db_session, submission_form, study):
         compartment = Compartment(**Compartment.filter_keys(compartment_data))
 
         if media_by_name:
-            compartment.medium = media_by_name.get(compartment.mediumName)
+            if medium := media_by_name.get(compartment.mediumName):
+                compartment.medium = medium
+                # Cache medium fields for now
+                compartment.mediumName = medium.name
+                compartment.mediumUrl = medium.url
 
         compartments.append(compartment)
 
