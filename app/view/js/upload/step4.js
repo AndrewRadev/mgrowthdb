@@ -57,6 +57,7 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
 
             $subforms.html(response.componentHtml);
             initIngredientSelects($subforms);
+            updateCompartmentMediumNames();
           }
         });
       });
@@ -143,6 +144,10 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
       $newForm.find('input[name$="name"]').val('');
       $newForm.find('.js-title').html('[New]')
     },
+
+    afterAdd: function() {
+      updateCompartmentMediumNames();
+    }
   });
 
   $step4.find('.js-community-section').initAjaxSubform({

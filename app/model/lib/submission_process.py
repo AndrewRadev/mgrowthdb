@@ -295,6 +295,10 @@ def _save_media(db_session, submission_form, study):
         medium.studyId = study.publicId
 
         for component_entry in component_data:
+            mediadive_id = component_entry.get('mediadiveId')
+            if mediadive_id is None or mediadive_id.strip() == '':
+                continue
+
             component = MediumComponent(**MediumComponent.filter_keys(component_entry))
             component.name = MediumIngredient.fetch_name(db_session, component.mediadiveId)
             medium.components.append(component)

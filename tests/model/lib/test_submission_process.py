@@ -161,6 +161,10 @@ class TestSubmissionProcess(DatabaseTest):
                 "components": [
                     {"mediadiveId": "2095", "massConcentration": 33, "molarConcentration": None},
                     {"mediadiveId": "1157", "massConcentration": 0.3, "molarConcentration": 1.90331},
+                    # Ignored since they're empty
+                    {"mediadiveId": ""},
+                    {"mediadiveId": None},
+                    {},
                 ],
             }, {
                 "url": "",

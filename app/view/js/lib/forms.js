@@ -113,6 +113,10 @@ $.fn.initAjaxSubform = function(params) {
     // Triggered before a form is removed, to do any cleanup elsewhere.
     beforeRemove: function($subform) {},
 
+    // Triggered after a new form is added to the DOM, could be used to scroll
+    // to the form.
+    afterAdd: function($subform) {},
+
     // Run any necessary javascript on the newly-created form:
     initializeSubform: function($subform, index) {},
   };
@@ -167,6 +171,9 @@ $.fn.initAjaxSubform = function(params) {
 
           // Trigger necessary javascript
           params.initializeSubform($newSubform, subformCount);
+
+          // Post-add callback
+          params.afterAdd($newSubform);
 
           // Initialize any new tooltips:
           initTooltips();
