@@ -2,7 +2,7 @@ import sqlalchemy as sql
 
 from db import get_session
 from app.model.lib.mediadive_fetcher import MediadiveFetcher
-from app.model.orm import Study, Medium
+from app.model.orm import Study, Medium, MediumComponent
 
 with get_session() as db_session:
     studies = db_session.scalars(
