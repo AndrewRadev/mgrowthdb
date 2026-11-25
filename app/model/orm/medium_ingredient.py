@@ -23,8 +23,8 @@ class MediumIngredient(OrmBase):
     name: Mapped[str]     = mapped_column(sql.String(255), nullable=False)
     mass: Mapped[Decimal] = mapped_column(sql.Numeric(10, 5))
 
-    mediadiveId: Mapped[str] = mapped_column(sql.String(100))
     mediadiveId: Mapped[int] = mapped_column(sql.Integer)
+    chebiId:     Mapped[str] = mapped_column(sql.String(100))
 
     @classmethod
     def fetch_name(Self, db_session, mediadive_id):
