@@ -4,7 +4,7 @@
 {% from 'pages/studies/_experiments_toc.html' import render_experiments_toc %}
 
 <div class="flex-row">
-  <div>
+  <div class="flex-1">
     {% for experiment in experiments: %}
       <div class="experiment-container">
         <h2 id="experiment-{{ experiment.publicId }}">
