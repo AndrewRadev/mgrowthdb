@@ -123,24 +123,28 @@ You can check the "Include STD" checkbox to add columns to the data spreadsheet 
 
 For strain-level measurements, you can check the "Include unknown" checkbox to add an additional column for recording unknown reads, like contamination.
 
-<h2 id="step-4">Step 4: Compartments and communities</h2>
+<h2 id="step-4">Step 4: Media, compartments and communities</h2>
 
 <div class="image-container" style="width: 50%; float: right; margin-left: 20px; margin-top: 20px;">
     <img
         class="no-border"
         src="/static/images/help/upload-process/step_4_1.png"
-        title="Step 4: Compartment subform" />
+        title="Step 4: Medium subform" />
     <img
         class="no-border"
         src="/static/images/help/upload-process/step_4_2.png"
+        title="Step 4: Compartment subform" />
+    <img
+        class="no-border"
+        src="/static/images/help/upload-process/step_4_3.png"
         title="Step 4: Community subforms" />
 </div>
 
-You can describe the physical containers of microbial communities as "compartments". You might have a single compartment per vessel, but it's also possible to define e.g. broth and mucin beads floating inside as separate "compartments" that you measure separately as well. Even if they are separate, they are still in the same biological system, so microbes can move between them. If there is more than one compartment associated with a particular experiment, its replicates will have subscripts for the different compartments, for example "BiorepA1<sub>C1</sub>".
+To describe the medium, it is recommended to provide a link to {{ "https://mediadive.dsmz.de/media"|external_link("MediaDive") }}. You can define a custom medium using their {{ "https://mediadive.dsmz.de/docs/medium-builder"|external_link("medium builder") }}. After copying and pasting the URL to the medium into the form, you can click the "Fetch MediaDive info" button to fill in the name and ingredient list automatically and modify them if you wish. Alternatively, you can define your medium directly in whatever detail you believe is necessary.
+
+Afterwards, you need to describe the physical containers of microbial communities as "compartments". You might have a single compartment per vessel, but it's also possible to define e.g. broth and mucin beads floating inside as separate "compartments" that you measure separately as well. Even if they are separate, they are still in the same biological system, so microbes can move between them. If there is more than one compartment associated with a particular experiment, its replicates will have subscripts for the different compartments, for example "BiorepA1<sub>C1</sub>".
 
 Compartments also define sets of environmental conditions. If you change environments e.g. by modifying pH from neutral to acidic, you can describe the two environments as two separate compartments and describe the change in pH in a **perturbation** by switching from e.g. compartment C0 to compartment C- or C+.
-
-To describe the medium, it is recommended to provide a link to {{ "https://mediadive.dsmz.de/media"|external_link("MediaDive") }}. You can define a custom medium using their {{ "https://mediadive.dsmz.de/docs/medium-builder"|external_link("medium builder") }}.
 
 Communities are defined based on the strains that were entered in step 2. Each experiment will be defined with a single community. If your experiment involves changing the species composition (e.g. adding a new strain) during the experiment, you will be able to describe that by adding a perturbation from one defined community to another.
 
