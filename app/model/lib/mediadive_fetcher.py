@@ -5,6 +5,17 @@ from app.model.orm import Medium, MediumComponent
 
 
 class MediadiveFetcher:
+    """
+    Fetch medium data through the MediaDive API.
+
+    The class can be constructed from a mediadive URL which is how it's used in
+    practice. If the URL doesn't look right, the class method returns `None`.
+
+    It's expected to execute `.make_request()`, and then take the fetched
+    properties from the object's attributes. If the requests fail, the relevant
+    attributes will be left empty.
+    """
+
     @classmethod
     def from_url(Self, mediadive_url):
         if id_match := re.search(r'mediadive\.dsmz\.de/medium/([0-9a-zA-Z]+)', mediadive_url):
@@ -49,27 +60,3 @@ class MediadiveFetcher:
             self.component_data = []
 
         return True
-
-    def create_study_records(self, db_session, study, medium_name=None):
-        assert(self.medium_name is not None)
-        assert(self.component_data is not None)
-
-        medium = Medium(
-            name=(medium_name or self.medium_name),
-            url=f"https://mediadive.dsmz.de/medium/{self.mediadive_id}",
-            study=study,
-            mediadiveId=self.mediadive_id,
-        )
-        db_session.add(medium)
-
-        for i, entry in enumerate(self.component_data):
-            medium_component = MediumComponent(
-                medium=medium,
-                name=entry['name'],
-                mediadiveId=entry['mediadiveId'],
-                massConcentration=entry.get('massConcentration'),
-                molarConcentration=entry.get('molarConcentration'),
-                optional=entry.get('optional', False),
-                position=i + 1,
-            )
-            db_session.add(medium_component)

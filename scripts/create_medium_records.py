@@ -27,11 +27,26 @@ with get_session() as db_session:
 
             if mediadive_fetcher:
                 mediadive_fetcher.make_request()
-                mediadive_fetcher.create_study_records(
-                    db_session,
-                    study,
-                    medium_name=medium_name,
+
+                medium = Medium(
+                    name=(medium_name or mediadive_fetcher.medium_name),
+                    url=f"https://mediadive.dsmz.de/medium/{mediadive_fetcher.mediadive_id}",
+                    study=study,
+                    mediadiveId=mediadive_fetcher.mediadive_id,
                 )
+                db_session.add(medium)
+
+                for i, entry in enumerate(mediadive_fetcher.component_data):
+                    medium_component = MediumComponent(
+                        medium=medium,
+                        name=entry['name'],
+                        mediadiveId=entry['mediadiveId'],
+                        massConcentration=entry.get('massConcentration'),
+                        molarConcentration=entry.get('molarConcentration'),
+                        optional=entry.get('optional', False),
+                        position=i + 1,
+                    )
+                    db_session.add(medium_component)
             else:
                 db_session.add(Medium(name=medium_name, study=study))
 

@@ -51,10 +51,6 @@
   flex-grow: 1;
 }
 
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
 .flex-1 {
   flex: 1;
 }

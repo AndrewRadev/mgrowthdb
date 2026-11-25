@@ -220,6 +220,8 @@ Page('.upload-page .step-content.step-4.active', function($step4) {
     });
   }
 
+  // Ideally, this function should be made unnecessary by moving media
+  // definitions into their own step.
   function updateCompartmentMediumNames() {
     let $nameInputs = $step4.find('.js-medium-section').find('.js-medium-name-input');
     let names = $.map($nameInputs.get(), function(input) { return $.trim($(input).val()) });
