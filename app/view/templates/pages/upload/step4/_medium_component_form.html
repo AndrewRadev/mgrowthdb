@@ -1,0 +1,54 @@
+{% macro render_medium_component_form(prefix, entry, submission_form=None) %}
+  {% set name = entry['name'] %}
+  {% if not name and entry['mediadiveId'] and submission_form: %}
+    {% set name = submission_form.fetch_medium_ingredient_name(entry['mediadiveId']) %}
+  {% endif %}
+
+  <div
+      class="flex-column flex-gap-6 margin-top-6 margin-bottom-6 smaller js-subform-container">
+    <input type="hidden" name="{{ prefix }}name" value="{{ name }}" />
+
+    <div class="flex-row flex-gap-6 mediadive-select-row">
+      <select
+          name="{{ prefix }}mediadiveId"
+          required
+          class="js-ingredients-select">
+        {% if entry['mediadiveId']: %}
+          {% if not name and submission_form: %}
+            {% set name = submission_form.fetch_medium_ingredient_name(entry['mediadiveId']) %}
+          {% endif %}
+
+          <option value="{{ entry['mediadiveId'] }}" selected>{{ name or '' }}</option>
+        {% endif %}
+      </select>
+
+      <a href="#" class="white-button smaller small-button flex-row flex-start js-remove-trigger">
+        <span class="icon icon-remove"></span>
+      </a>
+    </div>
+
+    <div class="flex-row flex-gap-6">
+      <label class="flex-row flex-gap-6">
+        <input
+            type="number"
+            step="any"
+            class="form-input-blue form-input-small"
+            name="{{ prefix }}massConcentration"
+            value="{{ entry['massConcentration'] or "" }}" />
+        <span style="white-space: nowrap">g/L</span>
+      </label>
+    </div>
+
+    <div class="flex-row flex-gap-6">
+      <label class="flex-row flex-gap-6">
+        <input
+            type="number"
+            step="any"
+            class="form-input-blue form-input-small"
+            name="{{ prefix }}molarConcentration"
+            value="{{ entry['molarConcentration'] or "" }}" />
+        <span class="flex-grow">mM</span>
+      </label>
+    </div>
+  </div>
+{% endmacro %}

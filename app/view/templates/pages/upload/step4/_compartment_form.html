@@ -5,23 +5,15 @@
       <span class="js-title">{{ form.data['name'] or '[New]' }}</span>
     </h3>
 
-    <div class="form-row form-row-compact">
-      <label>
+    <div class="form-row">
+      <label class="flex-1">
         <div class="required">Name (max. 5 letters)</div>
         {{ form['name'](class='form-input-blue form-input-full', placeholder="C1", maxlength=5) }}
       </label>
 
-      <label>
+      <label class="flex-2" data-selected="{{ form.data['mediumName'] }}">
         <div>Medium name</div>
-        {{ form.mediumName(class="form-input-blue form-input-full", placeholder="e.g. Wilkins-Chalgren") }}
-      </label>
-
-      <label>
-        <div>
-          Medium URL
-          <span class="icon icon-info" data-tooltip="A link to a URL with information about the medium. MediaDive is recommended"></span>
-        </div>
-        {{ form.mediumUrl(class="form-input-blue form-input-full", placeholder="https://mediadive.dsmz.de/medium/339") }}
+        {{ form.mediumName(class="form-input-blue form-input-full js-medium-names-select") }}
       </label>
     </div>
 

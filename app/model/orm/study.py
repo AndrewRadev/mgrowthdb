@@ -110,6 +110,8 @@ class Study(OrmBase):
         viewonly=True,
     )
 
+    media: Mapped[List['Medium']] = owner_relationship()
+
     lastSubmissionId: Mapped[int] = mapped_column(sql.ForeignKey('Submissions.id'), nullable=True)
     lastSubmission: Mapped['Submission'] = relationship()
 

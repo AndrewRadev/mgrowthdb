@@ -20,6 +20,7 @@ from app.model.lib.submission_process import (
     _clear_study,
     _save_project,
     _save_study,
+    _save_media,
     _save_compartments,
     _save_communities,
     _save_experiments,
@@ -147,7 +148,55 @@ class TestSubmissionProcess(DatabaseTest):
             self.assertTrue(study.isPublishable)
             self.assertTrue(study.isPublished)
 
-    def test_compartment_creation(self):
+    def test_compartment_creation_with_media(self):
+        self.create_medium_ingredient(mediadiveId="2095", name="dehydrated WC medium")
+        self.create_medium_ingredient(mediadiveId="1157", name="L-Cysteine HCl")
+
+        submission_form = SubmissionForm(submission_id=self.submission.id, db_session=self.db_session)
+        submission_form.update_study_design({
+            'media': [{
+                "url": "https://mediadive.dsmz.de/medium/339",
+                "name": "Wilkins-Chalgrens",
+                "description": "",
+                "components": [
+                    {"mediadiveId": "2095", "massConcentration": 33, "molarConcentration": None},
+                    {"mediadiveId": "1157", "massConcentration": 0.3, "molarConcentration": 1.90331},
+                    # Ignored since they're empty
+                    {"mediadiveId": ""},
+                    {"mediadiveId": None},
+                    {},
+                ],
+            }, {
+                "url": "",
+                "name": "Mucin",
+                "description": "Mucin beads intended to emulate the texture of a human gut",
+                "components": [],
+            }],
+            'compartments': [{
+                'name': 'WC',
+                'mediumName': 'Wilkins-Chalgrens',
+            }, {
+                'name': 'Mucin',
+                'mediumName': 'Mucin',
+            }]
+        })
+        submission_form.save()
+
+        # Creating compartments defined by the self.submission
+        study        = _save_study(self.db_session, submission_form)
+        media        = _save_media(self.db_session, submission_form, study)
+        compartments = _save_compartments(self.db_session, submission_form, study)
+
+        self.db_session.flush()
+
+        self.assertEqual(['Wilkins-Chalgrens', 'Mucin'], [c.name for c in media])
+        self.assertEqual(['WC', 'Mucin'], [c.name for c in compartments])
+
+        self.assertEqual(compartments[0].medium, media[0])
+        self.assertEqual(compartments[1].medium, media[1])
+
+
+    def test_compartment_creation_without_media(self):
         submission_form = SubmissionForm(submission_id=self.submission.id, db_session=self.db_session)
         submission_form.update_study_design({
             'compartments': [{

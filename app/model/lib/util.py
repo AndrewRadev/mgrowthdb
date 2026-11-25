@@ -8,10 +8,41 @@ import shutil
 from io import BytesIO
 from pathlib import Path
 from typing import Optional, Iterable
-from datetime import datetime, UTC
+from datetime import datetime
 
 import requests
-from flask import url_for, request
+from flask import request
+
+_IRREGULAR_PLURALIZATIONS = {
+    'person': 'people',
+    'medium': 'media',
+}
+
+
+def pluralize(count, singular_phrase):
+    """
+    Convenience function to format counts of things, extend with more cases and
+    irregular words as needed.
+    """
+    if count == 1:
+        return f"{count} {singular_phrase}"
+
+    parts = singular_phrase.rsplit(sep=None, maxsplit=1)
+    if len(parts) > 1:
+        prefix, singular_word = parts
+    else:
+        prefix = None
+        singular_word = parts[0]
+
+    # Rules:
+    if singular_word in _IRREGULAR_PLURALIZATIONS:
+        word = _IRREGULAR_PLURALIZATIONS[singular_word]
+    elif singular_word.endswith('y'):
+        word = f"{singular_word[:-1]}ies"
+    else:
+        word = f"{singular_word}s"
+
+    return ' '.join([part for part in [str(count), prefix, word] if part is not None])
 
 
 def find_duplicates(collection):
@@ -154,7 +185,7 @@ def is_ajax(request):
 
 def hex_to_rgba(hex_string, opacity):
     hex_string = hex_string.removeprefix('#')
-    assert(len(hex_string) == 6)
+    assert len(hex_string) == 6
 
     r = int(hex_string[0:2], 16)
     g = int(hex_string[2:4], 16)

@@ -19,6 +19,7 @@ from app.model.orm import (
     Measurement,
     MeasurementContext,
     MeasurementTechnique,
+    MediumIngredient,
     Metabolite,
     ModelingResult,
     PageVisit,
@@ -87,6 +88,9 @@ class DatabaseTest(unittest.TestCase):
 
         return self._create_orm_record(Metabolite, params)
 
+    def create_medium_ingredient(self, **params):
+        return self._create_orm_record(MediumIngredient, params)
+
     def create_project(self, **params):
         project_id = Project.generate_public_id(self.db_session)
         project_uuid = str(uuid4())
@@ -135,9 +139,8 @@ class DatabaseTest(unittest.TestCase):
         study_id = self._get_or_create_dependency(params, 'studyId', ('study', 'publicId'))
 
         params = {
-            'studyId':    study_id,
-            'name':       f"Compartment {self.compartment_sequence}",
-            'mediumName': 'WC anaerobe broth',
+            'studyId': study_id,
+            'name':    f"Compartment {self.compartment_sequence}",
             **params,
         }
 

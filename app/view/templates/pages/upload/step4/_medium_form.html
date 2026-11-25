@@ -1,0 +1,83 @@
+{% from 'utils/_form_errors.html' import render_form_errors %}
+{% from 'pages/upload/step4/_medium_component_form.html' import render_medium_component_form %}
+
+{% macro render_medium_form(form, index, submission_form) %}
+  <div class="subform-container box js-subform-container">
+    <div class="form-row">
+      <h3>
+        Medium <span class="js-index">{{ index + 1 if index is not none else '' }}</span>:
+        <span class="js-title">{{ form.data['name'] or '[New]' }}</span>
+      </h3>
+
+      <div class="flex-right flex-row flex-gap-6">
+        <a href="#" class="white-button small-button small flex-row js-remove-trigger">
+          <span class="icon icon-remove"></span> Remove
+        </a>
+      </div>
+    </div>
+
+    <div class="form-row form-row-compact">
+      <label>
+        <div>
+          URL
+          <span class="icon icon-info" data-tooltip="A link to a URL with information about the medium. MediaDive is recommended"></span>
+        </div>
+        {{ form.url(class="form-input-blue form-input-full", placeholder="https://mediadive.dsmz.de/medium/339") }}
+      </label>
+
+      <div class="no-label">
+        <button
+            type="button"
+            class="green-button js-fetch-mediadive-info"
+            data-url="{{ url_for('upload_mediadive_info_json') }}">
+          Fetch MediaDive info
+        </button>
+      </div>
+
+      <label>
+        <div class="required">Name</div>
+        {{ form['name'](
+        class='form-input-blue form-input-full js-medium-name-input',
+        placeholder="e.g. WC/BHI/GAM",
+        ) }}
+      </label>
+    </div>
+
+    <div class="form-row form-row-compact">
+      <label class="full">
+        <div>Description</div>
+        {{ form['description'](rows=2, class="form-input-blue form-input-full", placeholder="Details about the medium preparation that you think are important to communicate.") }}
+      </label>
+    </div>
+
+    <div class="form-row flex-column box box-light js-medium-component-form-row" style="margin-top: 10px">
+      <div class="form-row flex-row" style="align-items: center;">
+        <h4>Medium Components</h4>
+
+        <a href="#" class="white-button small-button flex-row js-add-trigger js-add-medium-component">
+          <span class="icon icon-add"></span>
+        </a>
+
+        <div class="help">
+          Compounds that make up the medium
+        </div>
+      </div>
+
+      {{ render_form_errors(form.errors['components']) }}
+
+      <div
+          style="overflow-x: scroll;"
+          class="js-subform-list js-medium-component-subform-list flex-row flex-gap-20">
+        {% set component_data = form.data['components'] %}
+        {% set medium_index = index %}
+        {% include 'pages/upload/step4/_medium_components.html' %}
+      </div>
+
+      <template class="medium-component-form">
+        {% set subform = form.get_template('MediumComponentForm') %}
+        {{ render_medium_component_form(entry=subform.data, prefix="", submission_form=submission_form) }}
+      </template>
+    </div>
+  </div>
+
+{% endmacro %}

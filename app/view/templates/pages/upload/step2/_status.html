@@ -9,23 +9,23 @@
         <span class="icon"></span>
 
         {% if strain_count > 0: %}
-          <span>{{ strain_count }} strain(s) selected:</span>
+          <span>{{ strain_count|pluralize("strain") }} selected:</span>
           <span class="truncate">
             {{ submission_form.fetch_taxa()|map(attribute='short_name')|join_tag('strong') }}
           </span>
         {% else: %}
-          <span>No existing strain(s) selected</span>
+          <span>No existing strains selected</span>
         {% endif %}
       </li>
       <li class="complete">
         {% if custom_strain_count > 0: %}
           <span class="icon"></span>
-          <span>{{ custom_strain_count }} custom strain(s) added:</span>
+          <span>{{ custom_strain_count|pluralize('custom strain') }} added:</span>
           <span class="truncate">
             {{ submission.studyDesign['custom_strains']|map(attribute='name')|join_tag('strong') }}
           </span>
         {% else: %}
-          <span class="icon"></span> No custom strain(s) added
+          <span class="icon"></span> No custom strains added
         {% endif %}
       </li>
 

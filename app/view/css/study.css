@@ -131,4 +131,16 @@
       }
     }
   }
+
+  ul.medium-components {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    padding-left: 0;
+
+    li {
+      list-style-type: none;
+      border-left: 1px solid var(--border-color);
+      padding-left: 6px;
+    }
+  }
 }

@@ -2,8 +2,9 @@ import re
 
 from markupsafe import Markup, escape as html_escape
 from flask import request
-
 from jinja2.utils import urlize
+
+from app.model.lib import util
 
 
 def format_text(text, first_paragraph=False, p_class=''):
@@ -49,6 +50,10 @@ def highlight(text, words, regex=None):
     )
 
     return Markup(highlighted_text)
+
+
+def pluralize(count, word):
+    return util.pluralize(count, word)
 
 
 def _replace_project_reference(m):

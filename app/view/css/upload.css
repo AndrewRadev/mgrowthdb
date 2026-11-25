@@ -117,6 +117,19 @@
         }
       }
     }
+
+    .mediadive-select-row {
+      .select2-selection {
+        height: 32px;
+        font-size: 14px;
+      }
+      .select2-selection__rendered {
+        line-height: 32px;
+      }
+      .select2-selection__arrow {
+        height: 32px;
+      }
+    }
   }
 
   .step-5 {

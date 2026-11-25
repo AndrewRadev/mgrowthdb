@@ -1,0 +1,6 @@
+{% from 'pages/upload/step4/_medium_component_form.html' import render_medium_component_form %}
+
+{% for entry in component_data: %}
+  {% set prefix = "media-{}-components-{}-".format(medium_index, loop.index0) %}
+  {{ render_medium_component_form(prefix, entry, submission_form) }}
+{% endfor %}

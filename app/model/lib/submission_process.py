@@ -16,6 +16,9 @@ from app.model.orm import (
     ExperimentCompartment,
     Measurement,
     MeasurementContext,
+    Medium,
+    MediumComponent,
+    MediumIngredient,
     Perturbation,
     Project,
     ProjectUser,
@@ -50,6 +53,7 @@ def persist_submission_to_database(submission_form):
         _clear_study(study)
 
         _save_study_techniques(db_trans_session, submission_form, study)
+        _save_media(db_trans_session, submission_form, study)
         _save_compartments(db_trans_session, submission_form, study)
         _save_communities(db_trans_session, submission_form, study, user_uuid)
         _save_experiments(db_trans_session, submission_form, study)
@@ -281,16 +285,52 @@ def _clear_study(study):
     study.studyMetabolites    = []
 
 
+def _save_media(db_session, submission_form, study):
+    submission = submission_form.submission
+    media = []
+
+    for medium_data in copy.deepcopy(submission.studyDesign['media']):
+        component_data = medium_data.pop('components')
+        medium = Medium(**Medium.filter_keys(medium_data))
+        medium.studyId = study.publicId
+
+        for component_entry in component_data:
+            mediadive_id = component_entry.get('mediadiveId')
+            if mediadive_id is None or mediadive_id.strip() == '':
+                continue
+
+            component = MediumComponent(**MediumComponent.filter_keys(component_entry))
+            component.name = MediumIngredient.fetch_name(db_session, component.mediadiveId)
+            medium.components.append(component)
+            db_session.add(component)
+
+        media.append(medium)
+
+    db_session.add_all(media)
+    study.media = media
+
+    return media
+
+
 def _save_compartments(db_session, submission_form, study):
     submission = submission_form.submission
     compartments = []
+    media_by_name = group_by_unique_name(study.media)
 
     for compartment_data in submission.studyDesign['compartments']:
         compartment = Compartment(**Compartment.filter_keys(compartment_data))
+
+        if media_by_name:
+            if medium := media_by_name.get(compartment.mediumName):
+                compartment.medium = medium
+                # Cache medium fields for now
+                compartment.mediumName = medium.name
+                compartment.mediumUrl = medium.url
+
         compartments.append(compartment)
 
-    study.compartments = compartments
     db_session.add_all(compartments)
+    study.compartments = compartments
 
     return compartments
 

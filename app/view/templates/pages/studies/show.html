@@ -123,6 +123,45 @@
 
       {{ render_strains_and_metabolites(study) }}
 
+      {% if study.media: %}
+        <h2>Media</h2>
+
+        <ol class="flex-column flex-gap-10">
+          {% for medium in study.media: %}
+            <li>
+              <strong>
+                {% if medium.url: %}
+                  {{ medium.url|external_link(medium.name) }}
+                {% else: %}
+                  {{ medium.name }}
+                {% endif %}
+              </strong>
+
+              {% if medium.description: %}
+                <div class="small">
+                  {{ medium.description }}
+                </div>
+              {% endif %}
+
+              {% if medium.components: %}
+                <ul class="smaller medium-components">
+                  {% for mediadive_id, component_name, measurement in medium.get_component_descriptions(): %}
+                    <li>
+                      {{ measurement }}
+                      {% if mediadive_id: %}
+                        {{ "https://mediadive.dsmz.de/ingredients/{}".format(mediadive_id)|external_link(component_name) }}
+                      {% else: %}
+                        {{ component_name }}
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      {% endif %}
+
       <h2>Measurement techniques</h2>
 
       <p>

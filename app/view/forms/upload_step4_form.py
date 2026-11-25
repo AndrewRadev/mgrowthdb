@@ -6,6 +6,7 @@ from wtforms import (
     SelectMultipleField,
     StringField,
     URLField,
+    TextAreaField,
 )
 from wtforms.validators import DataRequired, Optional, Length
 
@@ -16,14 +17,32 @@ class UploadStep4Form(BaseForm):
     class Meta:
         csrf_time_limit = None
 
+    class MediumForm(BaseForm):
+        class Meta:
+            csrf = False
+
+        class MediumComponentForm(BaseForm):
+            class Meta:
+                csrf = False
+
+            mediadiveId = StringField('mediadiveId', validators=[DataRequired()])
+
+            massConcentration  = DecimalField('massConcentration',  validators=[Optional()])
+            molarConcentration = DecimalField('molarConcentration', validators=[Optional()])
+
+        name        = StringField('name', validators=[DataRequired()])
+        url         = URLField('url', validators=[Length(max=100)])
+        description = TextAreaField('description')
+
+        components = FieldList(FormField(MediumComponentForm))
+
     class CompartmentForm(BaseForm):
         class Meta:
             csrf = False
 
         name = StringField('name', validators=[DataRequired()])
 
-        mediumName = StringField('mediumName', validators=[Length(max=100)])
-        mediumUrl  = URLField('mediumUrl', validators=[Length(max=100)])
+        mediumName = SelectField('mediumName', choices=[], validate_choice=False)
 
         volume        = DecimalField('volume',        validators=[Optional()])
         pressure      = DecimalField('pressure',      validators=[Optional()])
@@ -56,8 +75,13 @@ class UploadStep4Form(BaseForm):
         name              = StringField('name', validators=[DataRequired()])
         strainIdentifiers = SelectMultipleField('strainIdentifiers', choices=[], validate_choice=False)
 
+    media        = FieldList(FormField(MediumForm))
     compartments = FieldList(FormField(CompartmentForm))
     communities  = FieldList(FormField(CommunityForm))
+
+    def validate_media(self, field):
+        names = [c['name'] for c in field.data]
+        self._validate_uniqueness("media_names", "Medium names are not unique", names)
 
     def validate_compartments(self, field):
         names = [c['name'] for c in field.data]

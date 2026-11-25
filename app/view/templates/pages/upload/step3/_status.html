@@ -17,7 +17,7 @@
         {% else: %}
           <li class="complete">
             <span class="icon"></span>
-            <span>{{ study_techniques|length }} {{ type }} measurements:</span>
+            <span>{{ study_techniques|length|pluralize("{} measurement".format(type)) }}:</span>
             <span class="truncate">
               {{ study_techniques|map(attribute="short_name_with_units")|join_tag('strong') }}
             </span>

@@ -8,7 +8,7 @@
     {% if experiments|length > 0: %}
       <li class="complete">
         <span class="icon"></span>
-        <span>{{ experiments|length }} experiment(s):</span>
+        <span>{{ experiments|length|pluralize("experiment") }}:</span>
         <span class="truncate">
           {{ experiments|map(attribute='name')|join_tag('strong') }}
         </span>
@@ -22,7 +22,7 @@
     {% if bioreplicates|length > 0: %}
       <li class="complete">
         <span class="icon"></span>
-        <span>{{ bioreplicates|length }} bioreplicate(s):</span>
+        <span>{{ bioreplicates|length|pluralize("bioreplicate") }}:</span>
         <span class="truncate">
           {{ bioreplicates|map(attribute='name')|join_tag('strong') }}
         </span>
@@ -36,7 +36,7 @@
     {% if perturbations|length > 0: %}
       <li class="complete">
         <span class="icon"></span>
-        <span>{{ perturbations|length }} perturbation(s)</span>
+        <span>{{ perturbations|length|pluralize("perturbation") }}</span>
       </li>
     {% endif %}
   </ul>

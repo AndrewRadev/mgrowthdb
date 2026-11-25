@@ -4,7 +4,7 @@
 {% from 'pages/studies/_experiments_toc.html' import render_experiments_toc %}
 
 <div class="flex-row">
-  <div>
+  <div class="flex-1">
     {% for experiment in experiments: %}
       <div class="experiment-container">
         <h2 id="experiment-{{ experiment.publicId }}">
@@ -38,7 +38,11 @@
               <br>
 
               Medium:
-              {% if compartment.mediumUrl: %}
+              {% if compartment.medium and compartment.medium.url: %}
+                {{ compartment.medium.url|external_link(compartment.medium.name) }}
+              {% elif compartment.medium: %}
+                {{ compartment.medium.name }}
+              {% elif compartment.mediumUrl: %}
                 {{ compartment.mediumUrl|external_link(compartment.mediumName) }}
               {% else: %}
                 {{ compartment.mediumName }}
